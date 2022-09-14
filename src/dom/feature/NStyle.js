@@ -1,3 +1,5 @@
+import { NElement } from "../../../dist/qwqframe.js";
+
 /**
  * 样式
  * @template {keyof CSSStyleDeclaration} T
@@ -21,5 +23,14 @@ export class NStyle
     {
         this.key = key;
         this.value = value;
+    }
+
+    /**
+     * 将此特征应用于元素
+     * @param {NElement} e
+     */
+    apply(e)
+    {
+        e.setStyle(this.key, /** @type {string | number} */(this.value));
     }
 }

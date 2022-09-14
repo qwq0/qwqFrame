@@ -1,9 +1,16 @@
-export { getNElement } from "./dom/element/getNElement.js";
 export { cssG } from "./dom/style/cssGen.js";
 export { expandElement } from "./dom/tool/expandElement.js";
+export { divideLayout_LR, divideLayout_UD, divideLayout_RL, divideLayout_DU } from "./dom/tool/divideLayout.js";
 export { tag, tagName } from "./dom/tool/parsingElement.js";
-export { NStyle } from "./dom/style/NStyle.js";
-export { NEvent } from "./dom/event/NEvent.js";
-export { NElement } from "./dom/element/NElement.js";
+
+export { NAsse } from "./dom/feature/NAsse.js";
+export { NAttr } from "./dom/feature/NAttr.js";
+export { NEvent } from "./dom/feature/NEvent.js";
+export { NStyle } from "./dom/feature/NStyle.js";
+
+export { NElement, getNElement } from "./dom/element/NElement.js";
+
+export { mouseBind } from "./dom/event/tool/mouse.js";
+export { touchBind } from "./dom/event/tool/touch.js";
 
 export { runOnce } from "./flow/runOnce.js"

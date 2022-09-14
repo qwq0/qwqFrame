@@ -28,6 +28,6 @@ export function traverseTreeFT(node, callBack)
         (/** @type {Array} */ node.child).forEach((/** @type {any} */ e) =>
         {
             callBack(e, node);
-            traverseTree(e, callBack);
+            traverseTreeFT(e, callBack);
         });
 }

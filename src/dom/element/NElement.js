@@ -21,16 +21,19 @@ export class NElement
 
     /**
      * 添加单个子节点
-     * @param {NElement} chi
+     * @param {NElement | HTMLElement} chi
      */
     addChild(chi)
     {
-        this.element.appendChild(chi.element);
+        if (chi instanceof NElement)
+            this.element.appendChild(chi.element);
+        else
+            this.element.appendChild(chi);
     }
 
     /**
      * 添加多个子节点
-     * @param {Array<NElement | Array<NElement>>} chi
+     * @param {Array<NElement | HTMLElement | Array<NElement | HTMLElement>>} chi
      */
     addChilds(...chi)
     {
@@ -115,6 +118,26 @@ export class NElement
     }
 
     /**
+     * 获取子节点列表
+     * 返回的列表不会随dom树变化
+     * @returns {Array<NElement>}
+     */
+    getChilds()
+    {
+        return Array.from(this.element.children).map(o => getNElement(/** @type {HTMLElement} */(o)));
+    }
+
+    /**
+     * 获取第ind个子节点
+     * @param {number} ind
+     * @returns {NElement}
+     */
+    getChild(ind)
+    {
+        return getNElement(/** @type {HTMLElement} */(this.element.children[ind]));
+    }
+
+    /**
      * 修改样式
      * @param {keyof CSSStyleDeclaration | string} styleName
      * @param {string | number} value
@@ -123,6 +146,7 @@ export class NElement
     {
         this.element.style[styleName] = value;
     }
+
     /**
      * 获取样式
      * @param {keyof CSSStyleDeclaration | string} styleName
@@ -133,6 +157,7 @@ export class NElement
         if (typeof (styleName) == "string")
             return this.element.style[styleName];
     }
+
     /**
      * 修改多个样式
      * @param {Object<keyof CSSStyleDeclaration | string, string | number>} obj
@@ -167,7 +192,7 @@ export class NElement
 
     /**
      * 设置元素可见性
-     * @param {"block" | "inline" | "none" | "inline-block" | string} s
+     * @param {"block" | "inline" | "flex" | "none" | "inline-block" | string} s
      */
     setDisplay(s)
     {
@@ -176,8 +201,9 @@ export class NElement
 
     /**
      * 添加事件监听器
-     * @param {string} eventName
-     * @param {function(Event) : void} callBack
+     * @template {keyof HTMLElementEventMap} K
+     * @param {K} eventName
+     * @param {function(HTMLElementEventMap[K]): any} callBack
      * @param {boolean | AddEventListenerOptions} [options]
      */
     addEventListener(eventName, callBack, options)
@@ -195,4 +221,42 @@ export class NElement
     {
         this.element.removeEventListener(eventName, callBack, options);
     }
+
+    /**
+     * 执行动画
+     * @param {Array<Keyframe> | PropertyIndexedKeyframes} keyframes
+     * @param {number | KeyframeAnimationOptions} options
+     */
+    animate(keyframes, options)
+    {
+        this.element.animate(keyframes, options);
+    }
+
+    /**
+     * 流水线
+     * @param {function(typeof this): void} asseFunc 流水线函数(无视返回值)
+     * @returns {NElement} 返回本身
+     */
+    asse(asseFunc)
+    {
+        asseFunc(this);
+        return this;
+    }
+}
+
+const symbolKey = Symbol("NElement");
+
+/**
+ * 根据HTMLElement对象获取NElement对象
+ * 如果没有则生成
+ * @template {HTMLElement} ElementObjectType
+ * @param {ElementObjectType} element
+ * @returns {NElement<ElementObjectType>}
+ */
+export function getNElement(element)
+{
+    if (element[symbolKey])
+        return element[symbolKey];
+    else
+        return element[symbolKey] = new NElement(element);
 }

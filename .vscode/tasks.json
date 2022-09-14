@@ -6,7 +6,17 @@
         {
             "label": "build lib",
             "type": "shell",
-            "command": "rollup -i src/index.js -o dist/qframe.js -f es -m",
+            "command": "rollup -i src/index.js -o dist/qwqframe.js -f es",
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "build lib (with map)",
+            "type": "shell",
+            "command": "rollup -i src/index.js -o dist/qwqframe-withMap.js -f es -m",
             "problemMatcher": [],
             "group": {
                 "kind": "build",
@@ -16,7 +26,7 @@
         {
             "label": "build lib (iife)",
             "type": "shell",
-            "command": "rollup -i src/index.js -o dist/qframe.iife.js -n nFrame -f iife -m",
+            "command": "rollup -i src/index.js -o dist/qwqframe-iife.js -n qwqFrame -f iife -m",
             "problemMatcher": [],
             "group": {
                 "kind": "build",

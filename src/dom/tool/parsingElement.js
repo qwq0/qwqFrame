@@ -1,7 +1,6 @@
-import { getNElement } from "../element/getNElement.js";
-import { NElement } from "../element/NElement.js";
-import { NEvent } from "../event/NEvent.js";
-import { NStyle } from "../style/NStyle.js";
+import { NElement, getNElement } from "../element/NElement.js";
+import { NEvent } from "../feature/NEvent.js";
+import { NStyle } from "../feature/NStyle.js";
 
 /**
  * 解析标签
@@ -27,7 +26,7 @@ function parsingElement(tagName, strings, ...keys)
             else if (nowKey instanceof NStyle)
                 ret.setStyle(nowKey.key, nowKey.value);
             else if (nowKey instanceof NEvent)
-                ret.addEventListener(nowKey.key, nowKey.callback);
+                ret.addEventListener(nowKey.eventName, nowKey.callback);
             else if (nowKey)
                 throw "parsingElement error: Unprocessed type";
         }

@@ -1,22 +1,23 @@
-import { forEach } from "../../util/forEach.js";
+import { forEach } from "../../../util/forEach.js";
+import { NElement } from "../../element/NElement.js";
 import { pointerData } from "./pointerData.js";
 
 /**
  * 触摸(拖拽) 事件处理
- * @param {HTMLElement} element 
+ * @param {NElement} element 
  * @param {function(pointerData):void} callBack
  */
 export function touchBind(element, callBack)
 {
-    element.addEventListener("touchstart", e => touchStart(e), {
+    element.addEventListener("touchstart", e => touchStart(/** @type {TouchEvent} */(e)), {
         capture: false,
         passive: false
     });
-    element.addEventListener("touchmove", e => touchMove(e), {
+    element.addEventListener("touchmove", e => touchMove(/** @type {TouchEvent} */(e)), {
         capture: false,
         passive: true
     });
-    element.addEventListener("touchend", e => touchEnd(e), {
+    element.addEventListener("touchend", e => touchEnd(/** @type {TouchEvent} */(e)), {
         capture: false,
         passive: true
     });

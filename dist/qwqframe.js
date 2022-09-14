@@ -1,4 +1,32 @@
 /**
+ * css生成
+ * @namespace
+ */
+const cssG = {
+    /**
+     * 100%减去指定值
+     * @param {string} value
+     * @returns {string}
+     */
+    diFull: (value) =>
+    {
+        return ("calc(100% - " + value + ")");
+    },
+
+    /**
+     * 构建rgb或rgba颜色颜色
+     * @param {number | string} r 0~255
+     * @param {number | string} g 0~255
+     * @param {number | string} b 0~255
+     * @param {number | string} [a] 0~1
+     */
+    rgb: (r, g, b, a = 1) =>
+    {
+        return "rgba(" + r + ", " + g + ", " + b + ", " + a + ")";
+    }
+};
+
+/**
  * 正向遍历数组
  * 在回调中返回不为false或void的值主动结束遍历
  * 主动结束遍历 返回true
@@ -52,16 +80,19 @@ class NElement
 
     /**
      * 添加单个子节点
-     * @param {NElement} chi
+     * @param {NElement | HTMLElement} chi
      */
     addChild(chi)
     {
-        this.element.appendChild(chi.element);
+        if (chi instanceof NElement)
+            this.element.appendChild(chi.element);
+        else
+            this.element.appendChild(chi);
     }
 
     /**
      * 添加多个子节点
-     * @param {Array<NElement | Array<NElement>>} chi
+     * @param {Array<NElement | HTMLElement | Array<NElement | HTMLElement>>} chi
      */
     addChilds(...chi)
     {
@@ -146,6 +177,26 @@ class NElement
     }
 
     /**
+     * 获取子节点列表
+     * 返回的列表不会随dom树变化
+     * @returns {Array<NElement>}
+     */
+    getChilds()
+    {
+        return Array.from(this.element.children).map(o => getNElement(/** @type {HTMLElement} */(o)));
+    }
+
+    /**
+     * 获取第ind个子节点
+     * @param {number} ind
+     * @returns {NElement}
+     */
+    getChild(ind)
+    {
+        return getNElement(/** @type {HTMLElement} */(this.element.children[ind]));
+    }
+
+    /**
      * 修改样式
      * @param {keyof CSSStyleDeclaration | string} styleName
      * @param {string | number} value
@@ -154,6 +205,7 @@ class NElement
     {
         this.element.style[styleName] = value;
     }
+
     /**
      * 获取样式
      * @param {keyof CSSStyleDeclaration | string} styleName
@@ -164,6 +216,7 @@ class NElement
         if (typeof (styleName) == "string")
             return this.element.style[styleName];
     }
+
     /**
      * 修改多个样式
      * @param {Object<keyof CSSStyleDeclaration | string, string | number>} obj
@@ -198,7 +251,7 @@ class NElement
 
     /**
      * 设置元素可见性
-     * @param {"block" | "inline" | "none" | "inline-block" | string} s
+     * @param {"block" | "inline" | "flex" | "none" | "inline-block" | string} s
      */
     setDisplay(s)
     {
@@ -226,9 +279,31 @@ class NElement
     {
         this.element.removeEventListener(eventName, callBack, options);
     }
+
+    /**
+     * 执行动画
+     * @param {Array<Keyframe> | PropertyIndexedKeyframes} keyframes
+     * @param {number | KeyframeAnimationOptions} options
+     */
+    animate(keyframes, options)
+    {
+        this.element.animate(keyframes, options);
+    }
+
+    /**
+     * 流水线
+     * @param {function(typeof this): void} asseFunc 流水线函数(无视返回值)
+     * @returns {NElement} 返回本身
+     */
+    asse(asseFunc)
+    {
+        asseFunc(this);
+        return this;
+    }
 }
 
 const symbolKey = Symbol("NElement");
+
 /**
  * 根据HTMLElement对象获取NElement对象
  * 如果没有则生成
@@ -238,39 +313,11 @@ const symbolKey = Symbol("NElement");
  */
 function getNElement(element)
 {
-    if(element[symbolKey])
+    if (element[symbolKey])
         return element[symbolKey];
     else
         return element[symbolKey] = new NElement(element);
 }
-
-/**
- * css生成
- * @namespace
- */
-const cssG = {
-    /**
-     * 100%减去指定值
-     * @param {string} value
-     * @returns {string}
-     */
-    diFull: (value) =>
-    {
-        return ("calc(100% - " + value + ")");
-    },
-
-    /**
-     * 构建rgb或rgba颜色颜色
-     * @param {number | string} r 0~255
-     * @param {number | string} g 0~255
-     * @param {number | string} b 0~255
-     * @param {number | string} [a] 0~1
-     */
-    rgb: (r, g, b, a = 1) =>
-    {
-        return "rgba(" + r + ", " + g + ", " + b + ", " + a + ")";
-    }
-};
 
 /**
  * 遍历展开元素
@@ -328,7 +375,11 @@ function expEle(obj)
         now.element.classList.add(...obj.classList);
     if (obj.event) // 如果有绑定事件
     {
-        Object.keys(obj.event).forEach(key => now.addEventListener(key, obj.event[key]));
+        Object.keys(obj.event).forEach(key =>
+        {
+            if (obj.event[key])
+                now.addEventListener(key, obj.event[key]);
+        });
     }
     if (obj.child) // 若有子元素
     {
@@ -431,6 +482,107 @@ function preC(obj, def)
 function expandElement(obj)
 {
     return expEle(preC(obj, {}));
+}
+
+/**
+ * 左右方向分割
+ * @param {string} leftSize
+ * @param {NElement | import("./expandElement").EDObj} a
+ * @param {NElement | import("./expandElement").EDObj} b
+ * @returns {NElement}
+ */
+function divideLayout_LR(leftSize, a, b)
+{
+    return divideLayout(expandElement({
+        style: {
+            flexFlow: "row"
+        },
+        child: [
+            a,
+            b
+        ],
+        assembly: [e => { e.getChild(0).setStyle("width", leftSize); }]
+    }));
+}
+
+/**
+ * 上下方向分割
+ * @param {string} upSize
+ * @param {NElement | import("./expandElement").EDObj} a
+ * @param {NElement | import("./expandElement").EDObj} b
+ * @returns {NElement}
+ */
+function divideLayout_UD(upSize, a, b)
+{
+    return divideLayout(expandElement({
+        style: {
+            flexFlow: "column"
+        },
+        child: [
+            a,
+            b
+        ],
+        assembly: [e => { e.getChild(0).setStyle("height", upSize); }]
+    }));
+}
+
+/**
+ * 右左方向分割
+ * @param {string} rightSize
+ * @param {NElement | import("./expandElement").EDObj} a
+ * @param {NElement | import("./expandElement").EDObj} b
+ * @returns {NElement}
+ */
+function divideLayout_RL(rightSize, a, b)
+{
+    return divideLayout(expandElement({
+        style: {
+            flexFlow: "row-reverse"
+        },
+        child: [
+            a,
+            b
+        ],
+        assembly: [e => { e.getChild(0).setStyle("width", rightSize); }]
+    }));
+}
+
+/**
+ * 下上方向分割
+ * @param {string} downSize
+ * @param {NElement | import("./expandElement").EDObj} a
+ * @param {NElement | import("./expandElement").EDObj} b
+ * @returns {NElement}
+ */
+function divideLayout_DU(downSize, a, b)
+{
+    return divideLayout(expandElement({
+        style: {
+            flexFlow: "column-reverse"
+        },
+        child: [
+            a,
+            b
+        ],
+        assembly: [e => { e.getChild(0).setStyle("height", downSize); }]
+    }));
+}
+
+/**
+ * 设置为分割视图
+ * @param {NElement} p 父节点
+ * @returns {NElement} 返回父节点
+ */
+function divideLayout(p)
+{
+    p.setDisplay("flex");
+    p.setStyles({
+        alignItems: "stretch",
+        justifyContent: "space-between"
+    });
+    var childs = p.getChilds();
+    childs[1].setStyle("flexGrow", 1);
+    return p;
 }
 
 /**
@@ -540,6 +692,277 @@ function tagName(name)
 }
 
 /**
+ * 指针数据
+ * 当发生鼠标或触摸事件时传递
+ * 包含指针坐标和按下状态等数据
+ */
+class pointerData
+{
+    /**
+     * 当前指针位置x
+     * @type {number}
+    */
+    x = 0;
+    /**
+     * 当前指针位置y
+     * @type {number}
+    */
+    y = 0;
+    /**
+     * 指针位置和上次位置的变化x
+     * @type {number}
+    */
+    vx = 0;
+    /**
+     * 指针位置和上次位置的变化y
+     * @type {number}
+    */
+    vy = 0;
+    /**
+     * 此指针的起始位置x
+     * @type {number}
+    */
+    sx = 0;
+    /**
+     * 此指针的起始位置y
+     * @type {number}
+    */
+    sy = 0;
+    /**
+     * 当前此指针是否处于按下状态
+     * @type {boolean}
+    */
+    hold = false;
+    /**
+     * 当前指针是否正在按下(按下事件)
+     * @type {boolean}
+    */
+    pressing = false;
+    
+    /**
+     * @param {number} x
+     * @param {number} y
+     * @param {number} vx
+     * @param {number} vy
+     * @param {number} sx
+     * @param {number} sy
+     * @param {boolean} hold
+     * @param {boolean} pressing
+     */
+    constructor(x, y, vx, vy, sx, sy, hold, pressing)
+    {
+        this.x = x;
+        this.y = y;
+        this.vx = vx;
+        this.vy = vy;
+        this.sx = sx;
+        this.sy = sy;
+        this.hold = hold;
+        this.pressing = pressing;
+    }
+}
+
+/**
+ * 鼠标(拖拽)事件处理
+ * @param {NElement} element 绑定到元素
+ * @param {function(pointerData):void} callBack 回调
+ * @param {number} [button] 绑定的按键
+ */
+function mouseBind(element, callBack, button = 0)
+{
+    element.addEventListener("mousedown", (/** @type {MouseEvent} */ e) => mouseDown(e), false);
+
+    var mousemoveP = (/** @type {MouseEvent} */ e) => mouseMove(e);
+    var mouseupP = (/** @type {MouseEvent} */ e) => mouseUp(e);
+
+    var x = 0, y = 0;
+    var sx = 0, sy = 0;
+    var leftDown = false;
+    /**
+     * 鼠标处理函数(按下)
+     * @param {MouseEvent} e 
+     */
+    function mouseDown(e)
+    {
+        if (e.cancelable)
+            e.preventDefault();
+        sx = x = e.clientX;
+        sy = y = e.clientY;
+        window.addEventListener("mousemove", mousemoveP, true);
+        window.addEventListener("mouseup", mouseupP, true);
+        if (e.button == button)
+        {
+            leftDown = true;
+            callBack(new pointerData(
+                x, y,
+                0, 0,
+                x, y,
+                true, true
+            ));
+        }
+    }
+    /**
+     * 鼠标处理函数(移动)
+     * @param {MouseEvent} e 
+     */
+    function mouseMove(e)
+    {
+        if (leftDown)
+        {
+            // e.preventDefault();
+            var vx = e.clientX - x;
+            var vy = e.clientY - y;
+            x = e.clientX;
+            y = e.clientY;
+            callBack(new pointerData(
+                x, y,
+                vx, vy,
+                sx, sy,
+                true, false
+            ));
+        }
+    }
+    /**
+     * 鼠标处理函数(松开)
+     * @param {MouseEvent} e 
+     */
+    function mouseUp(e)
+    {
+        var vx = e.clientX - x;
+        var vy = e.clientY - y;
+        x = e.clientX;
+        y = e.clientY;
+        window.removeEventListener("mousemove", mousemoveP, false);
+        window.removeEventListener("mouseup", mouseupP, false);
+        if (leftDown && e.button == button)
+        {
+            leftDown = false;
+            callBack(new pointerData(
+                x, y,
+                vx, vy,
+                sx, sy,
+                false, false
+            ));
+        }
+    }
+}
+
+/**
+ * 触摸(拖拽) 事件处理
+ * @param {NElement} element 
+ * @param {function(pointerData):void} callBack
+ */
+function touchBind(element, callBack)
+{
+    element.addEventListener("touchstart", e => touchStart(/** @type {TouchEvent} */(e)), {
+        capture: false,
+        passive: false
+    });
+    element.addEventListener("touchmove", e => touchMove(/** @type {TouchEvent} */(e)), {
+        capture: false,
+        passive: true
+    });
+    element.addEventListener("touchend", e => touchEnd(/** @type {TouchEvent} */(e)), {
+        capture: false,
+        passive: true
+    });
+
+    var ogTouches = [];
+    /**
+     * 通过标识符取触摸点数据索引
+     * @param {any} id
+     * @returns {number}
+     */
+    function getTouchesInd(id)
+    {
+        var ret = -1;
+        ogTouches.forEach((o, i) =>
+        {
+            if (id == o.id)
+                ret = i;
+        });
+        return ret;
+    }
+    /**
+     * 触摸处理函数(按下)
+     * @param {TouchEvent} e 
+     */
+    function touchStart(e)
+    {
+        if (e.cancelable)
+            e.preventDefault();
+        forEach(e.touches, o =>
+        {
+            var t = {
+                id: o.identifier,
+                sx: o.clientX,
+                sy: o.clientY,
+                x: o.clientX,
+                y: o.clientY
+            };
+            ogTouches.push(t);
+            callBack(new pointerData(
+                t.x, t.y,
+                0, 0,
+                t.sx, t.sy,
+                true, true
+            ));
+        });
+    }
+    /**
+     * 触摸处理函数(移动)
+     * @param {TouchEvent} e 
+     */
+    function touchMove(e)
+    {
+        forEach(e.touches, o =>
+        {
+            var ind = getTouchesInd(o.identifier);
+            if (ind > -1)
+            {
+                var t = ogTouches[ind];
+                var vx = o.clientX - t.x;
+                var vy = o.clientY - t.y;
+                t.x = o.clientX;
+                t.y = o.clientY;
+                callBack(new pointerData(
+                    t.x, t.y,
+                    vx, vy,
+                    t.sx, t.sy,
+                    true, false
+                ));
+            }
+        });
+    }
+    /**
+     * 触摸处理函数(松开)
+     * @param {TouchEvent} e 
+     */
+    function touchEnd(e)
+    {
+        forEach(e.touches, o =>
+        {
+            var ind = getTouchesInd(o.identifier);
+            if (ind > -1)
+            {
+                var t = ogTouches[ind];
+                ogTouches.splice(ind, 1);
+                var vx = o.clientX - t.x;
+                var vy = o.clientY - t.y;
+                t.x = o.clientX;
+                t.y = o.clientY;
+                callBack(new pointerData(
+                    t.x, t.y,
+                    vx, vy,
+                    t.sx, t.sy,
+                    false, false
+                ));
+            }
+        });
+    }
+}
+
+/**
  * 包装为仅能执行一次的函数
  * @template P
  * @template R
@@ -562,5 +985,4 @@ function runOnce(func)
     });
 }
 
-export { NElement, NEvent, NStyle, cssG, expandElement, getNElement, runOnce, tag, tagName };
-//# sourceMappingURL=qframe.js.map
+export { NElement, NEvent, NStyle, cssG, divideLayout_DU, divideLayout_LR, divideLayout_RL, divideLayout_UD, expandElement, getNElement, mouseBind, runOnce, tag, tagName, touchBind };

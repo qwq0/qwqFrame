@@ -1,5 +1,5 @@
-import { NStyle } from "../src/dom/style/NStyle.js";
-import { NEvent } from "../src/dom/event/NEvent.js";
+import { NStyle } from "../src/dom/feature/NStyle.js";
+import { NEvent } from "../src/dom/feature/NEvent.js";
 import { tag, tagName } from "../src/dom/tool/parsingElement.js";
 import { getNElement } from "../src/index.js";
 
