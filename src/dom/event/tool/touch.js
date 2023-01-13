@@ -22,7 +22,7 @@ export function touchBind(element, callBack)
         passive: true
     });
 
-    var ogTouches = [];
+    let ogTouches = [];
     /**
      * 通过标识符取触摸点数据索引
      * @param {any} id
@@ -30,7 +30,7 @@ export function touchBind(element, callBack)
      */
     function getTouchesInd(id)
     {
-        var ret = -1;
+        let ret = -1;
         ogTouches.forEach((o, i) =>
         {
             if (id == o.id)
@@ -48,7 +48,7 @@ export function touchBind(element, callBack)
             e.preventDefault();
         forEach(e.touches, o =>
         {
-            var t = {
+            let t = {
                 id: o.identifier,
                 sx: o.clientX,
                 sy: o.clientY,
@@ -72,12 +72,12 @@ export function touchBind(element, callBack)
     {
         forEach(e.touches, o =>
         {
-            var ind = getTouchesInd(o.identifier);
+            let ind = getTouchesInd(o.identifier);
             if (ind > -1)
             {
-                var t = ogTouches[ind];
-                var vx = o.clientX - t.x;
-                var vy = o.clientY - t.y;
+                let t = ogTouches[ind];
+                let vx = o.clientX - t.x;
+                let vy = o.clientY - t.y;
                 t.x = o.clientX;
                 t.y = o.clientY;
                 callBack(new pointerData(
@@ -97,13 +97,13 @@ export function touchBind(element, callBack)
     {
         forEach(e.touches, o =>
         {
-            var ind = getTouchesInd(o.identifier);
+            let ind = getTouchesInd(o.identifier);
             if (ind > -1)
             {
-                var t = ogTouches[ind];
+                let t = ogTouches[ind];
                 ogTouches.splice(ind, 1);
-                var vx = o.clientX - t.x;
-                var vy = o.clientY - t.y;
+                let vx = o.clientX - t.x;
+                let vy = o.clientY - t.y;
                 t.x = o.clientX;
                 t.y = o.clientY;
                 callBack(new pointerData(

@@ -6,7 +6,9 @@ export { tag, tagName } from "./dom/tool/parsingElement.js";
 export { NAsse } from "./dom/feature/NAsse.js";
 export { NAttr } from "./dom/feature/NAttr.js";
 export { NEvent } from "./dom/feature/NEvent.js";
-export { NStyle } from "./dom/feature/NStyle.js";
+export { NStyle, createNStyle } from "./dom/feature/NStyle.js";
+export { NTagName } from "./dom/feature/NTagName.js";
+export { NList } from "./dom/feature/NList.js";
 
 export { NElement, getNElement } from "./dom/element/NElement.js";
 

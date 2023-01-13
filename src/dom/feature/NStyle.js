@@ -1,8 +1,11 @@
-import { NElement } from "../../../dist/qwqframe.js";
+import { NElement } from "../element/NElement.js";
 
 /**
+ * @typedef {(keyof CSSStyleDeclaration & string) | (string & {})} keyOfStyle
+ */
+/**
  * 样式
- * @template {keyof CSSStyleDeclaration} T
+ * @template {keyOfStyle} T
  */
 export class NStyle
 {
@@ -11,13 +14,13 @@ export class NStyle
      */
     key = null;
     /**
-     * @type {CSSStyleDeclaration[T]}
+     * @type {string}
      */
     value = null;
 
     /**
      * @param {T} key
-     * @param {CSSStyleDeclaration[T]} value
+     * @param {string} value
      */
     constructor(key, value)
     {
@@ -34,3 +37,15 @@ export class NStyle
         e.setStyle(this.key, /** @type {string | number} */(this.value));
     }
 }
+
+/**
+ * 创建NStyle 省略new
+ * @param {keyOfStyle} key
+ * @param {string} value
+ */
+export function createNStyle(key, value)
+{
+    return new NStyle(key, value);
+}
+
+createNStyle("asd", "");

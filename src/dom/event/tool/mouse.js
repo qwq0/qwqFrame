@@ -11,12 +11,12 @@ export function mouseBind(element, callBack, button = 0)
 {
     element.addEventListener("mousedown", (/** @type {MouseEvent} */ e) => mouseDown(e), false);
 
-    var mousemoveP = (/** @type {MouseEvent} */ e) => mouseMove(e);
-    var mouseupP = (/** @type {MouseEvent} */ e) => mouseUp(e);
+    let mousemoveP = (/** @type {MouseEvent} */ e) => mouseMove(e);
+    let mouseupP = (/** @type {MouseEvent} */ e) => mouseUp(e);
 
-    var x = 0, y = 0;
-    var sx = 0, sy = 0;
-    var leftDown = false;
+    let x = 0, y = 0;
+    let sx = 0, sy = 0;
+    let leftDown = false;
     /**
      * 鼠标处理函数(按下)
      * @param {MouseEvent} e 
@@ -49,8 +49,8 @@ export function mouseBind(element, callBack, button = 0)
         if (leftDown)
         {
             // e.preventDefault();
-            var vx = e.clientX - x;
-            var vy = e.clientY - y;
+            let vx = e.clientX - x;
+            let vy = e.clientY - y;
             x = e.clientX;
             y = e.clientY;
             callBack(new pointerData(
@@ -67,8 +67,8 @@ export function mouseBind(element, callBack, button = 0)
      */
     function mouseUp(e)
     {
-        var vx = e.clientX - x;
-        var vy = e.clientY - y;
+        let vx = e.clientX - x;
+        let vy = e.clientY - y;
         x = e.clientX;
         y = e.clientY;
         window.removeEventListener("mousemove", mousemoveP, false);

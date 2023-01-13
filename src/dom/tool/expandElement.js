@@ -16,9 +16,9 @@ import { NElement, getNElement } from "../element/NElement.js";
  *     tagName?: string, // html标签名(标签类型)
  *     classList?: Array<string>, // html标签类名列表
  *     text?: string, // 文本
- *     style?: Object<keyof CSSStyleDeclaration, string | number>, // 样式对象
+ *     style?: {[x in (keyof CSSStyleDeclaration)]?: string | number} | {[x: string]: string | number}, // 样式对象
  *     attr?: Object<string, string>, // 属性对象(HTMLElement的附加属性)
- *     event?: Object<string, function(Event) : void>, // 事件绑定
+ *     event?: {[x in (keyof HTMLElementEventMap)]?: (function(Event) : void)} | {[x: string]: (function(Event) : void)}, // 事件绑定
  *     child?: Array<EDObj | NElement>, // 子节点
  *     assembly?: Array<function(NElement) : void | NElement>, // 流水线
  *     [x: string]: any
@@ -28,7 +28,7 @@ import { NElement, getNElement } from "../element/NElement.js";
 */
 function expEle(obj)
 {
-    var now = getNElement(document.createElement(obj.tagName ? obj.tagName : "div"));
+    let now = getNElement(document.createElement(obj.tagName ? obj.tagName : "div"));
 
     ([
         "height",
@@ -43,7 +43,9 @@ function expEle(obj)
     ]).forEach(key =>
     {
         if (obj[key])
+        {
             now.setStyle(key, obj[key]);
+        }
     });
 
     if (obj.style)
@@ -59,7 +61,7 @@ function expEle(obj)
         Object.keys(obj.event).forEach(key =>
         {
             if (obj.event[key])
-                now.addEventListener(key, obj.event[key]);
+                now.addEventListener(/** @type {keyof HTMLElementEventMap} */(key), obj.event[key]);
         });
     }
     if (obj.child) // 若有子元素
@@ -79,7 +81,7 @@ function expEle(obj)
     {
         obj.assembly.forEach(o =>
         {
-            var e = o(now);
+            let e = o(now);
             if (e)
                 now = e;
         });
@@ -99,12 +101,12 @@ function preC(obj, def)
      * 当前结果
      * @type {EDObj}
      */
-    var now = {};
+    let now = {};
     /**
      * 缓存当前定义 之后回退
      * @type {EDObj}
      */
-    var nowDef = {};
+    let nowDef = {};
     Object.keys(def).forEach(key => now[key] = def[key]);
     Object.keys(obj).forEach(key =>
     {

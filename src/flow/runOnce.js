@@ -8,7 +8,7 @@
  */
 export function runOnce(func)
 {
-    var runned = false;
+    let runned = false;
     return /** @type {T} */ ((...para) =>
     {
         if (runned)

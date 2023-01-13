@@ -1,8 +1,15 @@
-import { NElement } from "../../../dist/qwqframe.js";
+import { NElement } from "../element/NElement.js";
 
 /**
+ * @typedef {{
+ *      [x in (keyof HTMLElement)]: any
+ *  } | {
+ *      [x: string]: any
+ * }} keyObjectOfHtmlElementAttr
+ */
+/**
  * 属性
- * @template {(keyof HTMLElement) | string} T
+ * @template {keyof keyObjectOfHtmlElementAttr} T
  */
 export class NAttr
 {
@@ -13,13 +20,13 @@ export class NAttr
     /**
      * 若为函数则应用时调用
      * 若有返回值则赋值到属性
-     * @type {string | number | function(any): any}
+     * @type {string | number | boolean | Function}
      */
     value = null;
 
     /**
      * @param {T} key
-     * @param {string | number | function(any): any} value
+     * @param {string | number | boolean | Function} value
      */
     constructor(key, value)
     {

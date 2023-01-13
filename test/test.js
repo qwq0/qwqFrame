@@ -1,11 +1,11 @@
-import { NStyle } from "../src/dom/feature/NStyle.js";
+import { createNStyle, NStyle } from "../src/dom/feature/NStyle.js";
 import { NEvent } from "../src/dom/feature/NEvent.js";
 import { tag, tagName } from "../src/dom/tool/parsingElement.js";
-import { getNElement } from "../src/index.js";
+import { cssG, expandElement, getNElement, NList } from "../src/index.js";
 
-var body = getNElement(document.body);
+let body = getNElement(document.body);
 
-var testElement = tag`
+let testElement_1 = tag`
     测试
     ${new NStyle("color", "red")}
 
@@ -28,4 +28,18 @@ var testElement = tag`
     `}
 `;
 
-body.addChild(testElement);
+let testElement_2 = NList.getElement([
+    createNStyle("accentColors", ""),
+    createNStyle("a", ""),
+    createNStyle("", "")
+]);
+let testElement_3 = expandElement({
+    style: {
+        "color": cssG.rgb(255, 255, 200),
+        "a": ""
+    }
+});
+
+body.addChild(testElement_1);
+body.addChild(testElement_2);
+body.addChild(testElement_3);

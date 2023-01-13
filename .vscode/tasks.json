@@ -14,13 +14,23 @@
             }
         },
         {
+            "label": "build types",
+            "type": "shell",
+            "command": "tsc ./src/index.js --declaration --allowJs --emitDeclarationOnly --strictNullChecks --exactOptionalPropertyTypes --outdir ./dist/types | rollup -i dist/types/index.d.ts -o dist/qwqframe.d.ts -f es -p rollup-plugin-dts",
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
             "label": "build lib (with map)",
             "type": "shell",
             "command": "rollup -i src/index.js -o dist/qwqframe-withMap.js -f es -m",
             "problemMatcher": [],
             "group": {
                 "kind": "build",
-                "isDefault": true
+                "isDefault": false
             }
         },
         {
@@ -30,7 +40,7 @@
             "problemMatcher": [],
             "group": {
                 "kind": "build",
-                "isDefault": true
+                "isDefault": false
             }
         }
     ]

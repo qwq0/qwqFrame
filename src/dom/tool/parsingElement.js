@@ -12,15 +12,15 @@ import { NStyle } from "../feature/NStyle.js";
  */
 function parsingElement(tagName, strings, ...keys)
 {
-    var ret = getNElement(document.createElement(tagName));
-    for (var i = 0; i < strings.length; i++)
+    let ret = getNElement(document.createElement(tagName));
+    for (let i = 0; i < strings.length; i++)
     {
-        var text = strings[i].trim();
+        let text = strings[i].trim();
         if (text)
             ret.element.appendChild(document.createTextNode(text));
         if (keys[i])
         {
-            var nowKey = keys[i];
+            let nowKey = keys[i];
             if (nowKey instanceof NElement)
                 ret.addChild(nowKey);
             else if (nowKey instanceof NStyle)

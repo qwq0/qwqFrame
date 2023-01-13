@@ -1,7 +1,7 @@
 /**
  * 键盘对应表
  */
-var table = {
+let table = {
     "~": "`",
     "!": "1",
     "@": "2",
@@ -24,14 +24,14 @@ var table = {
     ">": ".",
     "?": "/"
 };
-var capitalA = "A".charCodeAt(0);
-var lowercaseA = "a".charCodeAt(0);
-for (var i = 0; i < 26; i++)
+let capitalA = "A".charCodeAt(0);
+let lowercaseA = "a".charCodeAt(0);
+for (let i = 0; i < 26; i++)
     table[String.fromCharCode(capitalA + i)] = String.fromCharCode(lowercaseA + i);
 export { table };
 
 
-var keyMap = new Map();
+let keyMap = new Map();
 /**
  * 按下键时调用
  * @param {string} keyName

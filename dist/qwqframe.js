@@ -40,7 +40,7 @@ function forEach(o, callback)
 {
     if (!o)
         return false;
-    for (var i = 0, Li = o.length; i < Li; i++)
+    for (let i = 0, Li = o.length; i < Li; i++)
         if (o[i] != undefined && callback(o[i], i))
             return true;
     return false;
@@ -113,7 +113,7 @@ class NElement
      */
     insChild(chi, pos)
     {
-        var e = this.element;
+        let e = this.element;
         if (typeof (pos) == "number")
         {
             if (pos >= 0 || pos < e.childElementCount)
@@ -142,7 +142,7 @@ class NElement
      */
     childInd(chi)
     {
-        var ind = -1;
+        let ind = -1;
         forEach(this.element.children, (o, i) =>
         {
             if (o == chi.element)
@@ -169,10 +169,10 @@ class NElement
      */
     removeChilds(begin = 0, end = Infinity)
     {
-        var e = this.element;
+        let e = this.element;
         if (end > e.childElementCount)
             end = e.childElementCount;
-        for (var i = begin; i < end; i++)
+        for (let i = begin; i < end; i++)
             e.children[begin].remove();
     }
 
@@ -198,17 +198,18 @@ class NElement
 
     /**
      * 修改样式
-     * @param {keyof CSSStyleDeclaration | string} styleName
+     * @param {import("../feature/NStyle").keyOfStyle} styleName
      * @param {string | number} value
      */
     setStyle(styleName, value)
     {
+        // @ts-expect-error
         this.element.style[styleName] = value;
     }
 
     /**
      * 获取样式
-     * @param {keyof CSSStyleDeclaration | string} styleName
+     * @param {import("../feature/NStyle").keyOfStyle} styleName
      * @returns {string | number}
      */
     getStyle(styleName)
@@ -219,13 +220,13 @@ class NElement
 
     /**
      * 修改多个样式
-     * @param {Object<keyof CSSStyleDeclaration | string, string | number>} obj
+     * @param {{ [x in import("../feature/NStyle").keyOfStyle]?: string | number | undefined }} obj
      */
     setStyles(obj)
     {
         forEach(Object.keys(obj), (key) =>
         {
-            var value = obj[key];
+            let value = obj[key];
             if (isAmong(typeof (value), "number", "string"))
                 this.element.style[key] = obj[key];
         });
@@ -238,6 +239,15 @@ class NElement
     setText(text)
     {
         this.element.innerText = text;
+    }
+
+    /**
+     * 添加文本
+     * @param {string} text
+     */
+    addText(text)
+    {
+        this.element.appendChild(document.createTextNode(text));
     }
 
     /**
@@ -260,8 +270,9 @@ class NElement
 
     /**
      * 添加事件监听器
-     * @param {string} eventName
-     * @param {function(Event) : void} callBack
+     * @template {keyof HTMLElementEventMap} K
+     * @param {K} eventName
+     * @param {function(HTMLElementEventMap[K]): any} callBack
      * @param {boolean | AddEventListenerOptions} [options]
      */
     addEventListener(eventName, callBack, options)
@@ -292,13 +303,23 @@ class NElement
 
     /**
      * 流水线
-     * @param {function(typeof this): void} asseFunc 流水线函数(无视返回值)
+     * @param {function(NElement): void} asseFunc 流水线函数(无视返回值)
      * @returns {NElement} 返回本身
      */
     asse(asseFunc)
     {
         asseFunc(this);
         return this;
+    }
+
+    /**
+     * 获取标签名
+     * 标签名使用小写字母
+     * @returns {keyof HTMLElementTagNameMap}
+     */
+    getTagName()
+    {
+        return (/** @type {keyof HTMLElementTagNameMap} */(this.element.tagName.toLowerCase()));
     }
 }
 
@@ -335,9 +356,9 @@ function getNElement(element)
  *     tagName?: string, // html标签名(标签类型)
  *     classList?: Array<string>, // html标签类名列表
  *     text?: string, // 文本
- *     style?: Object<keyof CSSStyleDeclaration, string | number>, // 样式对象
+ *     style?: {[x in (keyof CSSStyleDeclaration)]?: string | number} | {[x: string]: string | number}, // 样式对象
  *     attr?: Object<string, string>, // 属性对象(HTMLElement的附加属性)
- *     event?: Object<string, function(Event) : void>, // 事件绑定
+ *     event?: {[x in (keyof HTMLElementEventMap)]?: (function(Event) : void)} | {[x: string]: (function(Event) : void)}, // 事件绑定
  *     child?: Array<EDObj | NElement>, // 子节点
  *     assembly?: Array<function(NElement) : void | NElement>, // 流水线
  *     [x: string]: any
@@ -347,7 +368,7 @@ function getNElement(element)
 */
 function expEle(obj)
 {
-    var now = getNElement(document.createElement(obj.tagName ? obj.tagName : "div"));
+    let now = getNElement(document.createElement(obj.tagName ? obj.tagName : "div"));
 
     ([
         "height",
@@ -362,7 +383,9 @@ function expEle(obj)
     ]).forEach(key =>
     {
         if (obj[key])
+        {
             now.setStyle(key, obj[key]);
+        }
     });
 
     if (obj.style)
@@ -378,7 +401,7 @@ function expEle(obj)
         Object.keys(obj.event).forEach(key =>
         {
             if (obj.event[key])
-                now.addEventListener(key, obj.event[key]);
+                now.addEventListener(/** @type {keyof HTMLElementEventMap} */(key), obj.event[key]);
         });
     }
     if (obj.child) // 若有子元素
@@ -398,7 +421,7 @@ function expEle(obj)
     {
         obj.assembly.forEach(o =>
         {
-            var e = o(now);
+            let e = o(now);
             if (e)
                 now = e;
         });
@@ -418,12 +441,12 @@ function preC(obj, def)
      * 当前结果
      * @type {EDObj}
      */
-    var now = {};
+    let now = {};
     /**
      * 缓存当前定义 之后回退
      * @type {EDObj}
      */
-    var nowDef = {};
+    let nowDef = {};
     Object.keys(def).forEach(key => now[key] = def[key]);
     Object.keys(obj).forEach(key =>
     {
@@ -501,7 +524,13 @@ function divideLayout_LR(leftSize, a, b)
             a,
             b
         ],
-        assembly: [e => { e.getChild(0).setStyle("width", leftSize); }]
+        assembly: [e =>
+        {
+            e.getChild(0).setStyles({
+                width: leftSize,
+                minWidth: leftSize
+            });
+        }]
     }));
 }
 
@@ -522,7 +551,13 @@ function divideLayout_UD(upSize, a, b)
             a,
             b
         ],
-        assembly: [e => { e.getChild(0).setStyle("height", upSize); }]
+        assembly: [e =>
+        {
+            e.getChild(0).setStyles({
+                height: upSize,
+                minHeight: upSize
+            });
+        }]
     }));
 }
 
@@ -543,7 +578,13 @@ function divideLayout_RL(rightSize, a, b)
             a,
             b
         ],
-        assembly: [e => { e.getChild(0).setStyle("width", rightSize); }]
+        assembly: [e =>
+        {
+            e.getChild(0).setStyles({
+                width: rightSize,
+                minWidth: rightSize
+            });
+        }]
     }));
 }
 
@@ -564,7 +605,13 @@ function divideLayout_DU(downSize, a, b)
             a,
             b
         ],
-        assembly: [e => { e.getChild(0).setStyle("height", downSize); }]
+        assembly: [e =>
+        {
+            e.getChild(0).setStyles({
+                height: downSize,
+                minHeight: downSize
+            });
+        }]
     }));
 }
 
@@ -580,7 +627,7 @@ function divideLayout(p)
         alignItems: "stretch",
         justifyContent: "space-between"
     });
-    var childs = p.getChilds();
+    let childs = p.getChilds();
     childs[1].setStyle("flexGrow", 1);
     return p;
 }
@@ -594,26 +641,38 @@ class NEvent
     /**
      * @type {T}
      */
-    key = null;
+    eventName = null;
     /**
-     * @type {function(Event) : void}
+     * @type {function(HTMLElementEventMap[T]): any}
      */
     callback = null;
 
     /**
      * @param {T} key
-     * @param {function(Event) : void} callback
+     * @param {function(HTMLElementEventMap[T]): any} callback
      */
     constructor(key, callback)
     {
-        this.key = key;
+        this.eventName = key;
         this.callback = callback;
+    }
+
+    /**
+     * 将此特征应用于元素
+     * @param {NElement} e
+     */
+    apply(e)
+    {
+        e.addEventListener(this.eventName, this.callback);
     }
 }
 
 /**
+ * @typedef {(keyof CSSStyleDeclaration) | (string & {})} keyOfStyle
+ */
+/**
  * 样式
- * @template {keyof CSSStyleDeclaration} T
+ * @template {keyOfStyle} T
  */
 class NStyle
 {
@@ -622,20 +681,41 @@ class NStyle
      */
     key = null;
     /**
-     * @type {CSSStyleDeclaration[T]}
+     * @type {string}
      */
     value = null;
 
     /**
      * @param {T} key
-     * @param {CSSStyleDeclaration[T]} value
+     * @param {string} value
      */
     constructor(key, value)
     {
         this.key = key;
         this.value = value;
     }
+
+    /**
+     * 将此特征应用于元素
+     * @param {NElement} e
+     */
+    apply(e)
+    {
+        e.setStyle(this.key, /** @type {string | number} */(this.value));
+    }
 }
+
+/**
+ * 创建NStyle 省略new
+ * @param {keyOfStyle} key
+ * @param {string} value
+ */
+function createNStyle(key, value)
+{
+    return new NStyle(key, value);
+}
+
+createNStyle("asd", "");
 
 /**
  * 解析标签
@@ -647,21 +727,21 @@ class NStyle
  */
 function parsingElement(tagName, strings, ...keys)
 {
-    var ret = getNElement(document.createElement(tagName));
-    for (var i = 0; i < strings.length; i++)
+    let ret = getNElement(document.createElement(tagName));
+    for (let i = 0; i < strings.length; i++)
     {
-        var text = strings[i].trim();
+        let text = strings[i].trim();
         if (text)
             ret.element.appendChild(document.createTextNode(text));
         if (keys[i])
         {
-            var nowKey = keys[i];
+            let nowKey = keys[i];
             if (nowKey instanceof NElement)
                 ret.addChild(nowKey);
             else if (nowKey instanceof NStyle)
                 ret.setStyle(nowKey.key, nowKey.value);
             else if (nowKey instanceof NEvent)
-                ret.addEventListener(nowKey.key, nowKey.callback);
+                ret.addEventListener(nowKey.eventName, nowKey.callback);
             else if (nowKey)
                 throw "parsingElement error: Unprocessed type";
         }
@@ -689,6 +769,233 @@ function tag(strings, ...keys)
 function tagName(name)
 {
     return parsingElement.bind(null, name);
+}
+
+/**
+ * 流水线
+ */
+class NAsse
+{
+    /**
+     * @type {function(NElement): void}
+     */
+    callback = null;
+
+    /**
+     * @param {function(NElement): void} callback
+     */
+    constructor(callback)
+    {
+        this.callback = callback;
+    }
+
+    /**
+     * 将此特征应用于元素
+     * @param {NElement} e
+     */
+    apply(e)
+    {
+        this.callback(e);
+    }
+}
+
+/**
+ * @typedef {{
+ *      [x in (keyof HTMLElement)]: any
+ *  } | {
+ *      [x: string]: any
+ * }} keyObjectOfHtmlElementAttr
+ */
+/**
+ * 属性
+ * @template {keyof keyObjectOfHtmlElementAttr} T
+ */
+class NAttr
+{
+    /**
+     * @type {T}
+     */
+    key = null;
+    /**
+     * 若为函数则应用时调用
+     * 若有返回值则赋值到属性
+     * @type {string | number | boolean | Function}
+     */
+    value = null;
+
+    /**
+     * @param {T} key
+     * @param {string | number | boolean | Function} value
+     */
+    constructor(key, value)
+    {
+        this.key = key;
+        this.value = value;
+    }
+
+    /**
+     * 将此特征应用于元素
+     * @param {NElement} e
+     */
+    apply(e)
+    {
+        if (typeof (this.value) == "function")
+        {
+            let cbRet = this.value(e.element[this.key]);
+            if (cbRet != undefined)
+                e.element[this.key] = cbRet;
+        }
+        else
+            e.element[this.key] = this.value;
+    }
+}
+
+/**
+ * 标签名
+ * 标签名使用小写字母
+ * 不包含此类的特征列表默认为div
+ * 一层特征列表只能有唯一tagName
+ * @template {keyof HTMLElementTagNameMap} T
+ */
+class NTagName
+{
+    /**
+     * @type {T}
+     */
+    tagName = null;
+
+    /**
+     * @param {T} tagName
+     */
+    constructor(tagName)
+    {
+        this.tagName = /** @type {T} */(tagName.toLowerCase());
+    }
+}
+
+/**
+ * 特征列表
+ * @typedef {Array<string | NTagName | NStyle | NAttr | NEvent | NAsse | NList | NList_list | NElement>} NList_list
+ */
+class NList
+{
+    /**
+     * @type {NList_list}
+     */
+    list = null;
+    /**
+     * 拉平特征
+     * (默认)标记为false将作为子元素节点
+     * 标记为true将作为上层节点的特征列表
+     * @type {boolean}
+     */
+    flatFlag = false;
+
+    /**
+     * @param {NList_list} list
+     */
+    constructor(list)
+    {
+        this.list = list;
+    }
+
+    /**
+     * 为元素应用特征列表
+     * @param {NElement<HTMLElement>} element
+     */
+    apply(element)
+    {
+        let tagName = element.getTagName();
+        this.list.forEach(o =>
+        {
+            if (typeof (o) == "string") // 内部文本
+                element.addText(o);
+            else if (o instanceof NTagName) // 标签名
+            {
+                if (tagName != o.tagName)
+                    throw "(NList) The feature tagName does not match the element";
+            }
+            else if (
+                (o instanceof NStyle) || // 样式
+                (o instanceof NAttr) || // 元素属性
+                (o instanceof NEvent) || // 事件
+                (o instanceof NAsse) // 流水线
+            )
+                o.apply(element);
+            else if (o instanceof NElement) // 子元素
+                element.addChild(o);
+            else if (o instanceof NList) // 子列表
+            {
+                if (o.flatFlag) // 子特征(列表)
+                    o.apply(element);
+                else // 子元素(列表)
+                    element.addChild(o.getElement());
+            }
+            else if (Array.isArray(o)) // 子元素(列表)
+                element.addChild(NList.getElement(o));
+            else
+                throw "(NList) Untractable feature types were found";
+        });
+    }
+
+    /**
+     * 获取列表的标签名
+     * @returns {string}
+     */
+    getTagName()
+    {
+        let ret = "";
+        this.list.forEach(o =>
+        {
+            let tagName = "";
+            if (o instanceof NTagName)
+                tagName = o.tagName;
+            else if ((o instanceof NList) && o.flatFlag)
+                tagName = o.getTagName();
+            if (tagName)
+            {
+                if (!ret)
+                    ret = tagName;
+                else if (ret != tagName)
+                    throw "(NList) Multiple TagNames exist in a feature list";
+            }
+        });
+        return ret;
+    }
+
+    /**
+     * 获取(生成)元素
+     * @returns {NElement}
+     */
+    getElement()
+    {
+        let tagName = this.getTagName();
+        if (tagName == "")
+            tagName = "div";
+        let ele = getNElement(document.createElement(tagName));
+        this.apply(ele);
+        return ele;
+    }
+
+    /**
+     * 生成拉平列表
+     * @param {NList_list} list
+     */
+    static flat(list)
+    {
+        let ret = new NList(list);
+        ret.flatFlag = true;
+        return ret;
+    }
+
+    /**
+     * 获取(生成)元素
+     * @param {NList_list} list
+     */
+    static getElement(list)
+    {
+        return (new NList(list)).getElement();
+    }
 }
 
 /**
@@ -772,12 +1079,12 @@ function mouseBind(element, callBack, button = 0)
 {
     element.addEventListener("mousedown", (/** @type {MouseEvent} */ e) => mouseDown(e), false);
 
-    var mousemoveP = (/** @type {MouseEvent} */ e) => mouseMove(e);
-    var mouseupP = (/** @type {MouseEvent} */ e) => mouseUp(e);
+    let mousemoveP = (/** @type {MouseEvent} */ e) => mouseMove(e);
+    let mouseupP = (/** @type {MouseEvent} */ e) => mouseUp(e);
 
-    var x = 0, y = 0;
-    var sx = 0, sy = 0;
-    var leftDown = false;
+    let x = 0, y = 0;
+    let sx = 0, sy = 0;
+    let leftDown = false;
     /**
      * 鼠标处理函数(按下)
      * @param {MouseEvent} e 
@@ -810,8 +1117,8 @@ function mouseBind(element, callBack, button = 0)
         if (leftDown)
         {
             // e.preventDefault();
-            var vx = e.clientX - x;
-            var vy = e.clientY - y;
+            let vx = e.clientX - x;
+            let vy = e.clientY - y;
             x = e.clientX;
             y = e.clientY;
             callBack(new pointerData(
@@ -828,8 +1135,8 @@ function mouseBind(element, callBack, button = 0)
      */
     function mouseUp(e)
     {
-        var vx = e.clientX - x;
-        var vy = e.clientY - y;
+        let vx = e.clientX - x;
+        let vy = e.clientY - y;
         x = e.clientX;
         y = e.clientY;
         window.removeEventListener("mousemove", mousemoveP, false);
@@ -867,7 +1174,7 @@ function touchBind(element, callBack)
         passive: true
     });
 
-    var ogTouches = [];
+    let ogTouches = [];
     /**
      * 通过标识符取触摸点数据索引
      * @param {any} id
@@ -875,7 +1182,7 @@ function touchBind(element, callBack)
      */
     function getTouchesInd(id)
     {
-        var ret = -1;
+        let ret = -1;
         ogTouches.forEach((o, i) =>
         {
             if (id == o.id)
@@ -893,7 +1200,7 @@ function touchBind(element, callBack)
             e.preventDefault();
         forEach(e.touches, o =>
         {
-            var t = {
+            let t = {
                 id: o.identifier,
                 sx: o.clientX,
                 sy: o.clientY,
@@ -917,12 +1224,12 @@ function touchBind(element, callBack)
     {
         forEach(e.touches, o =>
         {
-            var ind = getTouchesInd(o.identifier);
+            let ind = getTouchesInd(o.identifier);
             if (ind > -1)
             {
-                var t = ogTouches[ind];
-                var vx = o.clientX - t.x;
-                var vy = o.clientY - t.y;
+                let t = ogTouches[ind];
+                let vx = o.clientX - t.x;
+                let vy = o.clientY - t.y;
                 t.x = o.clientX;
                 t.y = o.clientY;
                 callBack(new pointerData(
@@ -942,13 +1249,13 @@ function touchBind(element, callBack)
     {
         forEach(e.touches, o =>
         {
-            var ind = getTouchesInd(o.identifier);
+            let ind = getTouchesInd(o.identifier);
             if (ind > -1)
             {
-                var t = ogTouches[ind];
+                let t = ogTouches[ind];
                 ogTouches.splice(ind, 1);
-                var vx = o.clientX - t.x;
-                var vy = o.clientY - t.y;
+                let vx = o.clientX - t.x;
+                let vy = o.clientY - t.y;
                 t.x = o.clientX;
                 t.y = o.clientY;
                 callBack(new pointerData(
@@ -972,7 +1279,7 @@ function touchBind(element, callBack)
  */
 function runOnce(func)
 {
-    var runned = false;
+    let runned = false;
     return /** @type {T} */ ((...para) =>
     {
         if (runned)
@@ -985,4 +1292,4 @@ function runOnce(func)
     });
 }
 
-export { NElement, NEvent, NStyle, cssG, divideLayout_DU, divideLayout_LR, divideLayout_RL, divideLayout_UD, expandElement, getNElement, mouseBind, runOnce, tag, tagName, touchBind };
+export { NAsse, NAttr, NElement, NEvent, NList, NStyle, NTagName, createNStyle, cssG, divideLayout_DU, divideLayout_LR, divideLayout_RL, divideLayout_UD, expandElement, getNElement, mouseBind, runOnce, tag, tagName, touchBind };

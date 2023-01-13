@@ -18,7 +18,13 @@ export function divideLayout_LR(leftSize, a, b)
             a,
             b
         ],
-        assembly: [e => { e.getChild(0).setStyle("width", leftSize); }]
+        assembly: [e =>
+        {
+            e.getChild(0).setStyles({
+                width: leftSize,
+                minWidth: leftSize
+            });
+        }]
     }));
 }
 
@@ -39,7 +45,13 @@ export function divideLayout_UD(upSize, a, b)
             a,
             b
         ],
-        assembly: [e => { e.getChild(0).setStyle("height", upSize); }]
+        assembly: [e =>
+        {
+            e.getChild(0).setStyles({
+                height: upSize,
+                minHeight: upSize
+            });
+        }]
     }));
 }
 
@@ -60,7 +72,13 @@ export function divideLayout_RL(rightSize, a, b)
             a,
             b
         ],
-        assembly: [e => { e.getChild(0).setStyle("width", rightSize); }]
+        assembly: [e =>
+        {
+            e.getChild(0).setStyles({
+                width: rightSize,
+                minWidth: rightSize
+            });
+        }]
     }));
 }
 
@@ -81,7 +99,13 @@ export function divideLayout_DU(downSize, a, b)
             a,
             b
         ],
-        assembly: [e => { e.getChild(0).setStyle("height", downSize); }]
+        assembly: [e =>
+        {
+            e.getChild(0).setStyles({
+                height: downSize,
+                minHeight: downSize
+            });
+        }]
     }));
 }
 
@@ -97,7 +121,7 @@ function divideLayout(p)
         alignItems: "stretch",
         justifyContent: "space-between"
     });
-    var childs = p.getChilds();
+    let childs = p.getChilds();
     childs[1].setStyle("flexGrow", 1);
     return p;
 }

@@ -1,4 +1,4 @@
-import { NElement } from "../../../dist/qwqframe.js";
+import { NElement } from "../element/NElement.js";
 
 /**
  * 事件

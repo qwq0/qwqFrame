@@ -10,7 +10,7 @@ export function keyboardBind(element, callBack)
 {
     element.addEventListener("keydown", e =>
     {
-        var keyName = (table[e.key] ? table[e.key] : e.key);
+        let keyName = (table[e.key] ? table[e.key] : e.key);
         callBack(new keyData(
             keyName,
             true,
@@ -19,7 +19,7 @@ export function keyboardBind(element, callBack)
     });
     element.addEventListener("keyup", e =>
     {
-        var keyName = (table[e.key] ? table[e.key] : e.key);
+        let keyName = (table[e.key] ? table[e.key] : e.key);
         keyUp(keyName);
         callBack(new keyData(
             keyName,

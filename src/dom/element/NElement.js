@@ -54,7 +54,7 @@ export class NElement
      */
     insChild(chi, pos)
     {
-        var e = this.element;
+        let e = this.element;
         if (typeof (pos) == "number")
         {
             if (pos >= 0 || pos < e.childElementCount)
@@ -83,7 +83,7 @@ export class NElement
      */
     childInd(chi)
     {
-        var ind = -1;
+        let ind = -1;
         forEach(this.element.children, (o, i) =>
         {
             if (o == chi.element)
@@ -110,10 +110,10 @@ export class NElement
      */
     removeChilds(begin = 0, end = Infinity)
     {
-        var e = this.element;
+        let e = this.element;
         if (end > e.childElementCount)
             end = e.childElementCount;
-        for (var i = begin; i < end; i++)
+        for (let i = begin; i < end; i++)
             e.children[begin].remove();
     }
 
@@ -139,17 +139,18 @@ export class NElement
 
     /**
      * 修改样式
-     * @param {keyof CSSStyleDeclaration | string} styleName
+     * @param {import("../feature/NStyle").keyOfStyle} styleName
      * @param {string | number} value
      */
     setStyle(styleName, value)
     {
+        // @ts-expect-error
         this.element.style[styleName] = value;
     }
 
     /**
      * 获取样式
-     * @param {keyof CSSStyleDeclaration | string} styleName
+     * @param {import("../feature/NStyle").keyOfStyle} styleName
      * @returns {string | number}
      */
     getStyle(styleName)
@@ -160,13 +161,13 @@ export class NElement
 
     /**
      * 修改多个样式
-     * @param {Object<keyof CSSStyleDeclaration | string, string | number>} obj
+     * @param {{ [x in (import("../feature/NStyle").keyOfStyle)]?: string | number }} obj
      */
     setStyles(obj)
     {
         forEach(Object.keys(obj), (key) =>
         {
-            var value = obj[key];
+            let value = obj[key];
             if (isAmong(typeof (value), "number", "string"))
                 this.element.style[key] = obj[key];
         });
@@ -179,6 +180,15 @@ export class NElement
     setText(text)
     {
         this.element.innerText = text;
+    }
+
+    /**
+     * 添加文本
+     * @param {string} text
+     */
+    addText(text)
+    {
+        this.element.appendChild(document.createTextNode(text));
     }
 
     /**
@@ -234,13 +244,23 @@ export class NElement
 
     /**
      * 流水线
-     * @param {function(typeof this): void} asseFunc 流水线函数(无视返回值)
+     * @param {function(NElement): void} asseFunc 流水线函数(无视返回值)
      * @returns {NElement} 返回本身
      */
     asse(asseFunc)
     {
         asseFunc(this);
         return this;
+    }
+
+    /**
+     * 获取标签名
+     * 标签名使用小写字母
+     * @returns {keyof HTMLElementTagNameMap}
+     */
+    getTagName()
+    {
+        return (/** @type {keyof HTMLElementTagNameMap} */(this.element.tagName.toLowerCase()));
     }
 }
 
