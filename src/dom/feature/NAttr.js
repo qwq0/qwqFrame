@@ -1,15 +1,11 @@
 import { NElement } from "../element/NElement.js";
 
 /**
- * @typedef {{
- *      [x in (keyof HTMLElement)]: any
- *  } | {
- *      [x: string]: any
- * }} keyObjectOfHtmlElementAttr
+ * @typedef {(keyof HTMLElement & string) | (string & {})} keyObjectOfHtmlElementAttr
  */
 /**
  * 属性
- * @template {keyof keyObjectOfHtmlElementAttr} T
+ * @template {keyObjectOfHtmlElementAttr} T
  */
 export class NAttr
 {

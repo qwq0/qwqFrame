@@ -220,7 +220,7 @@ class NElement
 
     /**
      * 修改多个样式
-     * @param {{ [x in import("../feature/NStyle").keyOfStyle]?: string | number | undefined }} obj
+     * @param {{ [x in (import("../feature/NStyle").keyOfStyle)]?: string | number }} obj
      */
     setStyles(obj)
     {
@@ -668,7 +668,7 @@ class NEvent
 }
 
 /**
- * @typedef {(keyof CSSStyleDeclaration) | (string & {})} keyOfStyle
+ * @typedef {(keyof CSSStyleDeclaration & string) | (string & {})} keyOfStyle
  */
 /**
  * 样式
@@ -800,15 +800,11 @@ class NAsse
 }
 
 /**
- * @typedef {{
- *      [x in (keyof HTMLElement)]: any
- *  } | {
- *      [x: string]: any
- * }} keyObjectOfHtmlElementAttr
+ * @typedef {(keyof HTMLElement & string) | (string & {})} keyObjectOfHtmlElementAttr
  */
 /**
  * 属性
- * @template {keyof keyObjectOfHtmlElementAttr} T
+ * @template {keyObjectOfHtmlElementAttr} T
  */
 class NAttr
 {
