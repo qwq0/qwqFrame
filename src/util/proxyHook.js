@@ -50,7 +50,6 @@ export function createHookObj(srcObj)
                 });
                 if (hookSet.size == 0)
                     hookMap.delete(key);
-                console.log(`[debug]触发了钩子 影响了${hookSet.size}个值`);
             }
             return ret;
         }
