@@ -1,4 +1,5 @@
 import { forEach, isAmong } from "../../util/forEach.js";
+import { HookBindCallback, HookBindInfo, HookBindValue } from "../../util/proxyHook.js";
 
 /**
  * dom元素的封装
@@ -7,9 +8,15 @@ import { forEach, isAmong } from "../../util/forEach.js";
 export class NElement
 {
     /**
+     * 元素对象
      * @type {ElementObjectType}
      */
     element = null;
+    /**
+     * 样式名 到 钩子绑定 映射
+     * @type {Map<string, HookBindValue | HookBindCallback>}
+     */
+    styleHooks = new Map();
 
     /**
      * @param {ElementObjectType} elementObj
@@ -140,14 +147,28 @@ export class NElement
     /**
      * 修改样式
      * @param {import("../feature/NStyle").keyOfStyle} styleName
-     * @param {string | number} value
+     * @param {string | number | HookBindInfo} value
+     * @param {HookBindValue | HookBindCallback} [hookObj]
      */
-    setStyle(styleName, value)
+    setStyle(styleName, value, hookObj)
     {
-        // @ts-expect-error
-        this.element.style[styleName] = value;
+        if (hookObj != this.styleHooks.get(styleName))
+        {
+            this.styleHooks.get(styleName)?.destroy();
+            if (hookObj != undefined)
+                this.styleHooks.set(styleName, hookObj);
+            else
+                this.styleHooks.delete(styleName);
+        }
+        if (value instanceof HookBindInfo)
+            value.bindToCallback(o =>
+            {
+                this.setStyle(styleName, o, hookObj);
+            }).emit();
+        else
+            // @ts-expect-error
+            this.element.style[styleName] = value;
     }
-
     /**
      * 获取样式
      * @param {import("../feature/NStyle").keyOfStyle} styleName

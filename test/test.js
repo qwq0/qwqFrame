@@ -4,16 +4,14 @@ import { tag, tagName } from "../src/dom/tool/parsingElement.js";
 import { cssG, expandElement, getNElement, NList } from "../src/index.js";
 import { bindValue, createHookObj } from "../src/util/proxyHook.js";
 
-const finalizationRegistry = new FinalizationRegistry(heldValue =>
-{
-    console.log("[debug]垃圾回收", heldValue);
-});
 
 
 let body = getNElement(document.body);
 
 let dataObj = createHookObj({
-    text: "在子节点间插入的动态文本"
+    text: "在子节点间插入的动态文本",
+    color: "black",
+    colorR: 0
 });
 
 let testElement_1 = NList.getElement([
@@ -32,23 +30,25 @@ let testElement_1 = NList.getElement([
     bindValue(dataObj, "text"),
 
     [
-        "子节点3"
+        "子节点3",
+        createNStyle("color", bindValue(dataObj, "color"))
     ],
 
     bindValue(dataObj, "text"),
 
 
     [
-        "子节点4"
+        "子节点4",
+        createNStyle("color", bindValue(dataObj, "colorR", o => `rgb(${o}, 0, 0)`))
     ],
 
     [
         "子节点5"
     ]
 ]);
-finalizationRegistry.register(testElement_1, "testElement_1");
-finalizationRegistry.register(testElement_1.element, "testElement_1.element");
 
+
+let count = 0;
 setInterval(() =>
 {
     // for (let i = 0; i < 100; i++)
@@ -60,18 +60,22 @@ setInterval(() =>
     //     window["test" + i] = null;
     // }
 
-    for (let i = 0; i < 100; i++)
+    for (let i = 0; i < 3; i++)
     {
         let element = null;
         body.addChild(element = NList.getElement([
-            bindValue(dataObj, "text")
+            "" + (++count),
+            bindValue(dataObj, "text"),
+            createNStyle("color", bindValue(dataObj, "color"))
         ]));
         element.remove();
         element = null;
     }
-}, 100);
+}, 160);
 
 setInterval(() => { dataObj.text += "-"; }, 500);
+setInterval(() => { dataObj.color = (dataObj.color == "black" ? "red" : "black"); }, 450);
+setInterval(() => { dataObj.colorR = (dataObj.colorR + 10) % 256; }, 100);
 
 let testElement_2 = expandElement({
     text: "--测试2--",

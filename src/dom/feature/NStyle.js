@@ -1,3 +1,4 @@
+import { HookBindInfo } from "../../util/proxyHook.js";
 import { NElement } from "../element/NElement.js";
 
 /**
@@ -14,13 +15,13 @@ export class NStyle
      */
     key = null;
     /**
-     * @type {string}
+     * @type {string | HookBindInfo}
      */
     value = null;
 
     /**
      * @param {T} key
-     * @param {string} value
+     * @param {string | HookBindInfo} value
      */
     constructor(key, value)
     {
@@ -34,14 +35,14 @@ export class NStyle
      */
     apply(e)
     {
-        e.setStyle(this.key, /** @type {string | number} */(this.value));
+        e.setStyle(this.key, this.value);
     }
 }
 
 /**
  * 创建NStyle 省略new
  * @param {keyOfStyle} key
- * @param {string} value
+ * @param {string | HookBindInfo} value
  */
 export function createNStyle(key, value)
 {
