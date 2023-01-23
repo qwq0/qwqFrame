@@ -1,5 +1,5 @@
 import { NElement } from "../element/NElement.js";
-import { expandElement } from "./expandElement";
+import { expandElement } from "./expandElement.js";
 
 /**
  * 左右方向分割

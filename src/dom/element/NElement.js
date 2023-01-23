@@ -185,10 +185,11 @@ export class NElement
     /**
      * 添加文本
      * @param {string} text
+     * @returns {Text}
      */
     addText(text)
     {
-        this.element.appendChild(document.createTextNode(text));
+        return this.element.appendChild(document.createTextNode(text));
     }
 
     /**

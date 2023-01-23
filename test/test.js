@@ -2,11 +2,85 @@ import { createNStyle, NStyle } from "../src/dom/feature/NStyle.js";
 import { NEvent } from "../src/dom/feature/NEvent.js";
 import { tag, tagName } from "../src/dom/tool/parsingElement.js";
 import { cssG, expandElement, getNElement, NList } from "../src/index.js";
+import { bindValue, createHookObj } from "../src/util/proxyHook.js";
+
+const finalizationRegistry = new FinalizationRegistry(heldValue =>
+{
+    console.log("[debug]垃圾回收", heldValue);
+});
+
 
 let body = getNElement(document.body);
 
-let testElement_1 = tag`
-    测试
+let dataObj = createHookObj({
+    text: "在子节点间插入的动态文本"
+});
+
+let testElement_1 = NList.getElement([
+    "--测试1--",
+
+    [
+        "子节点1"
+    ],
+
+    "在子节点间插入文本",
+
+    [
+        "子节点2"
+    ],
+
+    bindValue(dataObj, "text"),
+
+    [
+        "子节点3"
+    ],
+
+    bindValue(dataObj, "text"),
+
+
+    [
+        "子节点4"
+    ],
+
+    [
+        "子节点5"
+    ]
+]);
+finalizationRegistry.register(testElement_1, "testElement_1");
+finalizationRegistry.register(testElement_1.element, "testElement_1.element");
+
+setInterval(() =>
+{
+    // for (let i = 0; i < 100; i++)
+    // {
+    //     let hookInfo = bindValue(dataObj, "text");
+    //     hookInfo.bindToValue(window["test" + i] = body.addText(""), "data");
+    //     // finalizationRegistry.register(window["test" + i], "window.test" + i);
+    //     window["test" + i].remove();
+    //     window["test" + i] = null;
+    // }
+
+    for (let i = 0; i < 100; i++)
+    {
+        let element = null;
+        body.addChild(element = NList.getElement([
+            bindValue(dataObj, "text")
+        ]));
+        element.remove();
+        element = null;
+    }
+}, 100);
+
+setInterval(() => { dataObj.text += "-"; }, 500);
+
+let testElement_2 = expandElement({
+    text: "--测试2--",
+    style: {
+    }
+});
+
+let testElement_3 = tag`
+    --测试3--
     ${new NStyle("color", "red")}
 
     ${tag`
@@ -27,18 +101,6 @@ let testElement_1 = tag`
         `}
     `}
 `;
-
-let testElement_2 = NList.getElement([
-    createNStyle("accentColors", ""),
-    createNStyle("a", ""),
-    createNStyle("", "")
-]);
-let testElement_3 = expandElement({
-    style: {
-        "color": cssG.rgb(255, 255, 200),
-        "a": ""
-    }
-});
 
 body.addChild(testElement_1);
 body.addChild(testElement_2);

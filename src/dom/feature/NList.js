@@ -1,3 +1,4 @@
+import { HookBindInfo } from "../../util/proxyHook.js";
 import { getNElement, NElement } from "../element/NElement.js";
 import { NAsse } from "./NAsse.js";
 import { NAttr } from "./NAttr.js";
@@ -7,7 +8,7 @@ import { NTagName } from "./NTagName.js";
 
 /**
  * 特征列表
- * @typedef {Array<string | NTagName | NStyle | NAttr | NEvent | NAsse | NList | NList_list | NElement>} NList_list
+ * @typedef {Array<string | HookBindInfo | NTagName | NStyle | NAttr | NEvent | NAsse | NList | NList_list | NElement>} NList_list
  */
 export class NList
 {
@@ -37,36 +38,53 @@ export class NList
      */
     apply(element)
     {
-        let tagName = element.getTagName();
+        const tagName = element.getTagName();
         this.list.forEach(o =>
         {
             if (typeof (o) == "string") // 内部文本
                 element.addText(o);
-            else if (o instanceof NTagName) // 标签名
-            {
-                if (tagName != o.tagName)
-                    throw "(NList) The feature tagName does not match the element";
-            }
-            else if (
-                (o instanceof NStyle) || // 样式
-                (o instanceof NAttr) || // 元素属性
-                (o instanceof NEvent) || // 事件
-                (o instanceof NAsse) // 流水线
-            )
-                o.apply(element);
-            else if (o instanceof NElement) // 子元素
-                element.addChild(o);
-            else if (o instanceof NList) // 子列表
-            {
-                if (o.flatFlag) // 子特征(列表)
-                    o.apply(element);
-                else // 子元素(列表)
-                    element.addChild(o.getElement());
-            }
-            else if (Array.isArray(o)) // 子元素(列表)
-                element.addChild(NList.getElement(o));
             else
-                throw "(NList) Untractable feature types were found";
+            {
+                switch (Object.getPrototypeOf(o)?.constructor)
+                {
+                    case HookBindInfo:{ // 内部文本
+                        const hookInfo =  (/** @type {HookBindInfo} */(o));
+                        const text = element.addText(hookInfo.getValue());
+                        hookInfo.bindToValue(text, "data");
+                        break;
+                    }
+                    case NTagName: { // 标签名
+                        if (tagName != (/** @type {NTagName} */(o)).tagName)
+                            throw "(NList) The feature tagName does not match the element";
+                        break;
+                    }
+                    case NStyle: // 样式
+                    case NAttr: // 元素属性
+                    case NEvent: // 事件
+                    case NAsse: { // 流水线
+                        (/** @type {NStyle | NAttr | NEvent | NAsse} */(o)).apply(element);
+                        break;
+                    }
+                    case NElement: { // 子元素
+                        element.addChild(/** @type {NElement} */(o));
+                        break;
+                    }
+                    case NList: { // 子列表
+                        const childList = (/** @type {NList} */(o));
+                        if (childList.flatFlag) // 子特征(列表)
+                            childList.apply(element);
+                        else // 子元素(列表)
+                            element.addChild(childList.getElement());
+                        break;
+                    }
+                    case Array: { // 子元素(列表)
+                        element.addChild(NList.getElement((/** @type {Array} */(o))));
+                        break;
+                    }
+                    default:
+                        throw "(NList) Untractable feature types were found";
+                }
+            }
         });
     }
 
