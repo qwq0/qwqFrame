@@ -1,6 +1,8 @@
 import { forEach, isAmong } from "../../util/forEach.js";
 import { HookBindCallback, HookBindInfo, HookBindValue } from "../../util/proxyHook.js";
 
+const symbolKey = Symbol("NElement");
+
 /**
  * dom元素的封装
  * @template {HTMLElement} ElementObjectType
@@ -9,16 +11,19 @@ export class NElement
 {
     /**
      * 元素对象
+     * @readonly
      * @type {ElementObjectType}
      */
     element = null;
     /**
      * 样式名 到 钩子绑定 映射
+     * @private
      * @type {Map<string, HookBindValue | HookBindCallback>}
      */
     styleHooks = new Map();
 
     /**
+     * @private
      * @param {ElementObjectType} elementObj
      */
     constructor(elementObj)
@@ -164,7 +169,7 @@ export class NElement
             value.bindToCallback(o =>
             {
                 this.setStyle(styleName, o, hookObj);
-            }).emit();
+            }).bindDestroy(this).emit();
         else
             // @ts-expect-error
             this.element.style[styleName] = value;
@@ -284,21 +289,30 @@ export class NElement
     {
         return (/** @type {keyof HTMLElementTagNameMap} */(this.element.tagName.toLowerCase()));
     }
+
+    /**
+     * 根据HTMLElement对象获取NElement对象
+     * @template {HTMLElement} ElementObjectType
+     * @param {ElementObjectType} element
+     * @returns {NElement<ElementObjectType>}
+     */
+    static byElement(element)
+    {
+        if (element[symbolKey])
+            return element[symbolKey];
+        else
+            return element[symbolKey] = new NElement(element);
+    }
 }
 
-const symbolKey = Symbol("NElement");
 
 /**
  * 根据HTMLElement对象获取NElement对象
- * 如果没有则生成
  * @template {HTMLElement} ElementObjectType
  * @param {ElementObjectType} element
  * @returns {NElement<ElementObjectType>}
  */
 export function getNElement(element)
 {
-    if (element[symbolKey])
-        return element[symbolKey];
-    else
-        return element[symbolKey] = new NElement(element);
+    return NElement.byElement(element);
 }

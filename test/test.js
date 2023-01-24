@@ -1,4 +1,4 @@
-import { createNStyle, NStyle } from "../src/dom/feature/NStyle.js";
+import { createNStyle as style, NStyle } from "../src/dom/feature/NStyle.js";
 import { NEvent } from "../src/dom/feature/NEvent.js";
 import { tag, tagName } from "../src/dom/tool/parsingElement.js";
 import { cssG, expandElement, getNElement, NList } from "../src/index.js";
@@ -14,35 +14,47 @@ let dataObj = createHookObj({
     colorR: 0
 });
 
+let flatList = NList.flat([
+    style("border", "1px black solid"),
+    style("margin", "5px")
+]);
+
 let testElement_1 = NList.getElement([
+    flatList,
+
     "--测试1--",
 
     [
+        flatList,
         "子节点1"
     ],
 
     "在子节点间插入文本",
 
     [
+        flatList,
         "子节点2"
     ],
 
     bindValue(dataObj, "text"),
 
     [
+        flatList,
         "子节点3",
-        createNStyle("color", bindValue(dataObj, "color"))
+        style("color", bindValue(dataObj, "color"))
     ],
 
     bindValue(dataObj, "text"),
 
 
     [
+        flatList,
         "子节点4",
-        createNStyle("color", bindValue(dataObj, "colorR", o => `rgb(${o}, 0, 0)`))
+        style("color", bindValue(dataObj, "colorR", o => `rgb(${o}, 0, 0)`))
     ],
 
     [
+        flatList,
         "子节点5"
     ]
 ]);
@@ -66,7 +78,7 @@ setInterval(() =>
         body.addChild(element = NList.getElement([
             "" + (++count),
             bindValue(dataObj, "text"),
-            createNStyle("color", bindValue(dataObj, "color"))
+            style("color", bindValue(dataObj, "color"))
         ]));
         element.remove();
         element = null;

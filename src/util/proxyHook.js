@@ -284,6 +284,7 @@ export class HookBindCallback
      * 绑定销毁
      * 当目标对象释放时销毁
      * @param {object} targetObj
+     * @returns {HookBindCallback} 返回自身
      */
     bindDestroy(targetObj)
     {
@@ -296,6 +297,7 @@ export class HookBindCallback
         targetRefSet.add(this.callback);
         this.callback = null;
         register.register(targetObj, this, this);
+        return this;
     }
 }
 
