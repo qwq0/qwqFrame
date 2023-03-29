@@ -1,5 +1,6 @@
 import { HookBindInfo } from "../../util/proxyHook.js";
 import { NElement } from "../element/NElement.js";
+import { NList } from "./NList.js";
 
 /**
  * @typedef {(keyof CSSStyleDeclaration & string) | (string & {})} keyOfStyle
@@ -47,6 +48,15 @@ export class NStyle
 export function createNStyle(key, value)
 {
     return new NStyle(key, value);
+}
+
+/**
+ * 创建一组NStyle的flat NList
+ * @param {Object<keyOfStyle, string | HookBindInfo>} obj
+ */
+export function createNStyleList(obj)
+{
+    return NList.flat(Object.keys(obj).map(key => new NStyle(key, obj[key])));
 }
 
 createNStyle("asd", "");

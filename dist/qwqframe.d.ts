@@ -4,6 +4,21 @@ declare namespace cssG {
 }
 
 /**
+ * 创建对象的代理
+ * @template {object} T
+ * @param {T} srcObj
+ * @returns {T}
+ */
+declare function createHookObj<T extends unknown>(srcObj: T): T;
+/**
+ * 获取代理对象中指定值的绑定信息
+ * @template {Object} T
+ * @param {T} proxyObj
+ * @param {[(keyof T) | (string & {}) | symbol] | [...Array<(keyof T) | (string & {}) | symbol>, function(...any): any]} keys
+ * @returns {HookBindInfo}
+ */
+declare function bindValue<T extends unknown>(proxyObj: T, ...keys: [symbol | (string & {}) | keyof T] | [...(symbol | (string & {}) | keyof T)[], (...arg0: any[]) => any]): HookBindInfo;
+/**
  * 钩子绑定信息
  */
 declare class HookBindInfo {
@@ -152,11 +167,160 @@ declare class HookBindValue {
 }
 
 /**
+ * 标签名
+ * 标签名使用小写字母
+ * 不包含此类的特征列表默认为div
+ * 一层特征列表只能有唯一tagName
+ * @template {keyof HTMLElementTagNameMap} T
+ */
+declare class NTagName<T extends keyof HTMLElementTagNameMap> {
+    /**
+     * @param {T} tagName
+     */
+    constructor(tagName: T);
+    /**
+     * @type {T}
+     */
+    tagName: T;
+}
+
+/**
+ * @typedef {(keyof HTMLElement & string) | (string & {})} keyObjectOfHtmlElementAttr
+ */
+/**
+ * 属性
+ * @template {keyObjectOfHtmlElementAttr} T
+ */
+declare class NAttr<T extends keyObjectOfHtmlElementAttr> {
+    /**
+     * @param {T} key
+     * @param {string | number | boolean | Function} value
+     */
+    constructor(key: T, value: string | number | boolean | Function);
+    /**
+     * @type {T}
+     */
+    key: T;
+    /**
+     * 若为函数则应用时调用
+     * 若有返回值则赋值到属性
+     * @type {string | number | boolean | Function}
+     */
+    value: string | number | boolean | Function;
+    /**
+     * 将此特征应用于元素
+     * @param {NElement} e
+     */
+    apply(e: NElement<any>): void;
+}
+type keyObjectOfHtmlElementAttr = (keyof HTMLElement & string) | (string & {});
+
+/**
+ * 事件
+ * @template {keyof HTMLElementEventMap} T
+ */
+declare class NEvent<T extends keyof HTMLElementEventMap> {
+    /**
+     * @param {T} key
+     * @param {function(HTMLElementEventMap[T]): any} callback
+     */
+    constructor(key: T, callback: (arg0: HTMLElementEventMap[T]) => any);
+    /**
+     * @type {T}
+     */
+    eventName: T;
+    /**
+     * @type {function(HTMLElementEventMap[T]): any}
+     */
+    callback: (arg0: HTMLElementEventMap[T]) => any;
+    /**
+     * 将此特征应用于元素
+     * @param {NElement} e
+     */
+    apply(e: NElement<any>): void;
+}
+
+/**
+ * 流水线
+ */
+declare class NAsse {
+    /**
+     * @param {function(NElement): void} callback
+     */
+    constructor(callback: (arg0: NElement<any>) => void);
+    /**
+     * @type {function(NElement): void}
+     */
+    callback: (arg0: NElement<any>) => void;
+    /**
+     * 将此特征应用于元素
+     * @param {NElement} e
+     */
+    apply(e: NElement<any>): void;
+}
+
+/**
+ * 特征列表
+ * @typedef {Array<string | HookBindInfo | NTagName | NStyle | NAttr | NEvent | NAsse | NList | NList_list | NElement>} NList_list
+ */
+declare class NList {
+    /**
+     * 生成拉平列表
+     * @param {NList_list} list
+     */
+    static flat(list: NList_list): NList;
+    /**
+     * 获取(生成)元素
+     * @param {NList_list} list
+     */
+    static getElement(list: NList_list): NElement<any>;
+    /**
+     * @param {NList_list} list
+     */
+    constructor(list: NList_list);
+    /**
+     * @type {NList_list}
+     */
+    list: NList_list;
+    /**
+     * 拉平特征
+     * (默认)标记为false将作为子元素节点
+     * 标记为true将作为上层节点的特征列表
+     * @type {boolean}
+     */
+    flatFlag: boolean;
+    /**
+     * 为元素应用特征列表
+     * @param {NElement<HTMLElement>} element
+     */
+    apply(element: NElement<HTMLElement>): void;
+    /**
+     * 获取列表的标签名
+     * @returns {string}
+     */
+    getTagName(): string;
+    /**
+     * 获取(生成)元素
+     * @returns {NElement}
+     */
+    getElement(): NElement<any>;
+}
+/**
+ * 特征列表
+ */
+type NList_list = Array<string | HookBindInfo | NTagName<any> | NStyle<any> | NAttr<any> | NEvent<any> | NAsse | NList | (string | HookBindInfo | NAsse | NElement<any> | NTagName<any> | NStyle<any> | NAttr<any> | NEvent<any> | NList | NList_list)[] | NElement<any>>;
+
+/**
  * 创建NStyle 省略new
  * @param {keyOfStyle} key
  * @param {string | HookBindInfo} value
  */
 declare function createNStyle(key: keyOfStyle, value: string | HookBindInfo): NStyle<keyOfStyle>;
+/**
+ * 创建一组NStyle的flat NList
+ * @param {Object<keyOfStyle, string | HookBindInfo>} obj
+ */
+declare function createNStyleList(obj: any): NList;
 /**
  * @typedef {(keyof CSSStyleDeclaration & string) | (string & {})} keyOfStyle
  */
@@ -1431,150 +1595,6 @@ type EDObj = {
 };
 
 /**
- * 流水线
- */
-declare class NAsse {
-    /**
-     * @param {function(NElement): void} callback
-     */
-    constructor(callback: (arg0: NElement<any>) => void);
-    /**
-     * @type {function(NElement): void}
-     */
-    callback: (arg0: NElement<any>) => void;
-    /**
-     * 将此特征应用于元素
-     * @param {NElement} e
-     */
-    apply(e: NElement<any>): void;
-}
-
-/**
- * @typedef {(keyof HTMLElement & string) | (string & {})} keyObjectOfHtmlElementAttr
- */
-/**
- * 属性
- * @template {keyObjectOfHtmlElementAttr} T
- */
-declare class NAttr<T extends keyObjectOfHtmlElementAttr> {
-    /**
-     * @param {T} key
-     * @param {string | number | boolean | Function} value
-     */
-    constructor(key: T, value: string | number | boolean | Function);
-    /**
-     * @type {T}
-     */
-    key: T;
-    /**
-     * 若为函数则应用时调用
-     * 若有返回值则赋值到属性
-     * @type {string | number | boolean | Function}
-     */
-    value: string | number | boolean | Function;
-    /**
-     * 将此特征应用于元素
-     * @param {NElement} e
-     */
-    apply(e: NElement<any>): void;
-}
-type keyObjectOfHtmlElementAttr = (keyof HTMLElement & string) | (string & {});
-
-/**
- * 事件
- * @template {keyof HTMLElementEventMap} T
- */
-declare class NEvent<T extends keyof HTMLElementEventMap> {
-    /**
-     * @param {T} key
-     * @param {function(HTMLElementEventMap[T]): any} callback
-     */
-    constructor(key: T, callback: (arg0: HTMLElementEventMap[T]) => any);
-    /**
-     * @type {T}
-     */
-    eventName: T;
-    /**
-     * @type {function(HTMLElementEventMap[T]): any}
-     */
-    callback: (arg0: HTMLElementEventMap[T]) => any;
-    /**
-     * 将此特征应用于元素
-     * @param {NElement} e
-     */
-    apply(e: NElement<any>): void;
-}
-
-/**
- * 标签名
- * 标签名使用小写字母
- * 不包含此类的特征列表默认为div
- * 一层特征列表只能有唯一tagName
- * @template {keyof HTMLElementTagNameMap} T
- */
-declare class NTagName<T extends keyof HTMLElementTagNameMap> {
-    /**
-     * @param {T} tagName
-     */
-    constructor(tagName: T);
-    /**
-     * @type {T}
-     */
-    tagName: T;
-}
-
-/**
- * 特征列表
- * @typedef {Array<string | HookBindInfo | NTagName | NStyle | NAttr | NEvent | NAsse | NList | NList_list | NElement>} NList_list
- */
-declare class NList {
-    /**
-     * 生成拉平列表
-     * @param {NList_list} list
-     */
-    static flat(list: NList_list): NList;
-    /**
-     * 获取(生成)元素
-     * @param {NList_list} list
-     */
-    static getElement(list: NList_list): NElement<any>;
-    /**
-     * @param {NList_list} list
-     */
-    constructor(list: NList_list);
-    /**
-     * @type {NList_list}
-     */
-    list: NList_list;
-    /**
-     * 拉平特征
-     * (默认)标记为false将作为子元素节点
-     * 标记为true将作为上层节点的特征列表
-     * @type {boolean}
-     */
-    flatFlag: boolean;
-    /**
-     * 为元素应用特征列表
-     * @param {NElement<HTMLElement>} element
-     */
-    apply(element: NElement<HTMLElement>): void;
-    /**
-     * 获取列表的标签名
-     * @returns {string}
-     */
-    getTagName(): string;
-    /**
-     * 获取(生成)元素
-     * @returns {NElement}
-     */
-    getElement(): NElement<any>;
-}
-/**
- * 特征列表
- */
-type NList_list = Array<string | HookBindInfo | NTagName<any> | NStyle<any> | NAttr<any> | NEvent<any> | NAsse | NList | (string | HookBindInfo | NElement<any> | NStyle<any> | NEvent<any> | NAsse | NTagName<any> | NAttr<any> | NList | NList_list)[] | NElement<any>>;
-
-/**
  * 指针数据
  * 当发生鼠标或触摸事件时传递
  * 包含指针坐标和按下状态等数据
@@ -1710,4 +1730,4 @@ declare function tagName(name: string): (arg0: TemplateStringsArray, ...args: pa
  */
 type parsingElementKeysType = NElement<any> | NStyle<any> | NEvent<any>;
 
-export { NAsse, NAttr, NElement, NEvent, NList, NStyle, NTagName, createNStyle, cssG, divideLayout_DU, divideLayout_LR, divideLayout_RL, divideLayout_UD, expandElement, getNElement, mouseBind, runOnce, tag, tagName, touchBind };
+export { NAsse, NAttr, NElement, NEvent, NList, NStyle, NTagName, bindValue, createHookObj, createNStyle, createNStyleList, cssG, divideLayout_DU, divideLayout_LR, divideLayout_RL, divideLayout_UD, expandElement, getNElement, mouseBind, runOnce, tag, tagName, touchBind };

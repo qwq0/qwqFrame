@@ -6,7 +6,7 @@ export { tag, tagName } from "./dom/tool/parsingElement.js";
 export { NAsse } from "./dom/feature/NAsse.js";
 export { NAttr } from "./dom/feature/NAttr.js";
 export { NEvent } from "./dom/feature/NEvent.js";
-export { NStyle, createNStyle } from "./dom/feature/NStyle.js";
+export { NStyle, createNStyle, createNStyleList } from "./dom/feature/NStyle.js";
 export { NTagName } from "./dom/feature/NTagName.js";
 export { NList } from "./dom/feature/NList.js";
 
@@ -16,3 +16,5 @@ export { mouseBind } from "./dom/event/tool/mouse.js";
 export { touchBind } from "./dom/event/tool/touch.js";
 
 export { runOnce } from "./flow/runOnce.js"
+
+export { bindValue, createHookObj } from "./util/proxyHook.js";
