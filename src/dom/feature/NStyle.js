@@ -52,7 +52,7 @@ export function createNStyle(key, value)
 
 /**
  * 创建一组NStyle的flat NList
- * @param {Object<keyOfStyle, string | HookBindInfo>} obj
+ * @param {{ [x in keyOfStyle]: string | HookBindInfo }} obj
  */
 export function createNStyleList(obj)
 {
