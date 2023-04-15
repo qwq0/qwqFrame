@@ -22,6 +22,15 @@ export function touchBind(element, callBack)
         passive: true
     });
 
+    /**
+     * @type {Array<{
+     *  id: number,
+     *  sx: number,
+     *  sy: number,
+     *  x: number,
+     *  y: number
+     * }>}
+     */
     let ogTouches = [];
     /**
      * 通过标识符取触摸点数据索引
@@ -46,7 +55,7 @@ export function touchBind(element, callBack)
     {
         if (e.cancelable)
             e.preventDefault();
-        forEach(e.touches, o =>
+        forEach(e.changedTouches, o =>
         {
             let t = {
                 id: o.identifier,
@@ -70,7 +79,7 @@ export function touchBind(element, callBack)
      */
     function touchMove(e)
     {
-        forEach(e.touches, o =>
+        forEach(e.changedTouches, o =>
         {
             let ind = getTouchesInd(o.identifier);
             if (ind > -1)
@@ -95,7 +104,8 @@ export function touchBind(element, callBack)
      */
     function touchEnd(e)
     {
-        forEach(e.touches, o =>
+        e.changedTouches
+        forEach(e.changedTouches, o =>
         {
             let ind = getTouchesInd(o.identifier);
             if (ind > -1)

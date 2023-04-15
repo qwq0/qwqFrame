@@ -69,6 +69,7 @@ var qwqFrame = (function (exports) {
      *  srcObj: object
      * }>}
      */
+    const proxyMap = new WeakMap();
     /**
      * 目标对象 到 引用集合 映射
      * 确保当目标对象存活时引用集合的引用存活
@@ -86,6 +87,80 @@ var qwqFrame = (function (exports) {
     {
         heldValue.destroy();
     });
+
+    /**
+     * 创建对象的代理
+     * @template {object} T
+     * @param {T} srcObj
+     * @returns {T}
+     */
+    function createHookObj(srcObj)
+    {
+        if (proxyMap.has(srcObj)) // 已经是代理对象
+            throw "Unable to create a proxy for a proxy object";
+        /**
+         * 修改指定值时需要触发的钩子
+         * @type {Map<string | symbol, Set<HookBindValue | HookBindCallback>>}
+         */
+        const hookMap = new Map();
+        const proxyObj = (new Proxy((/** @type {object} */(srcObj)), {
+            get: (target, key) => // 取值
+            {
+                return Reflect.get(target, key);
+            },
+
+            set: (target, key, newValue) => // 设置值
+            {
+                let ret = Reflect.set(target, key, newValue);
+                if (ret)
+                {
+                    let hookSet = hookMap.get(key);
+                    if (hookSet) // 若此key上存在钩子集合
+                    {
+                        hookSet.forEach(o =>
+                        {
+                            o.emit(); // 触发每个钩子
+                        });
+                    }
+                }
+                return ret;
+            },
+
+            deleteProperty: (target, key) => // 删除值
+            {
+                let ret = Reflect.deleteProperty(target, key);
+                if (ret)
+                {
+                    let hookSet = hookMap.get(key);
+                    if (hookSet) // 若此key上存在钩子集合
+                    {
+                        hookSet.forEach(o =>
+                        {
+                            o.destroy(); // 销毁每个钩子
+                        });
+                        hookMap.delete(key); // 移除此key上的钩子集合
+                    }
+                }
+                return ret;
+            }
+        }));
+        proxyMap.set(proxyObj, { hookMap, srcObj });
+        return proxyObj;
+    }
+
+    /**
+     * 获取代理对象中指定值的绑定信息
+     * @template {Object} T
+     * @param {T} proxyObj
+     * @param {[(keyof T) | (string & {}) | symbol] | [...Array<(keyof T) | (string & {}) | symbol>, function(...any): any]} keys
+     * @returns {HookBindInfo}
+     */
+    function bindValue(proxyObj, ...keys)
+    {
+        const ctFunc = (/** @type {function(...any): any} */(keys.length >= 2 ? keys.pop() : null));
+        const proxyMata = proxyMap.get(proxyObj);
+        return new HookBindInfo(proxyObj, proxyMata.srcObj, (/** @type {Array<string | symbol>}*/(keys)), proxyMata.hookMap, ctFunc);
+    }
 
 
     /**
@@ -1001,110 +1076,6 @@ var qwqFrame = (function (exports) {
     }
 
     /**
-     * @typedef {(keyof CSSStyleDeclaration & string) | (string & {})} keyOfStyle
-     */
-    /**
-     * 样式
-     * @template {keyOfStyle} T
-     */
-    class NStyle
-    {
-        /**
-         * @type {T}
-         */
-        key = null;
-        /**
-         * @type {string | HookBindInfo}
-         */
-        value = null;
-
-        /**
-         * @param {T} key
-         * @param {string | HookBindInfo} value
-         */
-        constructor(key, value)
-        {
-            this.key = key;
-            this.value = value;
-        }
-
-        /**
-         * 将此特征应用于元素
-         * @param {NElement} e
-         */
-        apply(e)
-        {
-            e.setStyle(this.key, this.value);
-        }
-    }
-
-    /**
-     * 创建NStyle 省略new
-     * @param {keyOfStyle} key
-     * @param {string | HookBindInfo} value
-     */
-    function createNStyle(key, value)
-    {
-        return new NStyle(key, value);
-    }
-
-    createNStyle("asd", "");
-
-    /**
-     * 解析标签
-     * @param {string} tagName
-     * @param {TemplateStringsArray} strings
-     * @typedef {NElement | NStyle | NEvent} parsingElementKeysType
-     * @param {Array<parsingElementKeysType>} keys
-     * @returns {NElement}
-     */
-    function parsingElement(tagName, strings, ...keys)
-    {
-        let ret = getNElement(document.createElement(tagName));
-        for (let i = 0; i < strings.length; i++)
-        {
-            let text = strings[i].trim();
-            if (text)
-                ret.element.appendChild(document.createTextNode(text));
-            if (keys[i])
-            {
-                let nowKey = keys[i];
-                if (nowKey instanceof NElement)
-                    ret.addChild(nowKey);
-                else if (nowKey instanceof NStyle)
-                    ret.setStyle(nowKey.key, nowKey.value);
-                else if (nowKey instanceof NEvent)
-                    ret.addEventListener(nowKey.eventName, nowKey.callback);
-                else if (nowKey)
-                    throw "parsingElement error: Unprocessed type";
-            }
-        }
-        return ret;
-    }
-
-    /**
-     * 解析标签
-     * 默认为div标签
-     * @param {TemplateStringsArray} strings
-     * @param {Array<parsingElementKeysType>} keys
-     * @returns {NElement}
-     */
-    function tag(strings, ...keys)
-    {
-        return parsingElement("div", strings, ...keys);
-    }
-
-    /**
-     * 解析指定标签名的标签
-     * @param {string} name
-     * @returns {function(TemplateStringsArray, ...parsingElementKeysType): NElement}
-     */
-    function tagName(name)
-    {
-        return parsingElement.bind(null, name);
-    }
-
-    /**
      * 流水线
      */
     class NAsse
@@ -1345,6 +1316,117 @@ var qwqFrame = (function (exports) {
     }
 
     /**
+     * @typedef {(keyof CSSStyleDeclaration & string) | (string & {})} keyOfStyle
+     */
+    /**
+     * 样式
+     * @template {keyOfStyle} T
+     */
+    class NStyle
+    {
+        /**
+         * @type {T}
+         */
+        key = null;
+        /**
+         * @type {string | HookBindInfo}
+         */
+        value = null;
+
+        /**
+         * @param {T} key
+         * @param {string | HookBindInfo} value
+         */
+        constructor(key, value)
+        {
+            this.key = key;
+            this.value = value;
+        }
+
+        /**
+         * 将此特征应用于元素
+         * @param {NElement} e
+         */
+        apply(e)
+        {
+            e.setStyle(this.key, this.value);
+        }
+    }
+
+    /**
+     * 创建NStyle 省略new
+     * @param {keyOfStyle} key
+     * @param {string | HookBindInfo} value
+     */
+    function createNStyle(key, value)
+    {
+        return new NStyle(key, value);
+    }
+
+    /**
+     * 创建一组NStyle的flat NList
+     * @param {{ [x in keyOfStyle]?: string | HookBindInfo }} obj
+     */
+    function createNStyleList(obj)
+    {
+        return NList.flat(Object.keys(obj).map(key => new NStyle(key, obj[key])));
+    }
+
+    /**
+     * 解析标签
+     * @param {string} tagName
+     * @param {TemplateStringsArray} strings
+     * @typedef {NElement | NStyle | NEvent} parsingElementKeysType
+     * @param {Array<parsingElementKeysType>} keys
+     * @returns {NElement}
+     */
+    function parsingElement(tagName, strings, ...keys)
+    {
+        let ret = getNElement(document.createElement(tagName));
+        for (let i = 0; i < strings.length; i++)
+        {
+            let text = strings[i].trim();
+            if (text)
+                ret.element.appendChild(document.createTextNode(text));
+            if (keys[i])
+            {
+                let nowKey = keys[i];
+                if (nowKey instanceof NElement)
+                    ret.addChild(nowKey);
+                else if (nowKey instanceof NStyle)
+                    ret.setStyle(nowKey.key, nowKey.value);
+                else if (nowKey instanceof NEvent)
+                    ret.addEventListener(nowKey.eventName, nowKey.callback);
+                else if (nowKey)
+                    throw "parsingElement error: Unprocessed type";
+            }
+        }
+        return ret;
+    }
+
+    /**
+     * 解析标签
+     * 默认为div标签
+     * @param {TemplateStringsArray} strings
+     * @param {Array<parsingElementKeysType>} keys
+     * @returns {NElement}
+     */
+    function tag(strings, ...keys)
+    {
+        return parsingElement("div", strings, ...keys);
+    }
+
+    /**
+     * 解析指定标签名的标签
+     * @param {string} name
+     * @returns {function(TemplateStringsArray, ...parsingElementKeysType): NElement}
+     */
+    function tagName(name)
+    {
+        return parsingElement.bind(null, name);
+    }
+
+    /**
      * 指针数据
      * 当发生鼠标或触摸事件时传递
      * 包含指针坐标和按下状态等数据
@@ -1520,6 +1602,15 @@ var qwqFrame = (function (exports) {
             passive: true
         });
 
+        /**
+         * @type {Array<{
+         *  id: number,
+         *  sx: number,
+         *  sy: number,
+         *  x: number,
+         *  y: number
+         * }>}
+         */
         let ogTouches = [];
         /**
          * 通过标识符取触摸点数据索引
@@ -1544,7 +1635,7 @@ var qwqFrame = (function (exports) {
         {
             if (e.cancelable)
                 e.preventDefault();
-            forEach(e.touches, o =>
+            forEach(e.changedTouches, o =>
             {
                 let t = {
                     id: o.identifier,
@@ -1568,7 +1659,7 @@ var qwqFrame = (function (exports) {
          */
         function touchMove(e)
         {
-            forEach(e.touches, o =>
+            forEach(e.changedTouches, o =>
             {
                 let ind = getTouchesInd(o.identifier);
                 if (ind > -1)
@@ -1593,7 +1684,8 @@ var qwqFrame = (function (exports) {
          */
         function touchEnd(e)
         {
-            forEach(e.touches, o =>
+            e.changedTouches;
+            forEach(e.changedTouches, o =>
             {
                 let ind = getTouchesInd(o.identifier);
                 if (ind > -1)
@@ -1645,7 +1737,10 @@ var qwqFrame = (function (exports) {
     exports.NList = NList;
     exports.NStyle = NStyle;
     exports.NTagName = NTagName;
+    exports.bindValue = bindValue;
+    exports.createHookObj = createHookObj;
     exports.createNStyle = createNStyle;
+    exports.createNStyleList = createNStyleList;
     exports.cssG = cssG;
     exports.divideLayout_DU = divideLayout_DU;
     exports.divideLayout_LR = divideLayout_LR;
@@ -1658,8 +1753,6 @@ var qwqFrame = (function (exports) {
     exports.tag = tag;
     exports.tagName = tagName;
     exports.touchBind = touchBind;
-
-    Object.defineProperty(exports, '__esModule', { value: true });
 
     return exports;
 
