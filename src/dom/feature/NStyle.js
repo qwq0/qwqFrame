@@ -58,5 +58,3 @@ export function createNStyleList(obj)
 {
     return NList.flat(Object.keys(obj).map(key => new NStyle(key, obj[key])));
 }
-
-createNStyle("asd", "");

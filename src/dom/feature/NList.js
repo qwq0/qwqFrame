@@ -47,10 +47,8 @@ export class NList
             {
                 switch (Object.getPrototypeOf(o)?.constructor)
                 {
-                    case HookBindInfo:{ // 内部文本
-                        const hookInfo =  (/** @type {HookBindInfo} */(o));
-                        const text = element.addText(hookInfo.getValue());
-                        hookInfo.bindToValue(text, "data");
+                    case HookBindInfo: { // 子元素或文本
+                        element.addChild(/** @type {HookBindInfo} */(o));
                         break;
                     }
                     case NTagName: { // 标签名

@@ -14,6 +14,8 @@ let dataObj = createHookObj({
     colorR: 0
 });
 
+console.log(dataObj);
+
 let flatList = NList.flat([
     style("border", "1px black solid"),
     style("margin", "5px")

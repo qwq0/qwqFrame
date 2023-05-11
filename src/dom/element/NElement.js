@@ -1,5 +1,5 @@
 import { forEach, isAmong } from "../../util/forEach.js";
-import { HookBindCallback, HookBindInfo, HookBindValue } from "../../util/proxyHook.js";
+import { HookBindCallback, HookBindInfo, HookBindValue, bindValue } from "../../util/proxyHook.js";
 
 const symbolKey = Symbol("NElement");
 
@@ -33,19 +33,46 @@ export class NElement
 
     /**
      * 添加单个子节点
-     * @param {NElement | HTMLElement} chi
+     * @param {NElement | Node | string | HookBindInfo} chi
      */
     addChild(chi)
     {
         if (chi instanceof NElement)
             this.element.appendChild(chi.element);
-        else
+        else if (chi instanceof Node)
             this.element.appendChild(chi);
+        else if (typeof (chi) == "string")
+            this.addText(chi);
+        else if (chi instanceof HookBindInfo)
+        {
+            let currentNode = null;
+            {
+                let initVal = chi.getValue();
+                currentNode = (initVal == null ? new Comment() : (typeof (initVal) == "string" ? new Text(initVal) : (initVal instanceof NElement ? initVal.element : initVal)));
+                this.element.appendChild(currentNode);
+            }
+            chi.bindToCallback(val =>
+            {
+                if (currentNode instanceof Text && typeof (val) == "string")
+                {
+                    currentNode.data = val;
+                    return;
+                }
+                else
+                {
+                    let newNode = (val == null ? new Comment() : (typeof (val) == "string" ? new Text(val) : (val instanceof NElement ? val.element : val)));
+                    this.element.replaceChild(newNode, currentNode);
+                    currentNode = newNode;
+                }
+            }).bindDestroy(this);
+        }
+        else
+            throw "(NElement) Type of child node that cannot be added";
     }
 
     /**
      * 添加多个子节点
-     * @param {Array<NElement | HTMLElement | Array<NElement | HTMLElement>>} chi
+     * @param {Array<NElement | Node | string | HookBindInfo | Array<NElement | Node | string | HookBindInfo>>} chi
      */
     addChilds(...chi)
     {
@@ -300,6 +327,8 @@ export class NElement
     {
         if (element[symbolKey])
             return element[symbolKey];
+        else if (element instanceof NElement)
+            return element;
         else
             return element[symbolKey] = new NElement(element);
     }

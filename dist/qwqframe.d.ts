@@ -860,14 +860,14 @@ declare class NElement<ElementObjectType extends HTMLElement> {
     private styleHooks;
     /**
      * 添加单个子节点
-     * @param {NElement | HTMLElement} chi
+     * @param {NElement | Node | string | HookBindInfo} chi
      */
-    addChild(chi: NElement<any> | HTMLElement): void;
+    addChild(chi: NElement<any> | Node | string | HookBindInfo): void;
     /**
      * 添加多个子节点
-     * @param {Array<NElement | HTMLElement | Array<NElement | HTMLElement>>} chi
+     * @param {Array<NElement | Node | string | HookBindInfo | Array<NElement | Node | string | HookBindInfo>>} chi
      */
-    addChilds(...chi: Array<NElement<any> | HTMLElement | Array<NElement<any> | HTMLElement>>): void;
+    addChilds(...chi: Array<NElement<any> | Node | string | HookBindInfo | Array<NElement<any> | Node | string | HookBindInfo>>): void;
     /**
      * 插入单个子节点(在中间)
      * 如果此节点之前在树中则先移除后加入
