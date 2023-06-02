@@ -7,7 +7,7 @@
             "label": "build lib",
             "type": "shell",
             "command": "rollup -i src/index.js -o dist/qwqframe.js -f es",
-            "problemMatcher": [],
+            "problemMatcher": [ ],
             "group": {
                 "kind": "build",
                 "isDefault": true
@@ -17,7 +17,7 @@
             "label": "build types",
             "type": "shell",
             "command": "tsc ./src/index.js --declaration --allowJs --emitDeclarationOnly --strictNullChecks --exactOptionalPropertyTypes --outdir ./dist/types \n rollup -i dist/types/index.d.ts -o dist/qwqframe.d.ts -f es -p rollup-plugin-dts",
-            "problemMatcher": [],
+            "problemMatcher": [ ],
             "group": {
                 "kind": "build",
                 "isDefault": true
@@ -27,7 +27,7 @@
             "label": "build lib (with map)",
             "type": "shell",
             "command": "rollup -i src/index.js -o dist/qwqframe-withMap.js -f es -m",
-            "problemMatcher": [],
+            "problemMatcher": [ ],
             "group": {
                 "kind": "build",
                 "isDefault": false
@@ -37,7 +37,20 @@
             "label": "build lib (iife)",
             "type": "shell",
             "command": "rollup -i src/index.js -o dist/qwqframe.iife.js -n qwqFrame -f iife",
-            "problemMatcher": [],
+            "problemMatcher": [ ],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            }
+        },
+        {
+            "label": "build lib and types",
+            "dependsOn": [
+                "build lib",
+                "build types",
+                "build lib (iife)"
+            ],
+            "dependsOrder": "sequence",
             "group": {
                 "kind": "build",
                 "isDefault": false

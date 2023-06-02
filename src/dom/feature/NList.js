@@ -41,6 +41,8 @@ export class NList
         const tagName = element.getTagName();
         this.list.forEach(o =>
         {
+            if (o == undefined)
+                return;
             if (typeof (o) == "string") // 内部文本
                 element.addText(o);
             else

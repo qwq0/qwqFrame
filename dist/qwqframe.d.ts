@@ -308,7 +308,7 @@ declare class NList {
 /**
  * 特征列表
  */
-type NList_list = Array<string | HookBindInfo | NTagName<any> | NStyle<any> | NAttr<any> | NEvent<any> | NAsse | NList | (string | HookBindInfo | NAsse | NElement<any> | NTagName<any> | NStyle<any> | NAttr<any> | NEvent<any> | NList | NList_list)[] | NElement<any>>;
+type NList_list = Array<string | HookBindInfo | NTagName<any> | NStyle<any> | NAttr<any> | NEvent<any> | NAsse | NList | (string | HookBindInfo | NAsse | NElement<any> | NList | NList_list | NTagName<any> | NStyle<any> | NAttr<any> | NEvent<any>)[] | NElement<any>>;
 
 /**
  * 创建NStyle 省略new
@@ -1451,6 +1451,12 @@ declare class NElement<ElementObjectType extends HTMLElement> {
      * @returns {keyof HTMLElementTagNameMap}
      */
     getTagName(): keyof HTMLElementTagNameMap;
+    /**
+     * 应用NList到元素
+     * @param {NList | ConstructorParameters<typeof NList>[0]} list
+     * @returns {NElement} 返回被操作的NElement
+     */
+    applyNList(list: NList | ConstructorParameters<typeof NList>[0]): NElement<any>;
 }
 
 /**

@@ -432,6 +432,338 @@ var qwqFrame = (function (exports) {
         }
     }
 
+    /**
+     * 流水线
+     */
+    class NAsse
+    {
+        /**
+         * @type {function(NElement): void}
+         */
+        callback = null;
+
+        /**
+         * @param {function(NElement): void} callback
+         */
+        constructor(callback)
+        {
+            this.callback = callback;
+        }
+
+        /**
+         * 将此特征应用于元素
+         * @param {NElement} e
+         */
+        apply(e)
+        {
+            this.callback(e);
+        }
+    }
+
+    /**
+     * @typedef {(keyof HTMLElement & string) | (string & {})} keyObjectOfHtmlElementAttr
+     */
+    /**
+     * 属性
+     * @template {keyObjectOfHtmlElementAttr} T
+     */
+    class NAttr
+    {
+        /**
+         * @type {T}
+         */
+        key = null;
+        /**
+         * 若为函数则应用时调用
+         * 若有返回值则赋值到属性
+         * @type {string | number | boolean | Function}
+         */
+        value = null;
+
+        /**
+         * @param {T} key
+         * @param {string | number | boolean | Function} value
+         */
+        constructor(key, value)
+        {
+            this.key = key;
+            this.value = value;
+        }
+
+        /**
+         * 将此特征应用于元素
+         * @param {NElement} e
+         */
+        apply(e)
+        {
+            if (typeof (this.value) == "function")
+            {
+                let cbRet = this.value(e.element[this.key]);
+                if (cbRet != undefined)
+                    e.element[this.key] = cbRet;
+            }
+            else
+                e.element[this.key] = this.value;
+        }
+    }
+
+    /**
+     * 事件
+     * @template {keyof HTMLElementEventMap} T
+     */
+    class NEvent
+    {
+        /**
+         * @type {T}
+         */
+        eventName = null;
+        /**
+         * @type {function(HTMLElementEventMap[T]): any}
+         */
+        callback = null;
+
+        /**
+         * @param {T} key
+         * @param {function(HTMLElementEventMap[T]): any} callback
+         */
+        constructor(key, callback)
+        {
+            this.eventName = key;
+            this.callback = callback;
+        }
+
+        /**
+         * 将此特征应用于元素
+         * @param {NElement} e
+         */
+        apply(e)
+        {
+            e.addEventListener(this.eventName, this.callback);
+        }
+    }
+
+    /**
+     * @typedef {(keyof CSSStyleDeclaration & string) | (string & {})} keyOfStyle
+     */
+    /**
+     * 样式
+     * @template {keyOfStyle} T
+     */
+    class NStyle
+    {
+        /**
+         * @type {T}
+         */
+        key = null;
+        /**
+         * @type {string | HookBindInfo}
+         */
+        value = null;
+
+        /**
+         * @param {T} key
+         * @param {string | HookBindInfo} value
+         */
+        constructor(key, value)
+        {
+            this.key = key;
+            this.value = value;
+        }
+
+        /**
+         * 将此特征应用于元素
+         * @param {NElement} e
+         */
+        apply(e)
+        {
+            e.setStyle(this.key, this.value);
+        }
+    }
+
+    /**
+     * 创建NStyle 省略new
+     * @param {keyOfStyle} key
+     * @param {string | HookBindInfo} value
+     */
+    function createNStyle(key, value)
+    {
+        return new NStyle(key, value);
+    }
+
+    /**
+     * 创建一组NStyle的flat NList
+     * @param {{ [x in keyOfStyle]?: string | HookBindInfo }} obj
+     */
+    function createNStyleList(obj)
+    {
+        return NList.flat(Object.keys(obj).map(key => new NStyle(key, obj[key])));
+    }
+
+    /**
+     * 标签名
+     * 标签名使用小写字母
+     * 不包含此类的特征列表默认为div
+     * 一层特征列表只能有唯一tagName
+     * @template {keyof HTMLElementTagNameMap} T
+     */
+    class NTagName
+    {
+        /**
+         * @type {T}
+         */
+        tagName = null;
+
+        /**
+         * @param {T} tagName
+         */
+        constructor(tagName)
+        {
+            this.tagName = /** @type {T} */(tagName.toLowerCase());
+        }
+    }
+
+    /**
+     * 特征列表
+     * @typedef {Array<string | HookBindInfo | NTagName | NStyle | NAttr | NEvent | NAsse | NList | NList_list | NElement>} NList_list
+     */
+    class NList
+    {
+        /**
+         * @type {NList_list}
+         */
+        list = null;
+        /**
+         * 拉平特征
+         * (默认)标记为false将作为子元素节点
+         * 标记为true将作为上层节点的特征列表
+         * @type {boolean}
+         */
+        flatFlag = false;
+
+        /**
+         * @param {NList_list} list
+         */
+        constructor(list)
+        {
+            this.list = list;
+        }
+
+        /**
+         * 为元素应用特征列表
+         * @param {NElement<HTMLElement>} element
+         */
+        apply(element)
+        {
+            const tagName = element.getTagName();
+            this.list.forEach(o =>
+            {
+                if (o == undefined)
+                    return;
+                if (typeof (o) == "string") // 内部文本
+                    element.addText(o);
+                else
+                {
+                    switch (Object.getPrototypeOf(o)?.constructor)
+                    {
+                        case HookBindInfo: { // 子元素或文本
+                            element.addChild(/** @type {HookBindInfo} */(o));
+                            break;
+                        }
+                        case NTagName: { // 标签名
+                            if (tagName != (/** @type {NTagName} */(o)).tagName)
+                                throw "(NList) The feature tagName does not match the element";
+                            break;
+                        }
+                        case NStyle: // 样式
+                        case NAttr: // 元素属性
+                        case NEvent: // 事件
+                        case NAsse: { // 流水线
+                            (/** @type {NStyle | NAttr | NEvent | NAsse} */(o)).apply(element);
+                            break;
+                        }
+                        case NElement: { // 子元素
+                            element.addChild(/** @type {NElement} */(o));
+                            break;
+                        }
+                        case NList: { // 子列表
+                            const childList = (/** @type {NList} */(o));
+                            if (childList.flatFlag) // 子特征(列表)
+                                childList.apply(element);
+                            else // 子元素(列表)
+                                element.addChild(childList.getElement());
+                            break;
+                        }
+                        case Array: { // 子元素(列表)
+                            element.addChild(NList.getElement((/** @type {Array} */(o))));
+                            break;
+                        }
+                        default:
+                            throw "(NList) Untractable feature types were found";
+                    }
+                }
+            });
+        }
+
+        /**
+         * 获取列表的标签名
+         * @returns {string}
+         */
+        getTagName()
+        {
+            let ret = "";
+            this.list.forEach(o =>
+            {
+                let tagName = "";
+                if (o instanceof NTagName)
+                    tagName = o.tagName;
+                else if ((o instanceof NList) && o.flatFlag)
+                    tagName = o.getTagName();
+                if (tagName)
+                {
+                    if (!ret)
+                        ret = tagName;
+                    else if (ret != tagName)
+                        throw "(NList) Multiple TagNames exist in a feature list";
+                }
+            });
+            return ret;
+        }
+
+        /**
+         * 获取(生成)元素
+         * @returns {NElement}
+         */
+        getElement()
+        {
+            let tagName = this.getTagName();
+            if (tagName == "")
+                tagName = "div";
+            let ele = getNElement(document.createElement(tagName));
+            this.apply(ele);
+            return ele;
+        }
+
+        /**
+         * 生成拉平列表
+         * @param {NList_list} list
+         */
+        static flat(list)
+        {
+            let ret = new NList(list);
+            ret.flatFlag = true;
+            return ret;
+        }
+
+        /**
+         * 获取(生成)元素
+         * @param {NList_list} list
+         */
+        static getElement(list)
+        {
+            return (new NList(list)).getElement();
+        }
+    }
+
     const symbolKey = Symbol("NElement");
 
     /**
@@ -464,19 +796,46 @@ var qwqFrame = (function (exports) {
 
         /**
          * 添加单个子节点
-         * @param {NElement | HTMLElement} chi
+         * @param {NElement | Node | string | HookBindInfo} chi
          */
         addChild(chi)
         {
             if (chi instanceof NElement)
                 this.element.appendChild(chi.element);
-            else
+            else if (chi instanceof Node)
                 this.element.appendChild(chi);
+            else if (typeof (chi) == "string")
+                this.addText(chi);
+            else if (chi instanceof HookBindInfo)
+            {
+                let currentNode = null;
+                {
+                    let initVal = chi.getValue();
+                    currentNode = (initVal == null ? new Comment() : (typeof (initVal) == "string" ? new Text(initVal) : (initVal instanceof NElement ? initVal.element : initVal)));
+                    this.element.appendChild(currentNode);
+                }
+                chi.bindToCallback(val =>
+                {
+                    if (currentNode instanceof Text && typeof (val) == "string")
+                    {
+                        currentNode.data = val;
+                        return;
+                    }
+                    else
+                    {
+                        let newNode = (val == null ? new Comment() : (typeof (val) == "string" ? new Text(val) : (val instanceof NElement ? val.element : val)));
+                        this.element.replaceChild(newNode, currentNode);
+                        currentNode = newNode;
+                    }
+                }).bindDestroy(this);
+            }
+            else
+                throw "(NElement) Type of child node that cannot be added";
         }
 
         /**
          * 添加多个子节点
-         * @param {Array<NElement | HTMLElement | Array<NElement | HTMLElement>>} chi
+         * @param {Array<NElement | Node | string | HookBindInfo | Array<NElement | Node | string | HookBindInfo>>} chi
          */
         addChilds(...chi)
         {
@@ -722,6 +1081,18 @@ var qwqFrame = (function (exports) {
         }
 
         /**
+         * 应用NList到元素
+         * @param {NList | ConstructorParameters<typeof NList>[0]} list
+         * @returns {NElement} 返回被操作的NElement
+         */
+        applyNList(list)
+        {
+            let nList = (list instanceof NList ? list : NList.flat(list));
+            nList.apply(this);
+            return this;
+        }
+
+        /**
          * 根据HTMLElement对象获取NElement对象
          * @template {HTMLElement} ElementObjectType
          * @param {ElementObjectType} element
@@ -731,6 +1102,8 @@ var qwqFrame = (function (exports) {
         {
             if (element[symbolKey])
                 return element[symbolKey];
+            else if (element instanceof NElement)
+                return element;
             else
                 return element[symbolKey] = new NElement(element);
         }
@@ -1038,338 +1411,6 @@ var qwqFrame = (function (exports) {
         let childs = p.getChilds();
         childs[1].setStyle("flexGrow", 1);
         return p;
-    }
-
-    /**
-     * 事件
-     * @template {keyof HTMLElementEventMap} T
-     */
-    class NEvent
-    {
-        /**
-         * @type {T}
-         */
-        eventName = null;
-        /**
-         * @type {function(HTMLElementEventMap[T]): any}
-         */
-        callback = null;
-
-        /**
-         * @param {T} key
-         * @param {function(HTMLElementEventMap[T]): any} callback
-         */
-        constructor(key, callback)
-        {
-            this.eventName = key;
-            this.callback = callback;
-        }
-
-        /**
-         * 将此特征应用于元素
-         * @param {NElement} e
-         */
-        apply(e)
-        {
-            e.addEventListener(this.eventName, this.callback);
-        }
-    }
-
-    /**
-     * 流水线
-     */
-    class NAsse
-    {
-        /**
-         * @type {function(NElement): void}
-         */
-        callback = null;
-
-        /**
-         * @param {function(NElement): void} callback
-         */
-        constructor(callback)
-        {
-            this.callback = callback;
-        }
-
-        /**
-         * 将此特征应用于元素
-         * @param {NElement} e
-         */
-        apply(e)
-        {
-            this.callback(e);
-        }
-    }
-
-    /**
-     * @typedef {(keyof HTMLElement & string) | (string & {})} keyObjectOfHtmlElementAttr
-     */
-    /**
-     * 属性
-     * @template {keyObjectOfHtmlElementAttr} T
-     */
-    class NAttr
-    {
-        /**
-         * @type {T}
-         */
-        key = null;
-        /**
-         * 若为函数则应用时调用
-         * 若有返回值则赋值到属性
-         * @type {string | number | boolean | Function}
-         */
-        value = null;
-
-        /**
-         * @param {T} key
-         * @param {string | number | boolean | Function} value
-         */
-        constructor(key, value)
-        {
-            this.key = key;
-            this.value = value;
-        }
-
-        /**
-         * 将此特征应用于元素
-         * @param {NElement} e
-         */
-        apply(e)
-        {
-            if (typeof (this.value) == "function")
-            {
-                let cbRet = this.value(e.element[this.key]);
-                if (cbRet != undefined)
-                    e.element[this.key] = cbRet;
-            }
-            else
-                e.element[this.key] = this.value;
-        }
-    }
-
-    /**
-     * 标签名
-     * 标签名使用小写字母
-     * 不包含此类的特征列表默认为div
-     * 一层特征列表只能有唯一tagName
-     * @template {keyof HTMLElementTagNameMap} T
-     */
-    class NTagName
-    {
-        /**
-         * @type {T}
-         */
-        tagName = null;
-
-        /**
-         * @param {T} tagName
-         */
-        constructor(tagName)
-        {
-            this.tagName = /** @type {T} */(tagName.toLowerCase());
-        }
-    }
-
-    /**
-     * 特征列表
-     * @typedef {Array<string | HookBindInfo | NTagName | NStyle | NAttr | NEvent | NAsse | NList | NList_list | NElement>} NList_list
-     */
-    class NList
-    {
-        /**
-         * @type {NList_list}
-         */
-        list = null;
-        /**
-         * 拉平特征
-         * (默认)标记为false将作为子元素节点
-         * 标记为true将作为上层节点的特征列表
-         * @type {boolean}
-         */
-        flatFlag = false;
-
-        /**
-         * @param {NList_list} list
-         */
-        constructor(list)
-        {
-            this.list = list;
-        }
-
-        /**
-         * 为元素应用特征列表
-         * @param {NElement<HTMLElement>} element
-         */
-        apply(element)
-        {
-            const tagName = element.getTagName();
-            this.list.forEach(o =>
-            {
-                if (typeof (o) == "string") // 内部文本
-                    element.addText(o);
-                else
-                {
-                    switch (Object.getPrototypeOf(o)?.constructor)
-                    {
-                        case HookBindInfo:{ // 内部文本
-                            const hookInfo =  (/** @type {HookBindInfo} */(o));
-                            const text = element.addText(hookInfo.getValue());
-                            hookInfo.bindToValue(text, "data");
-                            break;
-                        }
-                        case NTagName: { // 标签名
-                            if (tagName != (/** @type {NTagName} */(o)).tagName)
-                                throw "(NList) The feature tagName does not match the element";
-                            break;
-                        }
-                        case NStyle: // 样式
-                        case NAttr: // 元素属性
-                        case NEvent: // 事件
-                        case NAsse: { // 流水线
-                            (/** @type {NStyle | NAttr | NEvent | NAsse} */(o)).apply(element);
-                            break;
-                        }
-                        case NElement: { // 子元素
-                            element.addChild(/** @type {NElement} */(o));
-                            break;
-                        }
-                        case NList: { // 子列表
-                            const childList = (/** @type {NList} */(o));
-                            if (childList.flatFlag) // 子特征(列表)
-                                childList.apply(element);
-                            else // 子元素(列表)
-                                element.addChild(childList.getElement());
-                            break;
-                        }
-                        case Array: { // 子元素(列表)
-                            element.addChild(NList.getElement((/** @type {Array} */(o))));
-                            break;
-                        }
-                        default:
-                            throw "(NList) Untractable feature types were found";
-                    }
-                }
-            });
-        }
-
-        /**
-         * 获取列表的标签名
-         * @returns {string}
-         */
-        getTagName()
-        {
-            let ret = "";
-            this.list.forEach(o =>
-            {
-                let tagName = "";
-                if (o instanceof NTagName)
-                    tagName = o.tagName;
-                else if ((o instanceof NList) && o.flatFlag)
-                    tagName = o.getTagName();
-                if (tagName)
-                {
-                    if (!ret)
-                        ret = tagName;
-                    else if (ret != tagName)
-                        throw "(NList) Multiple TagNames exist in a feature list";
-                }
-            });
-            return ret;
-        }
-
-        /**
-         * 获取(生成)元素
-         * @returns {NElement}
-         */
-        getElement()
-        {
-            let tagName = this.getTagName();
-            if (tagName == "")
-                tagName = "div";
-            let ele = getNElement(document.createElement(tagName));
-            this.apply(ele);
-            return ele;
-        }
-
-        /**
-         * 生成拉平列表
-         * @param {NList_list} list
-         */
-        static flat(list)
-        {
-            let ret = new NList(list);
-            ret.flatFlag = true;
-            return ret;
-        }
-
-        /**
-         * 获取(生成)元素
-         * @param {NList_list} list
-         */
-        static getElement(list)
-        {
-            return (new NList(list)).getElement();
-        }
-    }
-
-    /**
-     * @typedef {(keyof CSSStyleDeclaration & string) | (string & {})} keyOfStyle
-     */
-    /**
-     * 样式
-     * @template {keyOfStyle} T
-     */
-    class NStyle
-    {
-        /**
-         * @type {T}
-         */
-        key = null;
-        /**
-         * @type {string | HookBindInfo}
-         */
-        value = null;
-
-        /**
-         * @param {T} key
-         * @param {string | HookBindInfo} value
-         */
-        constructor(key, value)
-        {
-            this.key = key;
-            this.value = value;
-        }
-
-        /**
-         * 将此特征应用于元素
-         * @param {NElement} e
-         */
-        apply(e)
-        {
-            e.setStyle(this.key, this.value);
-        }
-    }
-
-    /**
-     * 创建NStyle 省略new
-     * @param {keyOfStyle} key
-     * @param {string | HookBindInfo} value
-     */
-    function createNStyle(key, value)
-    {
-        return new NStyle(key, value);
-    }
-
-    /**
-     * 创建一组NStyle的flat NList
-     * @param {{ [x in keyOfStyle]?: string | HookBindInfo }} obj
-     */
-    function createNStyleList(obj)
-    {
-        return NList.flat(Object.keys(obj).map(key => new NStyle(key, obj[key])));
     }
 
     /**

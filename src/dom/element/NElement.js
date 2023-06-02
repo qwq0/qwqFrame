@@ -1,5 +1,6 @@
 import { forEach, isAmong } from "../../util/forEach.js";
 import { HookBindCallback, HookBindInfo, HookBindValue, bindValue } from "../../util/proxyHook.js";
+import { NList } from "../feature/NList.js";
 
 const symbolKey = Symbol("NElement");
 
@@ -315,6 +316,18 @@ export class NElement
     getTagName()
     {
         return (/** @type {keyof HTMLElementTagNameMap} */(this.element.tagName.toLowerCase()));
+    }
+
+    /**
+     * 应用NList到元素
+     * @param {NList | ConstructorParameters<typeof NList>[0]} list
+     * @returns {NElement} 返回被操作的NElement
+     */
+    applyNList(list)
+    {
+        let nList = (list instanceof NList ? list : NList.flat(list));
+        nList.apply(this);
+        return this;
     }
 
     /**
