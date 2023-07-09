@@ -1,17 +1,15 @@
-import { NElement } from "../element/NElement.js";
-
 /**
  * 流水线
  */
 export class NAsse
 {
     /**
-     * @type {function(NElement): void}
+     * @type {function(import("../element/NElement").NElement): void}
      */
     callback = null;
 
     /**
-     * @param {function(NElement): void} callback
+     * @param {function(import("../element/NElement").NElement): void} callback
      */
     constructor(callback)
     {
@@ -20,7 +18,7 @@ export class NAsse
 
     /**
      * 将此特征应用于元素
-     * @param {NElement} e
+     * @param {import("../element/NElement").NElement} e
      */
     apply(e)
     {

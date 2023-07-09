@@ -17,4 +17,4 @@ export { touchBind } from "./dom/event/tool/touch.js";
 
 export { runOnce } from "./flow/runOnce.js"
 
-export { bindValue, createHookObj } from "./util/proxyHook.js";
+export { bindValue, createHookObj } from "./data/hook/proxyHook.js";

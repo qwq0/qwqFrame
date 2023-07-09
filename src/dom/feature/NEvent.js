@@ -1,5 +1,3 @@
-import { NElement } from "../element/NElement.js";
-
 /**
  * 事件
  * @template {keyof HTMLElementEventMap} T
@@ -11,13 +9,13 @@ export class NEvent
      */
     eventName = null;
     /**
-     * @type {function(HTMLElementEventMap[T]): any}
+     * @type {(event: HTMLElementEventMap[T], currentElement: import("../element/NElement").NElement) => void}
      */
     callback = null;
 
     /**
      * @param {T} key
-     * @param {function(HTMLElementEventMap[T]): any} callback
+     * @param {(event: HTMLElementEventMap[T], currentElement: import("../element/NElement").NElement) => void} callback
      */
     constructor(key, callback)
     {
@@ -27,10 +25,13 @@ export class NEvent
 
     /**
      * 将此特征应用于元素
-     * @param {NElement} e
+     * @param {import("../element/NElement").NElement} element
      */
-    apply(e)
+    apply(element)
     {
-        e.addEventListener(this.eventName, this.callback);
+        element.addEventListener(this.eventName, event =>
+        {
+            this.callback(event, element);
+        });
     }
 }

@@ -61,14 +61,16 @@ function isAmong(k, ...s)
 
 /**
  * 代理对象 到 钩子映射和目标对象 映射
+ * 
  * @type {WeakMap<object, {
- *  hookMap: Map<string | symbol, Set<HookBindValue | HookBindCallback>>,
+ *  hookMap: Map<string | symbol, Set<import("./HookBindValue").HookBindValue | import("./HookBindCallback").HookBindCallback>>,
  *  srcObj: object
  * }>}
  */
 const proxyMap = new WeakMap();
 /**
  * 目标对象 到 引用集合 映射
+ *
  * 确保当目标对象存活时引用集合的引用存活
  * 目前仅在HookBindCallback中使用
  * @type {WeakMap<object, Set<any>>}
@@ -77,8 +79,9 @@ const targetRefMap = new WeakMap();
 
 /**
  * 记录器
+
  * 在目标对象销毁时销毁钩子
- * @type {FinalizationRegistry<HookBindValue | HookBindCallback>}
+ * @type {FinalizationRegistry<import("./HookBindValue").HookBindValue | import("./HookBindCallback").HookBindCallback>}
  */
 const register = new FinalizationRegistry(heldValue =>
 {
@@ -86,79 +89,156 @@ const register = new FinalizationRegistry(heldValue =>
 });
 
 /**
- * 创建对象的代理
- * @template {object} T
- * @param {T} srcObj
- * @returns {T}
+ * 钩子绑定到回调类
  */
-function createHookObj(srcObj)
+class HookBindCallback
 {
-    if (proxyMap.has(srcObj)) // 已经是代理对象
-        throw "Unable to create a proxy for a proxy object";
     /**
-     * 修改指定值时需要触发的钩子
-     * @type {Map<string | symbol, Set<HookBindValue | HookBindCallback>>}
+     * 钩子信息
+     * @type {import("./HookBindInfo").HookBindInfo}
      */
-    const hookMap = new Map();
-    const proxyObj = (new Proxy((/** @type {object} */(srcObj)), {
-        get: (target, key) => // 取值
-        {
-            return Reflect.get(target, key);
-        },
+    info = null;
 
-        set: (target, key, newValue) => // 设置值
-        {
-            let ret = Reflect.set(target, key, newValue);
-            if (ret)
-            {
-                let hookSet = hookMap.get(key);
-                if (hookSet) // 若此key上存在钩子集合
-                {
-                    hookSet.forEach(o =>
-                    {
-                        o.emit(); // 触发每个钩子
-                    });
-                }
-            }
-            return ret;
-        },
+    /**
+     * 回调函数的弱引用
+     * @type {WeakRef<function(any): void>}
+     */
+    cbRef = null;
+    /**
+     * 回调函数
+     * 当此钩子绑定自动释放时为null
+     * @type {function(any): void}
+     */
+    callback = null;
 
-        deleteProperty: (target, key) => // 删除值
+    /**
+     * @param {import("./HookBindInfo").HookBindInfo} info
+     * @param {function(any): void} callback
+     */
+    constructor(info, callback)
+    {
+        this.info = info;
+        this.cbRef = new WeakRef(callback);
+        this.callback = callback;
+        info.addHook(this);
+    }
+
+    /**
+     * 触发此钩子
+     */
+    emit()
+    {
+        let callback = this.cbRef.deref();
+        if (callback)
         {
-            let ret = Reflect.deleteProperty(target, key);
-            if (ret)
+            try
             {
-                let hookSet = hookMap.get(key);
-                if (hookSet) // 若此key上存在钩子集合
-                {
-                    hookSet.forEach(o =>
-                    {
-                        o.destroy(); // 销毁每个钩子
-                    });
-                    hookMap.delete(key); // 移除此key上的钩子集合
-                }
+                callback(this.info.getValue());
             }
-            return ret;
+            catch (err)
+            {
+                console.error(err);
+            }
         }
-    }));
-    proxyMap.set(proxyObj, { hookMap, srcObj });
-    return proxyObj;
+    }
+
+    /**
+     * 销毁此钩子
+     * 销毁后钩子将不再自动触发
+     */
+    destroy()
+    {
+        this.info.removeHook(this);
+        register.unregister(this);
+    }
+
+    /**
+     * 绑定销毁
+     * 当目标对象释放时销毁
+     * @param {object} targetObj
+     * @returns {HookBindCallback} 返回自身
+     */
+    bindDestroy(targetObj)
+    {
+        let targetRefSet = targetRefMap.get(targetObj);
+        if (targetRefSet == undefined)
+        {
+            targetRefSet = new Set();
+            targetRefMap.set(targetObj, targetRefSet);
+        }
+        targetRefSet.add(this.callback);
+        this.callback = null;
+        register.register(targetObj, this, this);
+        return this;
+    }
 }
 
 /**
- * 获取代理对象中指定值的绑定信息
- * @template {Object} T
- * @param {T} proxyObj
- * @param {[(keyof T) | (string & {}) | symbol] | [...Array<(keyof T) | (string & {}) | symbol>, function(...any): any]} keys
- * @returns {HookBindInfo}
+ * 钩子绑定到值类
  */
-function bindValue(proxyObj, ...keys)
+class HookBindValue
 {
-    const ctFunc = (/** @type {function(...any): any} */(keys.length >= 2 ? keys.pop() : null));
-    const proxyMata = proxyMap.get(proxyObj);
-    return new HookBindInfo(proxyObj, proxyMata.srcObj, (/** @type {Array<string | symbol>}*/(keys)), proxyMata.hookMap, ctFunc);
-}
+    /**
+     * 钩子信息
+     * @type {import("./HookBindInfo").HookBindInfo}
+     */
+    info = null;
 
+    /**
+     * 目标对象
+     * @type {WeakRef<object>}
+     */
+    targetRef = null;
+    /**
+     * 目标对象的键
+     * @type {string | symbol}
+     */
+    targetKey = "";
+
+    /**
+     * @param {import("./HookBindInfo").HookBindInfo} info
+     * @param {object} targetObj
+     * @param {string | symbol} targetKey
+     */
+    constructor(info, targetObj, targetKey)
+    {
+        this.info = info;
+        this.targetRef = new WeakRef(targetObj);
+        this.targetKey = targetKey;
+        info.addHook(this);
+        register.register(targetObj, this, this);
+    }
+
+    /**
+     * 触发此钩子
+     * 销毁后仍可通过此方法手动触发
+     */
+    emit()
+    {
+        let target = this.targetRef.deref();
+        if (target != undefined)
+        {
+            try
+            {
+                target[this.targetKey] = this.info.getValue();
+            }
+            catch (err)
+            {
+                console.error(err);
+            }
+        }
+    }
+
+    /**
+     * 销毁此钩子
+     * 销毁后钩子将不再自动触发
+     */
+    destroy()
+    {
+        this.info.removeHook(this);
+        register.unregister(this);
+    }
+}
 
 /**
  * 钩子绑定信息
@@ -278,169 +358,17 @@ class HookBindInfo
 }
 
 /**
- * 钩子绑定到回调类
- */
-class HookBindCallback
-{
-    /**
-     * 钩子信息
-     * @type {HookBindInfo}
-     */
-    info = null;
-
-    /**
-     * 回调函数的弱引用
-     * @type {WeakRef<function(any): void>}
-     */
-    cbRef = null;
-    /**
-     * 回调函数
-     * 当此钩子绑定自动释放时为null
-     * @type {function(any): void}
-     */
-    callback = null;
-
-    /**
-     * @param {HookBindInfo} info
-     * @param {function(any): void} callback
-     */
-    constructor(info, callback)
-    {
-        this.info = info;
-        this.cbRef = new WeakRef(callback);
-        this.callback = callback;
-        info.addHook(this);
-    }
-
-    /**
-     * 触发此钩子
-     */
-    emit()
-    {
-        let callback = this.cbRef.deref();
-        if (callback)
-        {
-            try
-            {
-                callback(this.info.getValue());
-            }
-            catch (err)
-            {
-                console.error(err);
-            }
-        }
-    }
-
-    /**
-     * 销毁此钩子
-     * 销毁后钩子将不再自动触发
-     */
-    destroy()
-    {
-        this.info.removeHook(this);
-        register.unregister(this);
-    }
-
-    /**
-     * 绑定销毁
-     * 当目标对象释放时销毁
-     * @param {object} targetObj
-     * @returns {HookBindCallback} 返回自身
-     */
-    bindDestroy(targetObj)
-    {
-        let targetRefSet = targetRefMap.get(targetObj);
-        if (targetRefSet == undefined)
-        {
-            targetRefSet = new Set();
-            targetRefMap.set(targetObj, targetRefSet);
-        }
-        targetRefSet.add(this.callback);
-        this.callback = null;
-        register.register(targetObj, this, this);
-        return this;
-    }
-}
-
-/**
- * 钩子绑定到值类
- */
-class HookBindValue
-{
-    /**
-     * 钩子信息
-     * @type {HookBindInfo}
-     */
-    info = null;
-
-    /**
-     * 目标对象
-     * @type {WeakRef<object>}
-     */
-    targetRef = null;
-    /**
-     * 目标对象的键
-     * @type {string | symbol}
-     */
-    targetKey = "";
-
-    /**
-     * @param {HookBindInfo} info
-     * @param {object} targetObj
-     * @param {string | symbol} targetKey
-     */
-    constructor(info, targetObj, targetKey)
-    {
-        this.info = info;
-        this.targetRef = new WeakRef(targetObj);
-        this.targetKey = targetKey;
-        info.addHook(this);
-        register.register(targetObj, this, this);
-    }
-
-    /**
-     * 触发此钩子
-     * 销毁后仍可通过此方法手动触发
-     */
-    emit()
-    {
-        let target = this.targetRef.deref();
-        if (target != undefined)
-        {
-            try
-            {
-                target[this.targetKey] = this.info.getValue();
-            }
-            catch (err)
-            {
-                console.error(err);
-            }
-        }
-    }
-
-    /**
-     * 销毁此钩子
-     * 销毁后钩子将不再自动触发
-     */
-    destroy()
-    {
-        this.info.removeHook(this);
-        register.unregister(this);
-    }
-}
-
-/**
  * 流水线
  */
 class NAsse
 {
     /**
-     * @type {function(NElement): void}
+     * @type {function(import("../element/NElement").NElement): void}
      */
     callback = null;
 
     /**
-     * @param {function(NElement): void} callback
+     * @param {function(import("../element/NElement").NElement): void} callback
      */
     constructor(callback)
     {
@@ -449,7 +377,7 @@ class NAsse
 
     /**
      * 将此特征应用于元素
-     * @param {NElement} e
+     * @param {import("../element/NElement").NElement} e
      */
     apply(e)
     {
@@ -489,7 +417,7 @@ class NAttr
 
     /**
      * 将此特征应用于元素
-     * @param {NElement} e
+     * @param {import("../element/NElement").NElement} e
      */
     apply(e)
     {
@@ -515,13 +443,13 @@ class NEvent
      */
     eventName = null;
     /**
-     * @type {function(HTMLElementEventMap[T]): any}
+     * @type {(event: HTMLElementEventMap[T], currentElement: import("../element/NElement").NElement) => void}
      */
     callback = null;
 
     /**
      * @param {T} key
-     * @param {function(HTMLElementEventMap[T]): any} callback
+     * @param {(event: HTMLElementEventMap[T], currentElement: import("../element/NElement").NElement) => void} callback
      */
     constructor(key, callback)
     {
@@ -531,11 +459,14 @@ class NEvent
 
     /**
      * 将此特征应用于元素
-     * @param {NElement} e
+     * @param {import("../element/NElement").NElement} element
      */
-    apply(e)
+    apply(element)
     {
-        e.addEventListener(this.eventName, this.callback);
+        element.addEventListener(this.eventName, event =>
+        {
+            this.callback(event, element);
+        });
     }
 }
 
@@ -569,7 +500,7 @@ class NStyle
 
     /**
      * 将此特征应用于元素
-     * @param {NElement} e
+     * @param {import("../element/NElement").NElement} e
      */
     apply(e)
     {
@@ -600,7 +531,7 @@ function createNStyleList(obj)
  * 标签名
  * 标签名使用小写字母
  * 不包含此类的特征列表默认为div
- * 一层特征列表只能有唯一tagName
+ * 一层特征列表只能有唯一tagName (或等价的)
  * @template {keyof HTMLElementTagNameMap} T
  */
 class NTagName
@@ -621,7 +552,7 @@ class NTagName
 
 /**
  * 特征列表
- * @typedef {Array<string | HookBindInfo | NTagName | NStyle | NAttr | NEvent | NAsse | NList | NList_list | NElement>} NList_list
+ * @typedef {Array<string | HookBindInfo | NTagName | NStyle | NAttr | NEvent | NAsse | NList | NList_list | NElement | ((e: NElement) => void)>} NList_list
  */
 class NList
 {
@@ -657,8 +588,14 @@ class NList
             if (o == undefined)
                 return;
             if (typeof (o) == "string") // 内部文本
+            {
                 element.addText(o);
-            else
+            }
+            else if (typeof (o) == "function") // 流水线函数
+            {
+                o(element);
+            }
+            else if (typeof (o) == "object")
             {
                 switch (Object.getPrototypeOf(o)?.constructor)
                 {
@@ -698,6 +635,8 @@ class NList
                         throw "(NList) Untractable feature types were found";
                 }
             }
+            else
+                throw "(NList) Untractable feature types were found";
         });
     }
 
@@ -761,6 +700,10 @@ class NList
     }
 }
 
+/**
+ * NElement的symbol
+ * 用于将NElement绑定到对应的HTMLElement
+ */
 const symbolKey = Symbol("NElement");
 
 /**
@@ -1766,6 +1709,80 @@ function runOnce(func)
             return func(...para);
         }
     });
+}
+
+/**
+ * 创建对象的代理
+ * @template {object} T
+ * @param {T} srcObj
+ * @returns {T}
+ */
+function createHookObj(srcObj)
+{
+    if (proxyMap.has(srcObj)) // 已经是代理对象
+        throw "Unable to create a proxy for a proxy object";
+    /**
+     * 修改指定值时需要触发的钩子
+     * @type {Map<string | symbol, Set<HookBindValue | HookBindCallback>>}
+     */
+    const hookMap = new Map();
+    const proxyObj = (new Proxy((/** @type {object} */(srcObj)), {
+        get: (target, key) => // 取值
+        {
+            return Reflect.get(target, key);
+        },
+
+        set: (target, key, newValue) => // 设置值
+        {
+            let ret = Reflect.set(target, key, newValue);
+            if (ret)
+            {
+                let hookSet = hookMap.get(key);
+                if (hookSet) // 若此key上存在钩子集合
+                {
+                    hookSet.forEach(o =>
+                    {
+                        o.emit(); // 触发每个钩子
+                    });
+                }
+            }
+            return ret;
+        },
+
+        deleteProperty: (target, key) => // 删除值
+        {
+            let ret = Reflect.deleteProperty(target, key);
+            if (ret)
+            {
+                let hookSet = hookMap.get(key);
+                if (hookSet) // 若此key上存在钩子集合
+                {
+                    hookSet.forEach(o =>
+                    {
+                        o.destroy(); // 销毁每个钩子
+                    });
+                    hookMap.delete(key); // 移除此key上的钩子集合
+                }
+            }
+            return ret;
+        }
+    }));
+    proxyMap.set(proxyObj, { hookMap, srcObj });
+    return proxyObj;
+}
+
+/**
+ * 获取代理对象中指定值的绑定信息
+ * @template {Object} T
+ * @param {T} proxyObj
+ * @param {[(keyof T) | (string & {}) | symbol] | [Array<(keyof T) | (string & {}) | symbol>, ...Array<(keyof T) | (string & {}) | symbol>, function(...any): any]} keys
+ * @returns {HookBindInfo}
+ */
+function bindValue(proxyObj, ...keys)
+{
+    const ctFunc = (/** @type {function(...any): any} */(keys.length >= 2 ? keys.pop() : null));
+    const proxyMata = proxyMap.get(proxyObj);
+    return new HookBindInfo(proxyObj, proxyMata.srcObj, (/** @type {Array<string | symbol>}*/(keys)), proxyMata.hookMap, ctFunc);
 }
 
 export { NAsse, NAttr, NElement, NEvent, NList, NStyle, NTagName, bindValue, createHookObj, createNStyle, createNStyleList, cssG, divideLayout_DU, divideLayout_LR, divideLayout_RL, divideLayout_UD, expandElement, getNElement, mouseBind, runOnce, tag, tagName, touchBind };

@@ -1,7 +1,13 @@
 import { forEach, isAmong } from "../../util/forEach.js";
-import { HookBindCallback, HookBindInfo, HookBindValue, bindValue } from "../../util/proxyHook.js";
+import { HookBindInfo } from "../../data/hook/HookBindInfo.js";
+import { HookBindValue } from "../../data/hook/HookBindValue.js";
+import { HookBindCallback } from "../../data/hook/HookBindCallback.js";
 import { NList } from "../feature/NList.js";
 
+/**
+ * NElement的symbol
+ * 用于将NElement绑定到对应的HTMLElement
+ */
 const symbolKey = Symbol("NElement");
 
 /**

@@ -2,7 +2,7 @@ import { createNStyle as style, NStyle } from "../src/dom/feature/NStyle.js";
 import { NEvent } from "../src/dom/feature/NEvent.js";
 import { tag, tagName } from "../src/dom/tool/parsingElement.js";
 import { cssG, expandElement, getNElement, NList } from "../src/index.js";
-import { bindValue, createHookObj } from "../src/util/proxyHook.js";
+import { bindValue, createHookObj } from "../src/data/hook/proxyHook.js";
 
 
 

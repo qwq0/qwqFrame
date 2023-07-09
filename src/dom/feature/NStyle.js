@@ -1,5 +1,4 @@
-import { HookBindInfo } from "../../util/proxyHook.js";
-import { NElement } from "../element/NElement.js";
+import { HookBindInfo } from "../../data/hook/HookBindInfo.js";
 import { NList } from "./NList.js";
 
 /**
@@ -32,7 +31,7 @@ export class NStyle
 
     /**
      * 将此特征应用于元素
-     * @param {NElement} e
+     * @param {import("../element/NElement").NElement} e
      */
     apply(e)
     {

@@ -1,4 +1,4 @@
-import { HookBindInfo } from "../../util/proxyHook.js";
+import { HookBindInfo } from "../../data/hook/HookBindInfo.js";
 import { getNElement, NElement } from "../element/NElement.js";
 import { NAsse } from "./NAsse.js";
 import { NAttr } from "./NAttr.js";
@@ -8,7 +8,7 @@ import { NTagName } from "./NTagName.js";
 
 /**
  * 特征列表
- * @typedef {Array<string | HookBindInfo | NTagName | NStyle | NAttr | NEvent | NAsse | NList | NList_list | NElement>} NList_list
+ * @typedef {Array<string | HookBindInfo | NTagName | NStyle | NAttr | NEvent | NAsse | NList | NList_list | NElement | ((e: NElement) => void)>} NList_list
  */
 export class NList
 {
@@ -44,8 +44,14 @@ export class NList
             if (o == undefined)
                 return;
             if (typeof (o) == "string") // 内部文本
+            {
                 element.addText(o);
-            else
+            }
+            else if (typeof (o) == "function") // 流水线函数
+            {
+                o(element);
+            }
+            else if (typeof (o) == "object")
             {
                 switch (Object.getPrototypeOf(o)?.constructor)
                 {
@@ -85,6 +91,8 @@ export class NList
                         throw "(NList) Untractable feature types were found";
                 }
             }
+            else
+                throw "(NList) Untractable feature types were found";
         });
     }
 

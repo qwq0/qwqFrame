@@ -1,5 +1,3 @@
-import { NElement } from "../element/NElement.js";
-
 /**
  * @typedef {(keyof HTMLElement & string) | (string & {})} keyObjectOfHtmlElementAttr
  */
@@ -32,7 +30,7 @@ export class NAttr
 
     /**
      * 将此特征应用于元素
-     * @param {NElement} e
+     * @param {import("../element/NElement").NElement} e
      */
     apply(e)
     {

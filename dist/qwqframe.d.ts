@@ -4,20 +4,85 @@ declare namespace cssG {
 }
 
 /**
- * 创建对象的代理
- * @template {object} T
- * @param {T} srcObj
- * @returns {T}
+ * 钩子绑定到值类
  */
-declare function createHookObj<T extends unknown>(srcObj: T): T;
+declare class HookBindValue {
+    /**
+     * @param {import("./HookBindInfo").HookBindInfo} info
+     * @param {object} targetObj
+     * @param {string | symbol} targetKey
+     */
+    constructor(info: HookBindInfo, targetObj: object, targetKey: string | symbol);
+    /**
+     * 钩子信息
+     * @type {import("./HookBindInfo").HookBindInfo}
+     */
+    info: HookBindInfo;
+    /**
+     * 目标对象
+     * @type {WeakRef<object>}
+     */
+    targetRef: WeakRef<any>;
+    /**
+     * 目标对象的键
+     * @type {string | symbol}
+     */
+    targetKey: string | symbol;
+    /**
+     * 触发此钩子
+     * 销毁后仍可通过此方法手动触发
+     */
+    emit(): void;
+    /**
+     * 销毁此钩子
+     * 销毁后钩子将不再自动触发
+     */
+    destroy(): void;
+}
+
 /**
- * 获取代理对象中指定值的绑定信息
- * @template {Object} T
- * @param {T} proxyObj
- * @param {[(keyof T) | (string & {}) | symbol] | [...Array<(keyof T) | (string & {}) | symbol>, function(...any): any]} keys
- * @returns {HookBindInfo}
+ * 钩子绑定到回调类
  */
-declare function bindValue<T extends unknown>(proxyObj: T, ...keys: [symbol | (string & {}) | keyof T] | [...(symbol | (string & {}) | keyof T)[], (...arg0: any[]) => any]): HookBindInfo;
+declare class HookBindCallback {
+    /**
+     * @param {import("./HookBindInfo").HookBindInfo} info
+     * @param {function(any): void} callback
+     */
+    constructor(info: HookBindInfo, callback: (arg0: any) => void);
+    /**
+     * 钩子信息
+     * @type {import("./HookBindInfo").HookBindInfo}
+     */
+    info: HookBindInfo;
+    /**
+     * 回调函数的弱引用
+     * @type {WeakRef<function(any): void>}
+     */
+    cbRef: WeakRef<(arg0: any) => void>;
+    /**
+     * 回调函数
+     * 当此钩子绑定自动释放时为null
+     * @type {function(any): void}
+     */
+    callback: (arg0: any) => void;
+    /**
+     * 触发此钩子
+     */
+    emit(): void;
+    /**
+     * 销毁此钩子
+     * 销毁后钩子将不再自动触发
+     */
+    destroy(): void;
+    /**
+     * 绑定销毁
+     * 当目标对象释放时销毁
+     * @param {object} targetObj
+     * @returns {HookBindCallback} 返回自身
+     */
+    bindDestroy(targetObj: object): HookBindCallback;
+}
+
 /**
  * 钩子绑定信息
  */
@@ -87,90 +152,12 @@ declare class HookBindInfo {
      */
     bindToCallback(callback: (arg0: any) => void): HookBindCallback;
 }
-/**
- * 钩子绑定到回调类
- */
-declare class HookBindCallback {
-    /**
-     * @param {HookBindInfo} info
-     * @param {function(any): void} callback
-     */
-    constructor(info: HookBindInfo, callback: (arg0: any) => void);
-    /**
-     * 钩子信息
-     * @type {HookBindInfo}
-     */
-    info: HookBindInfo;
-    /**
-     * 回调函数的弱引用
-     * @type {WeakRef<function(any): void>}
-     */
-    cbRef: WeakRef<(arg0: any) => void>;
-    /**
-     * 回调函数
-     * 当此钩子绑定自动释放时为null
-     * @type {function(any): void}
-     */
-    callback: (arg0: any) => void;
-    /**
-     * 触发此钩子
-     */
-    emit(): void;
-    /**
-     * 销毁此钩子
-     * 销毁后钩子将不再自动触发
-     */
-    destroy(): void;
-    /**
-     * 绑定销毁
-     * 当目标对象释放时销毁
-     * @param {object} targetObj
-     * @returns {HookBindCallback} 返回自身
-     */
-    bindDestroy(targetObj: object): HookBindCallback;
-}
-/**
- * 钩子绑定到值类
- */
-declare class HookBindValue {
-    /**
-     * @param {HookBindInfo} info
-     * @param {object} targetObj
-     * @param {string | symbol} targetKey
-     */
-    constructor(info: HookBindInfo, targetObj: object, targetKey: string | symbol);
-    /**
-     * 钩子信息
-     * @type {HookBindInfo}
-     */
-    info: HookBindInfo;
-    /**
-     * 目标对象
-     * @type {WeakRef<object>}
-     */
-    targetRef: WeakRef<any>;
-    /**
-     * 目标对象的键
-     * @type {string | symbol}
-     */
-    targetKey: string | symbol;
-    /**
-     * 触发此钩子
-     * 销毁后仍可通过此方法手动触发
-     */
-    emit(): void;
-    /**
-     * 销毁此钩子
-     * 销毁后钩子将不再自动触发
-     */
-    destroy(): void;
-}
 
 /**
  * 标签名
  * 标签名使用小写字母
  * 不包含此类的特征列表默认为div
- * 一层特征列表只能有唯一tagName
+ * 一层特征列表只能有唯一tagName (或等价的)
  * @template {keyof HTMLElementTagNameMap} T
  */
 declare class NTagName<T extends keyof HTMLElementTagNameMap> {
@@ -209,7 +196,7 @@ declare class NAttr<T extends keyObjectOfHtmlElementAttr> {
     value: string | number | boolean | Function;
     /**
      * 将此特征应用于元素
-     * @param {NElement} e
+     * @param {import("../element/NElement").NElement} e
      */
     apply(e: NElement<any>): void;
 }
@@ -222,22 +209,22 @@ type keyObjectOfHtmlElementAttr = (keyof HTMLElement & string) | (string & {});
 declare class NEvent<T extends keyof HTMLElementEventMap> {
     /**
      * @param {T} key
-     * @param {function(HTMLElementEventMap[T]): any} callback
+     * @param {(event: HTMLElementEventMap[T], currentElement: import("../element/NElement").NElement) => void} callback
      */
-    constructor(key: T, callback: (arg0: HTMLElementEventMap[T]) => any);
+    constructor(key: T, callback: (event: HTMLElementEventMap[T], currentElement: NElement<any>) => void);
     /**
      * @type {T}
      */
     eventName: T;
     /**
-     * @type {function(HTMLElementEventMap[T]): any}
+     * @type {(event: HTMLElementEventMap[T], currentElement: import("../element/NElement").NElement) => void}
      */
-    callback: (arg0: HTMLElementEventMap[T]) => any;
+    callback: (event: HTMLElementEventMap[T], currentElement: NElement<any>) => void;
     /**
      * 将此特征应用于元素
-     * @param {NElement} e
+     * @param {import("../element/NElement").NElement} element
      */
-    apply(e: NElement<any>): void;
+    apply(element: NElement<any>): void;
 }
 
 /**
@@ -245,23 +232,23 @@ declare class NEvent<T extends keyof HTMLElementEventMap> {
  */
 declare class NAsse {
     /**
-     * @param {function(NElement): void} callback
+     * @param {function(import("../element/NElement").NElement): void} callback
      */
     constructor(callback: (arg0: NElement<any>) => void);
     /**
-     * @type {function(NElement): void}
+     * @type {function(import("../element/NElement").NElement): void}
      */
     callback: (arg0: NElement<any>) => void;
     /**
      * 将此特征应用于元素
-     * @param {NElement} e
+     * @param {import("../element/NElement").NElement} e
      */
     apply(e: NElement<any>): void;
 }
 
 /**
  * 特征列表
- * @typedef {Array<string | HookBindInfo | NTagName | NStyle | NAttr | NEvent | NAsse | NList | NList_list | NElement>} NList_list
+ * @typedef {Array<string | HookBindInfo | NTagName | NStyle | NAttr | NEvent | NAsse | NList | NList_list | NElement | ((e: NElement) => void)>} NList_list
  */
 declare class NList {
     /**
@@ -308,7 +295,7 @@ declare class NList {
 /**
  * 特征列表
  */
-type NList_list = Array<string | HookBindInfo | NTagName<any> | NStyle<any> | NAttr<any> | NEvent<any> | NAsse | NList | (string | HookBindInfo | NAsse | NElement<any> | NList | NList_list | NTagName<any> | NStyle<any> | NAttr<any> | NEvent<any>)[] | NElement<any>>;
+type NList_list = (string | HookBindInfo | NAsse | NElement<any> | NList | NList_list | NTagName<any> | NStyle<any> | NAttr<any> | NEvent<any> | ((e: NElement<any>) => void))[];
 
 /**
  * 创建NStyle 省略new
@@ -816,7 +803,7 @@ declare class NStyle<T extends keyOfStyle> {
     value: string | HookBindInfo;
     /**
      * 将此特征应用于元素
-     * @param {NElement} e
+     * @param {import("../element/NElement").NElement} e
      */
     apply(e: NElement<any>): void;
 }
@@ -2207,5 +2194,21 @@ declare function tagName(name: string): (arg0: TemplateStringsArray, ...args: pa
  * 解析标签
  */
 type parsingElementKeysType = NElement<any> | NStyle<any> | NEvent<any>;
+
+/**
+ * 创建对象的代理
+ * @template {object} T
+ * @param {T} srcObj
+ * @returns {T}
+ */
+declare function createHookObj<T extends unknown>(srcObj: T): T;
+/**
+ * 获取代理对象中指定值的绑定信息
+ * @template {Object} T
+ * @param {T} proxyObj
+ * @param {[(keyof T) | (string & {}) | symbol] | [Array<(keyof T) | (string & {}) | symbol>, ...Array<(keyof T) | (string & {}) | symbol>, function(...any): any]} keys
+ * @returns {HookBindInfo}
+ */
+declare function bindValue<T extends unknown>(proxyObj: T, ...keys: [symbol | (string & {}) | keyof T] | [(symbol | (string & {}) | keyof T)[], ...(symbol | (string & {}) | keyof T)[], (...arg0: any[]) => any]): HookBindInfo;
 
 export { NAsse, NAttr, NElement, NEvent, NList, NStyle, NTagName, bindValue, createHookObj, createNStyle, createNStyleList, cssG, divideLayout_DU, divideLayout_LR, divideLayout_RL, divideLayout_UD, expandElement, getNElement, mouseBind, runOnce, tag, tagName, touchBind };
