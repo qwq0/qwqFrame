@@ -1424,8 +1424,17 @@ declare class NElement<ElementObjectType extends HTMLElement> {
      * 执行动画
      * @param {Array<Keyframe> | PropertyIndexedKeyframes} keyframes
      * @param {number | KeyframeAnimationOptions} options
+     * @returns {Animation}
      */
-    animate(keyframes: Array<Keyframe> | PropertyIndexedKeyframes, options: number | KeyframeAnimationOptions): void;
+    animate(keyframes: Array<Keyframe> | PropertyIndexedKeyframes, options: number | KeyframeAnimationOptions): Animation;
+    /**
+     * 执行动画并提交
+     * 在执行完成动画后将最后的效果提交到style
+     * @param {Array<Keyframe> | PropertyIndexedKeyframes} keyframes
+     * @param {number | KeyframeAnimationOptions} options
+     * @returns {Promise<void>} 动画执行完后返回
+     */
+    animateCommit(keyframes: Array<Keyframe> | PropertyIndexedKeyframes, options: number | KeyframeAnimationOptions): Promise<void>;
     /**
      * 流水线
      * @param {function(NElement): void} asseFunc 流水线函数(无视返回值)

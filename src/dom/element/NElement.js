@@ -297,10 +297,35 @@ export class NElement
      * 执行动画
      * @param {Array<Keyframe> | PropertyIndexedKeyframes} keyframes
      * @param {number | KeyframeAnimationOptions} options
+     * @returns {Animation}
      */
     animate(keyframes, options)
     {
-        this.element.animate(keyframes, options);
+        return this.element.animate(keyframes, options);
+    }
+
+    /**
+     * 执行动画并提交
+     * 在执行完成动画后将最后的效果提交到style
+     * @param {Array<Keyframe> | PropertyIndexedKeyframes} keyframes
+     * @param {number | KeyframeAnimationOptions} options
+     * @returns {Promise<void>} 动画执行完后返回
+     */
+    async animateCommit(keyframes, options)
+    {
+        if (typeof (options) == "number")
+            options = {
+                duration: options,
+                fill: "forwards"
+            };
+        else
+            options = Object.assign({ fill: "forwards" }, options);
+        if (options.fill != "forwards" && options.fill != "both")
+            throw "(NElelemt) animateCommit can only be used when fill forwards or both";
+        let animate = this.element.animate(keyframes, options);
+        await animate.finished;
+        animate.commitStyles();
+        animate.cancel();
     }
 
     /**
