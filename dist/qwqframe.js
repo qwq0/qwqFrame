@@ -1,32 +1,4 @@
 /**
- * css生成
- * @namespace
- */
-const cssG = {
-    /**
-     * 100%减去指定值
-     * @param {string} value
-     * @returns {string}
-     */
-    diFull: (value) =>
-    {
-        return ("calc(100% - " + value + ")");
-    },
-
-    /**
-     * 构建rgb或rgba颜色颜色
-     * @param {number | string} r 0~255
-     * @param {number | string} g 0~255
-     * @param {number | string} b 0~255
-     * @param {number | string} [a] 0~1
-     */
-    rgb: (r, g, b, a = 1) =>
-    {
-        return "rgba(" + r + ", " + g + ", " + b + ", " + a + ")";
-    }
-};
-
-/**
  * 正向遍历数组
  * 在回调中返回不为false或void的值主动结束遍历
  * 主动结束遍历 返回true
@@ -60,7 +32,7 @@ function isAmong(k, ...s)
 }
 
 /**
- * 代理对象 到 钩子映射和目标对象 映射
+ * 代理对象 到 钩子映射和源对象 映射
  * 
  * @type {WeakMap<object, {
  *  hookMap: Map<string | symbol, Set<import("./HookBindValue").HookBindValue | import("./HookBindCallback").HookBindCallback>>,
@@ -75,7 +47,7 @@ const proxyMap = new WeakMap();
  * 目前仅在HookBindCallback中使用
  * @type {WeakMap<object, Set<any>>}
  */
-const targetRefMap = new WeakMap();
+const targetRefMap$1 = new WeakMap();
 
 /**
  * 记录器
@@ -83,7 +55,7 @@ const targetRefMap = new WeakMap();
  * 在目标对象销毁时销毁钩子
  * @type {FinalizationRegistry<import("./HookBindValue").HookBindValue | import("./HookBindCallback").HookBindCallback>}
  */
-const register = new FinalizationRegistry(heldValue =>
+const register$1 = new FinalizationRegistry(heldValue =>
 {
     heldValue.destroy();
 });
@@ -149,7 +121,7 @@ class HookBindCallback
     destroy()
     {
         this.info.removeHook(this);
-        register.unregister(this);
+        register$1.unregister(this);
     }
 
     /**
@@ -160,15 +132,15 @@ class HookBindCallback
      */
     bindDestroy(targetObj)
     {
-        let targetRefSet = targetRefMap.get(targetObj);
+        let targetRefSet = targetRefMap$1.get(targetObj);
         if (targetRefSet == undefined)
         {
             targetRefSet = new Set();
-            targetRefMap.set(targetObj, targetRefSet);
+            targetRefMap$1.set(targetObj, targetRefSet);
         }
         targetRefSet.add(this.callback);
         this.callback = null;
-        register.register(targetObj, this, this);
+        register$1.register(targetObj, this, this);
         return this;
     }
 }
@@ -206,7 +178,7 @@ class HookBindValue
         this.targetRef = new WeakRef(targetObj);
         this.targetKey = targetKey;
         info.addHook(this);
-        register.register(targetObj, this, this);
+        register$1.register(targetObj, this, this);
     }
 
     /**
@@ -236,7 +208,7 @@ class HookBindValue
     destroy()
     {
         this.info.removeHook(this);
-        register.unregister(this);
+        register$1.unregister(this);
     }
 }
 
@@ -603,11 +575,13 @@ class NList
                         element.addChild(/** @type {HookBindInfo} */(o));
                         break;
                     }
+
                     case NTagName: { // 标签名
                         if (tagName != (/** @type {NTagName} */(o)).tagName)
                             throw "(NList) The feature tagName does not match the element";
                         break;
                     }
+
                     case NStyle: // 样式
                     case NAttr: // 元素属性
                     case NEvent: // 事件
@@ -615,10 +589,12 @@ class NList
                         (/** @type {NStyle | NAttr | NEvent | NAsse} */(o)).apply(element);
                         break;
                     }
+
                     case NElement: { // 子元素
                         element.addChild(/** @type {NElement} */(o));
                         break;
                     }
+
                     case NList: { // 子列表
                         const childList = (/** @type {NList} */(o));
                         if (childList.flatFlag) // 子特征(列表)
@@ -627,10 +603,12 @@ class NList
                             element.addChild(childList.getElement());
                         break;
                     }
+
                     case Array: { // 子元素(列表)
                         element.addChild(NList.getElement((/** @type {Array} */(o))));
                         break;
                     }
+                    
                     default:
                         throw "(NList) Untractable feature types were found";
                 }
@@ -1087,6 +1065,71 @@ function getNElement(element)
 }
 
 /**
+ * css生成
+ * @namespace
+ */
+const cssG = {
+    /**
+     * 100%减去指定值
+     * @param {string} value
+     * @returns {string}
+     */
+    diFull: (value) =>
+    {
+        return ("calc(100% - " + value + ")");
+    },
+
+    /**
+     * 构建rgb或rgba颜色颜色
+     * @param {number | string} r 0~255
+     * @param {number | string} g 0~255
+     * @param {number | string} b 0~255
+     * @param {number | string} [a] 0~1
+     */
+    rgb: (r, g, b, a = 1) =>
+    {
+        return "rgba(" + r + ", " + g + ", " + b + ", " + a + ")";
+    }
+};
+
+/**
+ * 绑定元素属性到对象作为getter/setter
+ * @template {Object} T
+ * @param {string} attrName
+ * @param {T} obj
+ * @param {(keyof T) | (string & {})} key
+ * @param {boolean} [noInitialize] 不将对象中原来的值赋给元素属性
+ * @returns {(element: NElement) => void} 流水线函数
+ */
+function bindAttribute(attrName, obj, key, noInitialize = false)
+{
+    return ((ele) =>
+    {
+        // @ts-ignore
+        if (Object.hasOwn(obj, key))
+        {
+            if (!noInitialize)
+                // @ts-ignore
+                ele.element[attrName] = obj[key];
+            // @ts-ignore
+            delete obj[key];
+        }
+        Object.defineProperty(obj, key, {
+            get: () =>
+            {
+                return ele.element[attrName];
+            },
+            set: (newValue) =>
+            {
+                ele.element[attrName] = newValue;
+            },
+            enumerable: true,
+            configurable: true
+        });
+    });
+}
+
+/**
  * 遍历展开元素
  * @typedef {{
  *     id?:  string, // id
@@ -1399,10 +1442,8 @@ function parsingElement(tagName, strings, ...keys)
             let nowKey = keys[i];
             if (nowKey instanceof NElement)
                 ret.addChild(nowKey);
-            else if (nowKey instanceof NStyle)
-                ret.setStyle(nowKey.key, nowKey.value);
-            else if (nowKey instanceof NEvent)
-                ret.addEventListener(nowKey.eventName, nowKey.callback);
+            else if (nowKey instanceof NStyle || nowKey instanceof NEvent)
+                nowKey.apply(ret);
             else if (nowKey)
                 throw "parsingElement error: Unprocessed type";
         }
@@ -1437,7 +1478,7 @@ function tagName(name)
  * 当发生鼠标或触摸事件时传递
  * 包含指针坐标和按下状态等数据
  */
-class pointerData
+class PointerData
 {
     /**
      * 当前指针位置x
@@ -1506,7 +1547,7 @@ class pointerData
 /**
  * 鼠标(拖拽)事件处理
  * @param {NElement} element 绑定到元素
- * @param {function(pointerData):void} callBack 回调
+ * @param {function(PointerData):void} callBack 回调
  * @param {number} [button] 绑定的按键
  */
 function mouseBind(element, callBack, button = 0)
@@ -1534,7 +1575,7 @@ function mouseBind(element, callBack, button = 0)
         if (e.button == button)
         {
             leftDown = true;
-            callBack(new pointerData(
+            callBack(new PointerData(
                 x, y,
                 0, 0,
                 x, y,
@@ -1555,7 +1596,7 @@ function mouseBind(element, callBack, button = 0)
             let vy = e.clientY - y;
             x = e.clientX;
             y = e.clientY;
-            callBack(new pointerData(
+            callBack(new PointerData(
                 x, y,
                 vx, vy,
                 sx, sy,
@@ -1578,7 +1619,7 @@ function mouseBind(element, callBack, button = 0)
         if (leftDown && e.button == button)
         {
             leftDown = false;
-            callBack(new pointerData(
+            callBack(new PointerData(
                 x, y,
                 vx, vy,
                 sx, sy,
@@ -1591,7 +1632,7 @@ function mouseBind(element, callBack, button = 0)
 /**
  * 触摸(拖拽) 事件处理
  * @param {NElement} element 
- * @param {function(pointerData):void} callBack
+ * @param {function(PointerData):void} callBack
  */
 function touchBind(element, callBack)
 {
@@ -1651,7 +1692,7 @@ function touchBind(element, callBack)
                 y: o.clientY
             };
             ogTouches.push(t);
-            callBack(new pointerData(
+            callBack(new PointerData(
                 t.x, t.y,
                 0, 0,
                 t.sx, t.sy,
@@ -1675,7 +1716,7 @@ function touchBind(element, callBack)
                 let vy = o.clientY - t.y;
                 t.x = o.clientX;
                 t.y = o.clientY;
-                callBack(new pointerData(
+                callBack(new PointerData(
                     t.x, t.y,
                     vx, vy,
                     t.sx, t.sy,
@@ -1702,7 +1743,7 @@ function touchBind(element, callBack)
                 let vy = o.clientY - t.y;
                 t.x = o.clientX;
                 t.y = o.clientY;
-                callBack(new pointerData(
+                callBack(new PointerData(
                     t.x, t.y,
                     vx, vy,
                     t.sx, t.sy,
@@ -1800,14 +1841,306 @@ function createHookObj(srcObj)
  * 获取代理对象中指定值的绑定信息
  * @template {Object} T
  * @param {T} proxyObj
- * @param {[(keyof T) | (string & {}) | symbol] | [Array<(keyof T) | (string & {}) | symbol>, ...Array<(keyof T) | (string & {}) | symbol>, function(...any): any]} keys
+ * @param {[(keyof T) | (string & {}) | symbol] | [((keyof T) | (string & {}) | symbol), ...Array<(keyof T) | (string & {}) | symbol>, function(...any): any]} keys
  * @returns {HookBindInfo}
  */
 function bindValue(proxyObj, ...keys)
 {
     const ctFunc = (/** @type {function(...any): any} */(keys.length >= 2 ? keys.pop() : null));
     const proxyMata = proxyMap.get(proxyObj);
+    if (proxyMata == undefined)
+        throw "bindValue: Values can only be bound from proxy objects";
     return new HookBindInfo(proxyObj, proxyMata.srcObj, (/** @type {Array<string | symbol>}*/(keys)), proxyMata.hookMap, ctFunc);
 }
 
-export { NAsse, NAttr, NElement, NEvent, NList, NStyle, NTagName, bindValue, createHookObj, createNStyle, createNStyleList, cssG, divideLayout_DU, divideLayout_LR, divideLayout_RL, divideLayout_UD, expandElement, getNElement, mouseBind, runOnce, tag, tagName, touchBind };
+/**
+ * 代理数组 到 钩子映射和目标对象 映射
+ * 
+ * @type {WeakMap<object, {
+*  hookSet: Set<import("./ArrayHookBind").ArrayHookBind>,
+*  srcArr: Array
+* }>}
+*/
+const arrayProxyMap = new WeakMap();
+
+/**
+ * 目标对象 到 引用集合 映射
+ *
+ * 确保当目标对象存活时引用集合的引用存活
+ * @type {WeakMap<object, Set<any>>}
+ */
+const targetRefMap = new WeakMap();
+
+/**
+ * 记录器
+
+ * 在目标对象销毁时销毁钩子
+ * @type {FinalizationRegistry<import("./ArrayHookBind").ArrayHookBind>}
+ */
+const register = new FinalizationRegistry(heldValue =>
+{
+    heldValue.destroy();
+});
+
+/**
+ * 数组钩子绑定类
+ */
+class ArrayHookBind
+{
+    /**
+     * 回调函数的弱引用
+     * @type {WeakRef<typeof ArrayHookBind.prototype.callback>}
+     */
+    cbRef = null;
+
+    /**
+     * 回调函数
+     * 当此钩子绑定自动释放时为null
+     */
+    callback = {
+        /** @type {(index: number, value: any) => void} */
+        set: null,
+        /** @type {(index: number, value: any) => void} */
+        add: null,
+        /** @type {(index: number) => void} */
+        del: null
+    };
+
+    /**
+     * @param {typeof ArrayHookBind.prototype.callback} callback
+     */
+    constructor(callback)
+    {
+        this.cbRef = new WeakRef(callback);
+        this.callback = Object.assign({}, callback);
+    }
+
+    /**
+     * 触发此钩子 (设置)
+     * @param {number} index
+     * @param {any} value
+     */
+    emitSet(index, value)
+    {
+        let callback = this.cbRef.deref();
+        if (callback)
+        {
+            try
+            {
+                callback.set(index, value);
+            }
+            catch (err)
+            {
+                console.error(err);
+            }
+        }
+    }
+
+    /**
+     * 触发此钩子 (增加)
+     * @param {number} index
+     * @param {any} value
+     */
+    emitAdd(index, value)
+    {
+        let callback = this.cbRef.deref();
+        if (callback)
+        {
+            try
+            {
+                callback.add(index, value);
+            }
+            catch (err)
+            {
+                console.error(err);
+            }
+        }
+    }
+
+    /**
+     * 触发此钩子 (删除)
+     * @param {number} index
+     */
+    emitDel(index)
+    {
+        let callback = this.cbRef.deref();
+        if (callback)
+        {
+            try
+            {
+                callback.del(index);
+            }
+            catch (err)
+            {
+                console.error(err);
+            }
+        }
+    }
+
+    /**
+     * 销毁此钩子
+     * 销毁后钩子将不再自动触发
+     */
+    destroy()
+    {
+        register.unregister(this);
+    }
+
+    /**
+     * 绑定销毁
+     * 当目标对象释放时销毁
+     * @param {object} targetObj
+     * @returns {ArrayHookBind} 返回自身
+     */
+    bindDestroy(targetObj)
+    {
+        let targetRefSet = targetRefMap.get(targetObj);
+        if (targetRefSet == undefined)
+        {
+            targetRefSet = new Set();
+            targetRefMap.set(targetObj, targetRefSet);
+        }
+        targetRefSet.add(this.callback);
+        this.callback = null;
+        register.register(targetObj, this, this);
+        return this;
+    }
+}
+
+/**
+ * 创建数组的代理
+ * @template {Array} T
+ * @param {T} srcArray
+ * @returns {T}
+ */
+function createHookArray(srcArray)
+{
+    let oldLength = srcArray.length;
+    /**
+     * @type {Set<ArrayHookBind>}
+     */
+    let hookSet = new Set();
+    const proxyArray = (new Proxy(srcArray, {
+        get: (target, key) => // 取值
+        {
+            switch (key)
+            {
+                case "push":
+                    return Array.prototype.push;
+                case "pop":
+                    return Array.prototype.pop;
+                default:
+                    return Reflect.get(target, key);
+            }
+        },
+
+        set: (target, key, newValue) => // 设置值
+        {
+            let ret = Reflect.set(target, key, newValue);
+            if (ret)
+            {
+                if (key == "length")
+                {
+                    if (newValue < oldLength)
+                    {
+                        for (let i = oldLength - 1; i >= newValue; i--)
+                            hookSet.forEach(o => { o.emitDel(i); });
+                    }
+                    else if (newValue > oldLength)
+                    {
+                        for (let i = oldLength; i < newValue; i++)
+                            hookSet.forEach(o => { o.emitAdd(i, undefined); });
+                    }
+                    oldLength = newValue;
+                }
+                else if ((typeof (key) == "string" && (/^[1-9][0-9]*$/.test(key) || key == "0")) || typeof (key) == "number")
+                {
+                    let ind = Number(key);
+                    if (ind >= oldLength)
+                    {
+                        if (ind >= oldLength + 1)
+                        {
+                            for (let i = oldLength; i < ind; i++)
+                                hookSet.forEach(o => { o.emitAdd(i, undefined); });
+                        }
+                        hookSet.forEach(o => { o.emitAdd(ind, newValue); });
+                        oldLength = ind + 1;
+                    }
+                    else
+                    {
+                        hookSet.forEach(o => { o.emitSet(ind, newValue); });
+                    }
+                }
+            }
+            return ret;
+        },
+    }));
+    arrayProxyMap.set(proxyArray, { hookSet: hookSet, srcArr: srcArray });
+    return proxyArray;
+}
+
+
+/**
+ * 绑定数组的代理
+ * @template {Array} T
+ * @param {T} proxyArray
+ * @param {{
+ *  set?: (index: number, value: any) => void;
+ *  add: (index: number, value: any) => void;
+ *  del: (index: number) => void;
+ * }} callbacks
+ * @param {{ noSet?: boolean, addExisting?: boolean }} [option]
+ * @returns {ArrayHookBind}
+ */
+function bindArrayHook(proxyArray, callbacks, option = {})
+{
+    const proxyMata = arrayProxyMap.get(proxyArray);
+    if (proxyMata == undefined)
+        throw "bindArrayHook: Hook callbacks can only be bound from proxy array";
+
+    option = Object.assign({
+        noSet: false,
+        addExisting: false
+    }, option);
+
+    let callbackObj = Object.assign({
+        set: () => { },
+        add: () => { },
+        del: () => { },
+    }, callbacks);
+
+    if (option.noSet)
+    {
+        if (callbacks.set != undefined)
+        {
+            throw "bindArrayHook: cannot pass the set function when setting the noSet option";
+        }
+        callbackObj.set = (ind, value) =>
+        {
+            callbackObj.del(ind);
+            callbackObj.add(ind, value);
+        };
+    }
+
+
+    if (option.addExisting)
+    {
+        try
+        {
+            proxyMata.srcArr.forEach((e, ind) =>
+            {
+                callbackObj.add(ind, e);
+            });
+        }
+        catch (err)
+        {
+            console.log(err);
+        }
+    }
+
+    let ret = new ArrayHookBind(callbackObj);
+    proxyMata.hookSet.add(ret);
+    return ret;
+}
+
+export { NAsse, NAttr, NElement, NEvent, NList, NStyle, NTagName, bindArrayHook, bindAttribute, bindValue, createHookArray, createHookObj, createNStyle, createNStyleList, cssG, divideLayout_DU, divideLayout_LR, divideLayout_RL, divideLayout_UD, expandElement, getNElement, mouseBind, runOnce, tag, tagName, touchBind };

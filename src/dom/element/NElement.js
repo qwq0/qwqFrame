@@ -1,7 +1,7 @@
 import { forEach, isAmong } from "../../util/forEach.js";
-import { HookBindInfo } from "../../data/hook/HookBindInfo.js";
-import { HookBindValue } from "../../data/hook/HookBindValue.js";
-import { HookBindCallback } from "../../data/hook/HookBindCallback.js";
+import { HookBindInfo } from "../../data/hook/object/HookBindInfo.js";
+import { HookBindValue } from "../../data/hook/object/HookBindValue.js";
+import { HookBindCallback } from "../../data/hook/object/HookBindCallback.js";
 import { NList } from "../feature/NList.js";
 
 /**

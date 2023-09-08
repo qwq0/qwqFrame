@@ -1,4 +1,4 @@
-import { HookBindInfo } from "../../data/hook/HookBindInfo.js";
+import { HookBindInfo } from "../../data/hook/object/HookBindInfo.js";
 import { NList } from "./NList.js";
 
 /**

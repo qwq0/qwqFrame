@@ -1,8 +1,8 @@
 import { createNStyle as style, NStyle } from "../src/dom/feature/NStyle.js";
 import { NEvent } from "../src/dom/feature/NEvent.js";
 import { tag, tagName } from "../src/dom/tool/parsingElement.js";
-import { cssG, expandElement, getNElement, NList } from "../src/index.js";
-import { bindValue, createHookObj } from "../src/data/hook/proxyHook.js";
+import { cssG, expandElement, getNElement, NList, bindValue, createHookObj, createHookArray } from "../src/index.js";
+import { bindArrayHook } from "../src/data/hook/array/proxyArray.js";
 
 
 
@@ -14,7 +14,15 @@ let dataObj = createHookObj({
     colorR: 0
 });
 
+let dataArray = createHookArray([]);
+bindArrayHook(dataArray, {
+    set: (ind, val) => { console.log("dataArray set", ind, val); },
+    add: (ind, val) => { console.log("dataArray add", ind, val); },
+    del: (ind) => { console.log("dataArray del", ind); },
+});
+
 console.log(dataObj);
+console.log(dataArray);
 
 let flatList = NList.flat([
     style("border", "1px black solid"),
@@ -90,6 +98,7 @@ setInterval(() =>
 setInterval(() => { dataObj.text += "-"; }, 500);
 setInterval(() => { dataObj.color = (dataObj.color == "black" ? "red" : "black"); }, 450);
 setInterval(() => { dataObj.colorR = (dataObj.colorR + 10) % 256; }, 100);
+setInterval(() => { dataArray.push(123); }, 450);
 
 let testElement_2 = expandElement({
     text: "--测试2--",

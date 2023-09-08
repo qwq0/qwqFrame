@@ -3,7 +3,7 @@
  * 当发生鼠标或触摸事件时传递
  * 包含指针坐标和按下状态等数据
  */
-export class pointerData
+export class PointerData
 {
     /**
      * 当前指针位置x

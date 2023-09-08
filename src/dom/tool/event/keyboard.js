@@ -1,17 +1,17 @@
 import { keyPress, keyUp, table } from "./keyboardTable.js";
-import { keyData } from "./keyData.js";
+import { KeyData } from "./keyData.js";
 
 /**
  * 键盘 事件处理
  * @param {HTMLElement} element
- * @param {function(keyData) : void} callBack
+ * @param {function(KeyData) : void} callBack
  */
 export function keyboardBind(element, callBack)
 {
     element.addEventListener("keydown", e =>
     {
         let keyName = (table[e.key] ? table[e.key] : e.key);
-        callBack(new keyData(
+        callBack(new KeyData(
             keyName,
             true,
             keyPress(keyName)
@@ -21,7 +21,7 @@ export function keyboardBind(element, callBack)
     {
         let keyName = (table[e.key] ? table[e.key] : e.key);
         keyUp(keyName);
-        callBack(new keyData(
+        callBack(new KeyData(
             keyName,
             false,
             false

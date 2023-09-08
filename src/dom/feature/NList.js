@@ -1,4 +1,4 @@
-import { HookBindInfo } from "../../data/hook/HookBindInfo.js";
+import { HookBindInfo } from "../../data/hook/object/HookBindInfo.js";
 import { getNElement, NElement } from "../element/NElement.js";
 import { NAsse } from "./NAsse.js";
 import { NAttr } from "./NAttr.js";
@@ -59,11 +59,13 @@ export class NList
                         element.addChild(/** @type {HookBindInfo} */(o));
                         break;
                     }
+
                     case NTagName: { // 标签名
                         if (tagName != (/** @type {NTagName} */(o)).tagName)
                             throw "(NList) The feature tagName does not match the element";
                         break;
                     }
+
                     case NStyle: // 样式
                     case NAttr: // 元素属性
                     case NEvent: // 事件
@@ -71,10 +73,12 @@ export class NList
                         (/** @type {NStyle | NAttr | NEvent | NAsse} */(o)).apply(element);
                         break;
                     }
+
                     case NElement: { // 子元素
                         element.addChild(/** @type {NElement} */(o));
                         break;
                     }
+
                     case NList: { // 子列表
                         const childList = (/** @type {NList} */(o));
                         if (childList.flatFlag) // 子特征(列表)
@@ -83,10 +87,12 @@ export class NList
                             element.addChild(childList.getElement());
                         break;
                     }
+
                     case Array: { // 子元素(列表)
                         element.addChild(NList.getElement((/** @type {Array} */(o))));
                         break;
                     }
+                    
                     default:
                         throw "(NList) Untractable feature types were found";
                 }

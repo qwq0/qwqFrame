@@ -1,10 +1,10 @@
 import { NElement } from "../../element/NElement.js";
-import { pointerData } from "./pointerData.js";
+import { PointerData } from "./pointerData.js";
 
 /**
  * 鼠标(拖拽)事件处理
  * @param {NElement} element 绑定到元素
- * @param {function(pointerData):void} callBack 回调
+ * @param {function(PointerData):void} callBack 回调
  * @param {number} [button] 绑定的按键
  */
 export function mouseBind(element, callBack, button = 0)
@@ -32,7 +32,7 @@ export function mouseBind(element, callBack, button = 0)
         if (e.button == button)
         {
             leftDown = true;
-            callBack(new pointerData(
+            callBack(new PointerData(
                 x, y,
                 0, 0,
                 x, y,
@@ -53,7 +53,7 @@ export function mouseBind(element, callBack, button = 0)
             let vy = e.clientY - y;
             x = e.clientX;
             y = e.clientY;
-            callBack(new pointerData(
+            callBack(new PointerData(
                 x, y,
                 vx, vy,
                 sx, sy,
@@ -76,7 +76,7 @@ export function mouseBind(element, callBack, button = 0)
         if (leftDown && e.button == button)
         {
             leftDown = false;
-            callBack(new pointerData(
+            callBack(new PointerData(
                 x, y,
                 vx, vy,
                 sx, sy,

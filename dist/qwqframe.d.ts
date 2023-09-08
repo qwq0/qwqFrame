@@ -1456,6 +1456,17 @@ declare namespace cssG {
 }
 
 /**
+ * 绑定元素属性到对象作为getter/setter
+ * @template {Object} T
+ * @param {string} attrName
+ * @param {T} obj
+ * @param {(keyof T) | (string & {})} key
+ * @param {boolean} [noInitialize] 不将对象中原来的值赋给元素属性
+ * @returns {(element: NElement) => void} 流水线函数
+ */
+declare function bindAttribute<T extends unknown>(attrName: string, obj: T, key: (string & {}) | keyof T, noInitialize?: boolean | undefined): (element: NElement<any>) => void;
+
+/**
  * 展开元素
  * 将内容js对象转换为封装的HTML树
  * 请不要转换不受信任的json
@@ -2073,7 +2084,7 @@ type EDObj = {
  * 当发生鼠标或触摸事件时传递
  * 包含指针坐标和按下状态等数据
  */
-declare class pointerData {
+declare class PointerData {
     /**
      * @param {number} x
      * @param {number} y
@@ -2130,17 +2141,17 @@ declare class pointerData {
 /**
  * 鼠标(拖拽)事件处理
  * @param {NElement} element 绑定到元素
- * @param {function(pointerData):void} callBack 回调
+ * @param {function(PointerData):void} callBack 回调
  * @param {number} [button] 绑定的按键
  */
-declare function mouseBind(element: NElement<any>, callBack: (arg0: pointerData) => void, button?: number | undefined): void;
+declare function mouseBind(element: NElement<any>, callBack: (arg0: PointerData) => void, button?: number | undefined): void;
 
 /**
  * 触摸(拖拽) 事件处理
  * @param {NElement} element
- * @param {function(pointerData):void} callBack
+ * @param {function(PointerData):void} callBack
  */
-declare function touchBind(element: NElement<any>, callBack: (arg0: pointerData) => void): void;
+declare function touchBind(element: NElement<any>, callBack: (arg0: PointerData) => void): void;
 
 /**
  * 包装为仅能执行一次的函数
@@ -2215,11 +2226,102 @@ declare function createHookObj<T extends unknown>(srcObj: T): T;
  * 获取代理对象中指定值的绑定信息
  * @template {Object} T
  * @param {T} proxyObj
- * @param {[(keyof T) | (string & {}) | symbol] | [Array<(keyof T) | (string & {}) | symbol>, ...Array<(keyof T) | (string & {}) | symbol>, function(...any): any]} keys
+ * @param {[(keyof T) | (string & {}) | symbol] | [((keyof T) | (string & {}) | symbol), ...Array<(keyof T) | (string & {}) | symbol>, function(...any): any]} keys
  * @returns {HookBindInfo}
  */
-declare function bindValue<T extends unknown>(proxyObj: T, ...keys: [symbol | (string & {}) | keyof T] | [(symbol | (string & {}) | keyof T)[], ...(symbol | (string & {}) | keyof T)[], (...arg0: any[]) => any]): HookBindInfo;
+declare function bindValue<T extends unknown>(proxyObj: T, ...keys: [symbol | (string & {}) | keyof T] | [symbol | (string & {}) | keyof T, ...(symbol | (string & {}) | keyof T)[], (...arg0: any[]) => any]): HookBindInfo;
+
+/**
+ * 数组钩子绑定类
+ */
+declare class ArrayHookBind {
+    /**
+     * @param {typeof ArrayHookBind.prototype.callback} callback
+     */
+    constructor(callback: typeof ArrayHookBind.prototype.callback);
+    /**
+     * 回调函数的弱引用
+     * @type {WeakRef<typeof ArrayHookBind.prototype.callback>}
+     */
+    cbRef: WeakRef<{
+        /** @type {(index: number, value: any) => void} */
+        set: (index: number, value: any) => void;
+        /** @type {(index: number, value: any) => void} */
+        add: (index: number, value: any) => void;
+        /** @type {(index: number) => void} */
+        del: (index: number) => void;
+    }>;
+    /**
+     * 回调函数
+     * 当此钩子绑定自动释放时为null
+     */
+    callback: {
+        /** @type {(index: number, value: any) => void} */
+        set: (index: number, value: any) => void;
+        /** @type {(index: number, value: any) => void} */
+        add: (index: number, value: any) => void;
+        /** @type {(index: number) => void} */
+        del: (index: number) => void;
+    };
+    /**
+     * 触发此钩子 (设置)
+     * @param {number} index
+     * @param {any} value
+     */
+    emitSet(index: number, value: any): void;
+    /**
+     * 触发此钩子 (增加)
+     * @param {number} index
+     * @param {any} value
+     */
+    emitAdd(index: number, value: any): void;
+    /**
+     * 触发此钩子 (删除)
+     * @param {number} index
+     */
+    emitDel(index: number): void;
+    /**
+     * 销毁此钩子
+     * 销毁后钩子将不再自动触发
+     */
+    destroy(): void;
+    /**
+     * 绑定销毁
+     * 当目标对象释放时销毁
+     * @param {object} targetObj
+     * @returns {ArrayHookBind} 返回自身
+     */
+    bindDestroy(targetObj: object): ArrayHookBind;
+}
+
+/**
+ * 创建数组的代理
+ * @template {Array} T
+ * @param {T} srcArray
+ * @returns {T}
+ */
+declare function createHookArray<T extends any[]>(srcArray: T): T;
+/**
+ * 绑定数组的代理
+ * @template {Array} T
+ * @param {T} proxyArray
+ * @param {{
+ *  set?: (index: number, value: any) => void;
+ *  add: (index: number, value: any) => void;
+ *  del: (index: number) => void;
+ * }} callbacks
+ * @param {{ noSet?: boolean, addExisting?: boolean }} [option]
+ * @returns {ArrayHookBind}
+ */
+declare function bindArrayHook<T extends any[]>(proxyArray: T, callbacks: {
+    set?: (index: number, value: any) => void;
+    add: (index: number, value: any) => void;
+    del: (index: number) => void;
+}, option?: {
+    noSet?: boolean;
+    addExisting?: boolean;
+} | undefined): ArrayHookBind;
 
 type NList_list = NList_list$1;
 
-export { NAsse, NAttr, NElement, NEvent, NList, NList_list, NStyle, NTagName, bindValue, createHookObj, createNStyle, createNStyleList, cssG, divideLayout_DU, divideLayout_LR, divideLayout_RL, divideLayout_UD, expandElement, getNElement, mouseBind, runOnce, tag, tagName, touchBind };
+export { NAsse, NAttr, NElement, NEvent, NList, NList_list, NStyle, NTagName, bindArrayHook, bindAttribute, bindValue, createHookArray, createHookObj, createNStyle, createNStyleList, cssG, divideLayout_DU, divideLayout_LR, divideLayout_RL, divideLayout_UD, expandElement, getNElement, mouseBind, runOnce, tag, tagName, touchBind };

@@ -68,13 +68,15 @@ export function createHookObj(srcObj)
  * 获取代理对象中指定值的绑定信息
  * @template {Object} T
  * @param {T} proxyObj
- * @param {[(keyof T) | (string & {}) | symbol] | [Array<(keyof T) | (string & {}) | symbol>, ...Array<(keyof T) | (string & {}) | symbol>, function(...any): any]} keys
+ * @param {[(keyof T) | (string & {}) | symbol] | [((keyof T) | (string & {}) | symbol), ...Array<(keyof T) | (string & {}) | symbol>, function(...any): any]} keys
  * @returns {HookBindInfo}
  */
 export function bindValue(proxyObj, ...keys)
 {
     const ctFunc = (/** @type {function(...any): any} */(keys.length >= 2 ? keys.pop() : null));
     const proxyMata = proxyMap.get(proxyObj);
+    if (proxyMata == undefined)
+        throw "bindValue: Values can only be bound from proxy objects";
     return new HookBindInfo(proxyObj, proxyMata.srcObj, (/** @type {Array<string | symbol>}*/(keys)), proxyMata.hookMap, ctFunc);
 }
 

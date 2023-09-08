@@ -1,11 +1,11 @@
 import { forEach } from "../../../util/forEach.js";
 import { NElement } from "../../element/NElement.js";
-import { pointerData } from "./pointerData.js";
+import { PointerData } from "./pointerData.js";
 
 /**
  * 触摸(拖拽) 事件处理
  * @param {NElement} element 
- * @param {function(pointerData):void} callBack
+ * @param {function(PointerData):void} callBack
  */
 export function touchBind(element, callBack)
 {
@@ -65,7 +65,7 @@ export function touchBind(element, callBack)
                 y: o.clientY
             };
             ogTouches.push(t);
-            callBack(new pointerData(
+            callBack(new PointerData(
                 t.x, t.y,
                 0, 0,
                 t.sx, t.sy,
@@ -89,7 +89,7 @@ export function touchBind(element, callBack)
                 let vy = o.clientY - t.y;
                 t.x = o.clientX;
                 t.y = o.clientY;
-                callBack(new pointerData(
+                callBack(new PointerData(
                     t.x, t.y,
                     vx, vy,
                     t.sx, t.sy,
@@ -116,7 +116,7 @@ export function touchBind(element, callBack)
                 let vy = o.clientY - t.y;
                 t.x = o.clientX;
                 t.y = o.clientY;
-                callBack(new pointerData(
+                callBack(new PointerData(
                     t.x, t.y,
                     vx, vy,
                     t.sx, t.sy,

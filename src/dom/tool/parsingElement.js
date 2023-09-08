@@ -23,10 +23,8 @@ function parsingElement(tagName, strings, ...keys)
             let nowKey = keys[i];
             if (nowKey instanceof NElement)
                 ret.addChild(nowKey);
-            else if (nowKey instanceof NStyle)
-                ret.setStyle(nowKey.key, nowKey.value);
-            else if (nowKey instanceof NEvent)
-                ret.addEventListener(nowKey.eventName, nowKey.callback);
+            else if (nowKey instanceof NStyle || nowKey instanceof NEvent)
+                nowKey.apply(ret);
             else if (nowKey)
                 throw "parsingElement error: Unprocessed type";
         }
