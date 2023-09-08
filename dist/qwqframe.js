@@ -2016,19 +2016,121 @@ class ArrayHookBind
 function createHookArray(srcArray)
 {
     let oldLength = srcArray.length;
+
     /**
      * @type {Set<ArrayHookBind>}
      */
     let hookSet = new Set();
+
+    /**
+     * @param {number} ind
+     * @param {any} value
+     */
+    function emitSet(ind, value)
+    {
+        hookSet.forEach(o => { o.emitSet(ind, value); });
+    }
+    /**
+     * @param {number} ind
+     * @param {any} value
+     */
+    function emitAdd(ind, value)
+    {
+        hookSet.forEach(o => { o.emitAdd(ind, value); });
+    }
+    /**
+     * @param {number} ind
+     */
+    function emitDel(ind)
+    {
+        hookSet.forEach(o => { o.emitDel(ind); });
+    }
+
     const proxyArray = (new Proxy(srcArray, {
         get: (target, key) => // 取值
         {
             switch (key)
             {
                 case "push":
-                    return Array.prototype.push;
+                    return (/** @type {any[]} */ ...items) =>
+                    {
+                        items.forEach(o =>
+                        {
+                            emitAdd(oldLength, o);
+                            oldLength++;
+                        });
+                        return srcArray.push(...items);
+                    };
                 case "pop":
-                    return Array.prototype.pop;
+                    return () =>
+                    {
+                        oldLength--;
+                        emitDel(oldLength);
+                        return srcArray.pop();
+                    };
+                case "unshift":
+                    return (/** @type {any[]} */ ...items) =>
+                    {
+                        items.forEach((o, ind) =>
+                        {
+                            emitAdd(ind, o);
+                            oldLength++;
+                        });
+                        return srcArray.unshift(...items);
+                    };
+                case "shift":
+                    return () =>
+                    {
+                        oldLength--;
+                        emitDel(0);
+                        return srcArray.shift();
+                    };
+                case "splice":
+                    return (/** @type {number} */ start, deleteCount = Infinity, /** @type {Array} */ ...items) =>
+                    {
+                        let actualStartIndex = (
+                            start >= 0 ?
+                                (
+                                    start >= oldLength ? oldLength : start
+                                ) :
+                                (
+                                    start < -oldLength ? 0 : start + oldLength
+                                )
+                        );
+                        let actualDeleteCount = (
+                            deleteCount > 0 ?
+                                Math.min(deleteCount, oldLength - actualStartIndex) :
+                                0
+                        );
+                        for (let i = 0; i < actualDeleteCount; i++)
+                        {
+                            emitDel(actualStartIndex);
+                        }
+                        items.forEach((o, ind) =>
+                        {
+                            emitAdd(actualStartIndex + ind, o);
+                        });
+                        return srcArray.splice(start, deleteCount, ...items);
+                    };
+                case "forEach":
+                case "map":
+                case "every":
+                case "some":
+                case "join":
+                case "find":
+                case "findIndex":
+                case "findLast":
+                case "findLastIndex":
+                case "flat":
+                case "flatMap":
+                case "includes":
+                case "indexOf":
+                case "slice":
+                    return (/** @type {any} */ ...arg) =>
+                    {
+                        // @ts-ignore
+                        return srcArray[key](...arg);
+                    };
                 default:
                     return Reflect.get(target, key);
             }
@@ -2044,12 +2146,12 @@ function createHookArray(srcArray)
                     if (newValue < oldLength)
                     {
                         for (let i = oldLength - 1; i >= newValue; i--)
-                            hookSet.forEach(o => { o.emitDel(i); });
+                            emitDel(i);
                     }
                     else if (newValue > oldLength)
                     {
                         for (let i = oldLength; i < newValue; i++)
-                            hookSet.forEach(o => { o.emitAdd(i, undefined); });
+                            emitAdd(i, undefined);
                     }
                     oldLength = newValue;
                 }
@@ -2061,14 +2163,14 @@ function createHookArray(srcArray)
                         if (ind >= oldLength + 1)
                         {
                             for (let i = oldLength; i < ind; i++)
-                                hookSet.forEach(o => { o.emitAdd(i, undefined); });
+                                emitAdd(i, undefined);
                         }
-                        hookSet.forEach(o => { o.emitAdd(ind, newValue); });
+                        emitAdd(ind, newValue);
                         oldLength = ind + 1;
                     }
                     else
                     {
-                        hookSet.forEach(o => { o.emitSet(ind, newValue); });
+                        emitSet(ind, newValue);
                     }
                 }
             }
