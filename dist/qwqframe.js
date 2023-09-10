@@ -2056,8 +2056,8 @@ function createHookArray(srcArray)
                     {
                         items.forEach(o =>
                         {
-                            emitAdd(oldLength, o);
                             oldLength++;
+                            emitAdd(oldLength - 1, o);
                         });
                         return srcArray.push(...items);
                     };
@@ -2073,8 +2073,8 @@ function createHookArray(srcArray)
                     {
                         items.forEach((o, ind) =>
                         {
-                            emitAdd(ind, o);
                             oldLength++;
+                            emitAdd(ind, o);
                         });
                         return srcArray.unshift(...items);
                     };
@@ -2104,10 +2104,12 @@ function createHookArray(srcArray)
                         );
                         for (let i = 0; i < actualDeleteCount; i++)
                         {
+                            oldLength--;
                             emitDel(actualStartIndex);
                         }
                         items.forEach((o, ind) =>
                         {
+                            oldLength++;
                             emitAdd(actualStartIndex + ind, o);
                         });
                         return srcArray.splice(start, deleteCount, ...items);
@@ -2143,30 +2145,32 @@ function createHookArray(srcArray)
             {
                 if (key == "length")
                 {
-                    if (newValue < oldLength)
+                    let oldLengthBefore = oldLength;
+                    oldLength = newValue;
+                    if (newValue < oldLengthBefore)
                     {
-                        for (let i = oldLength - 1; i >= newValue; i--)
+                        for (let i = oldLengthBefore - 1; i >= newValue; i--)
                             emitDel(i);
                     }
-                    else if (newValue > oldLength)
+                    else if (newValue > oldLengthBefore)
                     {
-                        for (let i = oldLength; i < newValue; i++)
+                        for (let i = oldLengthBefore; i < newValue; i++)
                             emitAdd(i, undefined);
                     }
-                    oldLength = newValue;
                 }
                 else if ((typeof (key) == "string" && (/^[1-9][0-9]*$/.test(key) || key == "0")) || typeof (key) == "number")
                 {
                     let ind = Number(key);
                     if (ind >= oldLength)
                     {
-                        if (ind >= oldLength + 1)
+                        let oldLengthBefore = oldLength;
+                        oldLength = ind + 1;
+                        if (ind >= oldLengthBefore + 1)
                         {
-                            for (let i = oldLength; i < ind; i++)
+                            for (let i = oldLengthBefore; i < ind; i++)
                                 emitAdd(i, undefined);
                         }
                         emitAdd(ind, newValue);
-                        oldLength = ind + 1;
                     }
                     else
                     {
@@ -2184,6 +2188,7 @@ function createHookArray(srcArray)
 
 /**
  * 绑定数组的代理
+ * 回调函数中不应当进行可能触发钩子的操作
  * @template {Array} T
  * @param {T} proxyArray
  * @param {{

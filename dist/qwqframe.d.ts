@@ -2303,6 +2303,7 @@ declare class ArrayHookBind {
 declare function createHookArray<T extends any[]>(srcArray: T): T;
 /**
  * 绑定数组的代理
+ * 回调函数中不应当进行可能触发钩子的操作
  * @template {Array} T
  * @param {T} proxyArray
  * @param {{
