@@ -744,6 +744,11 @@ declare class NElement<ElementObjectType extends HTMLElement> {
      */
     getChild(ind: number): NElement<any>;
     /**
+     * 使用指定元素替换此元素
+     * @param {Array<NElement>} elements
+     */
+    replaceWith(...elements: Array<NElement<any>>): void;
+    /**
      * 修改样式
      * @param {import("../feature/NStyle").keyOfStyle} styleName
      * @param {string | number | HookBindInfo} value

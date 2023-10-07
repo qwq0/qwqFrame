@@ -858,6 +858,15 @@ class NElement
     }
 
     /**
+     * 使用指定元素替换此元素
+     * @param {Array<NElement>} elements
+     */
+    replaceWith(...elements)
+    {
+        this.element.replaceWith(...(elements.map(o => o.element)));
+    }
+
+    /**
      * 修改样式
      * @param {import("../feature/NStyle").keyOfStyle} styleName
      * @param {string | number | HookBindInfo} value
