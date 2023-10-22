@@ -27,6 +27,10 @@ export { runOnce } from "./flow/runOnce.js";
 export { bindValue, createHookObj } from "./data/hook/object/proxyObject.js";
 export { createHookArray, bindArrayHook } from "./data/hook/array/proxyArray.js";
 
+
+export { delayPromise } from "./util/delayPromise.js";
+export { EventHandler } from "./util/EventHandler.js";
+
 /**
  * @typedef {import("./dom/feature/NList.js").NList_list} NList_list
  */

@@ -2169,6 +2169,69 @@ declare function touchBind(element: NElement<any>, callBack: (arg0: PointerData)
 declare function runOnce<P, R, T extends (...arg0: P[]) => R>(func: T): T;
 
 /**
+ * 异步延迟
+ * 将创建一个Promise并在指定延迟时间后解决
+ * @param {number} time 单位:毫秒
+ * @returns {Promise<void>}
+ */
+declare function delayPromise(time: number): Promise<void>;
+
+/**
+ * 事件处理器
+ * 可以定多个事件响应函数
+ * @template {*} T
+ */
+declare class EventHandler<T extends unknown> {
+    /**
+     * 回调列表
+     * @type {Array<function(T): void>}
+     */
+    cbList: Array<(arg0: T) => void>;
+    /**
+     * 单次回调列表
+     * @type {Array<function(T): void>}
+     */
+    onceCbList: Array<(arg0: T) => void>;
+    /**
+     * 添加响应函数
+     * @param {function(T): void} cb
+     */
+    add(cb: (arg0: T) => void): void;
+    /**
+     * 添加单次响应函数
+     * 触发一次事件后将不再响应
+     * @param {function(T): void} cb
+     */
+    addOnce(cb: (arg0: T) => void): void;
+    /**
+     * 返回一个Primise
+     * 下次响应时此primise将解决
+     * @returns {Promise<T>}
+     */
+    oncePromise(): Promise<T>;
+    /**
+     * 移除响应函数
+     * @param {function(T): void} cb
+     */
+    remove(cb: (arg0: T) => void): void;
+    /**
+     * 移除所有响应函数
+     */
+    removeAll(): void;
+    /**
+     * 触发事件
+     * @param {T} e
+     */
+    trigger(e: T): void;
+    /**
+     * 存在监听器
+     * @returns {boolean}
+     */
+    existListener(): boolean;
+    #private;
+}
+
+/**
  * 左右方向分割
  * @param {string} leftSize
  * @param {NElement | import("./expandElement").EDObj} a
@@ -2330,4 +2393,4 @@ declare function bindArrayHook<T extends any[]>(proxyArray: T, callbacks: {
 
 type NList_list = NList_list$1;
 
-export { NAsse, NAttr, NElement, NEvent, NList, NList_list, NStyle, NTagName, bindArrayHook, bindAttribute, bindValue, createHookArray, createHookObj, createNStyle, createNStyleList, cssG, divideLayout_DU, divideLayout_LR, divideLayout_RL, divideLayout_UD, expandElement, getNElement, mouseBind, runOnce, tag, tagName, touchBind };
+export { EventHandler, NAsse, NAttr, NElement, NEvent, NList, NList_list, NStyle, NTagName, bindArrayHook, bindAttribute, bindValue, createHookArray, createHookObj, createNStyle, createNStyleList, cssG, delayPromise, divideLayout_DU, divideLayout_LR, divideLayout_RL, divideLayout_UD, expandElement, getNElement, mouseBind, runOnce, tag, tagName, touchBind };
