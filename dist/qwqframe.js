@@ -1007,8 +1007,19 @@ class NElement
             throw "(NElelemt) animateCommit can only be used when fill forwards or both";
         let animate = this.element.animate(keyframes, options);
         await animate.finished;
-        animate.commitStyles();
+        
+        let errorObject = null;
+        try
+        {
+            animate.commitStyles();
+        }
+        catch (err)
+        {
+            errorObject = err;
+        }
         animate.cancel();
+        if (errorObject != null)
+            throw errorObject;
     }
 
     /**
