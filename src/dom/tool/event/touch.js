@@ -1,6 +1,6 @@
 import { forEach } from "../../../util/forEach.js";
 import { NElement } from "../../element/NElement.js";
-import { PointerData } from "./pointerData.js";
+import { PointerData } from "./PointerData.js";
 
 /**
  * 触摸(拖拽) 事件处理

@@ -33,4 +33,5 @@ export { EventHandler } from "./util/EventHandler.js";
 
 /**
  * @typedef {import("./dom/feature/NList.js").NList_list} NList_list
+ * @typedef {import("./dom/tool/event/PointerData.js").PointerData} PointerData
  */
