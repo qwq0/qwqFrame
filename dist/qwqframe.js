@@ -1569,8 +1569,9 @@ class PointerData
  * @param {NElement} element 绑定到元素
  * @param {function(PointerData):void} callBack 回调
  * @param {number} [button] 绑定的按键
+ * @param {HTMLElement | Window} [extensionRegion] 延伸区域 (实际捕获鼠标移动和按钮抬起的区域)
  */
-function mouseBind(element, callBack, button = 0)
+function mouseBind(element, callBack, button = 0, extensionRegion = window)
 {
     element.addEventListener("mousedown", (/** @type {MouseEvent} */ e) => mouseDown(e), false);
 
@@ -1590,8 +1591,8 @@ function mouseBind(element, callBack, button = 0)
             e.preventDefault();
         sx = x = e.clientX;
         sy = y = e.clientY;
-        window.addEventListener("mousemove", mousemoveP, true);
-        window.addEventListener("mouseup", mouseupP, true);
+        extensionRegion.addEventListener("mousemove", mousemoveP, true);
+        extensionRegion.addEventListener("mouseup", mouseupP, true);
         if (e.button == button)
         {
             leftDown = true;
@@ -1634,8 +1635,8 @@ function mouseBind(element, callBack, button = 0)
         let vy = e.clientY - y;
         x = e.clientX;
         y = e.clientY;
-        window.removeEventListener("mousemove", mousemoveP, false);
-        window.removeEventListener("mouseup", mouseupP, false);
+        extensionRegion.removeEventListener("mousemove", mousemoveP, false);
+        extensionRegion.removeEventListener("mouseup", mouseupP, false);
         if (leftDown && e.button == button)
         {
             leftDown = false;

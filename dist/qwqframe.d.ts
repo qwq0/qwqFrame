@@ -2148,8 +2148,9 @@ type EDObj = {
  * @param {NElement} element 绑定到元素
  * @param {function(PointerData):void} callBack 回调
  * @param {number} [button] 绑定的按键
+ * @param {HTMLElement | Window} [extensionRegion] 延伸区域 (实际捕获鼠标移动和按钮抬起的区域)
  */
-declare function mouseBind(element: NElement<any>, callBack: (arg0: PointerData$1) => void, button?: number | undefined): void;
+declare function mouseBind(element: NElement<any>, callBack: (arg0: PointerData$1) => void, button?: number | undefined, extensionRegion?: HTMLElement | Window | undefined): void;
 
 /**
  * 触摸(拖拽) 事件处理
