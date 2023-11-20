@@ -6,8 +6,9 @@ import { PointerData } from "./PointerData.js";
  * 触摸(拖拽) 事件处理
  * @param {NElement} element 
  * @param {function(PointerData):void} callBack
+ * @param {boolean} [preventDefault]
  */
-export function touchBind(element, callBack)
+export function touchBind(element, callBack, preventDefault = true)
 {
     element.addEventListener("touchstart", e => touchStart(/** @type {TouchEvent} */(e)), {
         capture: false,
@@ -44,7 +45,7 @@ export function touchBind(element, callBack)
      */
     function touchStart(e)
     {
-        if (e.cancelable)
+        if (e.cancelable && preventDefault)
             e.preventDefault();
         forEach(e.changedTouches, o =>
         {
