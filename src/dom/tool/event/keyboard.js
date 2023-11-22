@@ -1,5 +1,5 @@
 import { keyPress, keyUp, keyNameTable } from "./keyboardTable.js";
-import { KeyData } from "./keyData.js";
+import { KeyData } from "./KeyData.js";
 
 /**
  * 键盘 事件处理
