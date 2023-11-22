@@ -3,7 +3,7 @@
  * 当发生键盘事件时传递
  * 包含按键和按下状态等数据
  */
-export class KeyData
+export class KeyboardData
 {
     /**
      * 操作的键名

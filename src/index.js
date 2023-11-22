@@ -17,6 +17,7 @@ export { tag, tagName } from "./dom/tool/parsingElement.js";
 
 export { mouseBind } from "./dom/tool/event/mouse.js";
 export { touchBind } from "./dom/tool/event/touch.js";
+export { keyboardBind } from "./dom/tool/event/keyboard.js";
 
 
 
@@ -34,4 +35,5 @@ export { EventHandler } from "./util/EventHandler.js";
 /**
  * @typedef {import("./dom/feature/NList.js").NList_list} NList_list
  * @typedef {import("./dom/tool/event/PointerData.js").PointerData} PointerData
+ * @typedef {import("./dom/tool/event/KeyboardData.js").KeyboardData} KeyboardData
  */
