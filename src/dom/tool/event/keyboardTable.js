@@ -1,34 +1,34 @@
 /**
  * 键盘对应表
  */
-let table = {
-    "~": "`",
-    "!": "1",
-    "@": "2",
-    "#": "3",
-    "$": "4",
-    "%": "5",
-    "^": "6",
-    "&": "7",
-    "*": "8",
-    "(": "9",
-    ")": "0",
-    "_": "-",
-    "+": "=",
-    "{": "[",
-    "}": "]",
-    "|": "\\",
-    "\"": "\'",
-    ":": ";",
-    "<": ",",
-    ">": ".",
-    "?": "/"
-};
-let capitalA = "A".charCodeAt(0);
-let lowercaseA = "a".charCodeAt(0);
+let keyNameTable = new Map([
+    ["~", "`"],
+    ["!", "1"],
+    ["@", "2"],
+    ["#", "3"],
+    ["$", "4"],
+    ["%", "5"],
+    ["^", "6"],
+    ["&", "7"],
+    ["*", "8"],
+    ["(", "9"],
+    [")", "0"],
+    ["_", "-"],
+    ["+", "="],
+    ["{", "["],
+    ["}", "]"],
+    ["|", "\\"],
+    ["\"", "\'"],
+    [":", ";"],
+    ["<", ","],
+    [">", "."],
+    ["?", "/"]
+]);
+const capitalA = "A".charCodeAt(0);
+const lowercaseA = "a".charCodeAt(0);
 for (let i = 0; i < 26; i++)
-    table[String.fromCharCode(capitalA + i)] = String.fromCharCode(lowercaseA + i);
-export { table };
+    keyNameTable.set(String.fromCharCode(capitalA + i), String.fromCharCode(lowercaseA + i));
+export { keyNameTable };
 
 
 let keyMap = new Map();
