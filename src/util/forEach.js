@@ -43,12 +43,12 @@ export function forEachRev(o, callback)
  * 第一个参数与任何一个之后的参数相等 返回true
  * 与任何一个都不相等 返回false
  * @param {any} k
- * @param  {...any} s
+ * @param  {Array<any>} s
  * @returns {boolean}
  */
 export function isAmong(k, ...s)
 {
-    return forEach(s, o => o == k);
+    return s.some(o => o === k);
 }
 
 /**

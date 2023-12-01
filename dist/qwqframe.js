@@ -23,12 +23,12 @@ function forEach(o, callback)
  * 第一个参数与任何一个之后的参数相等 返回true
  * 与任何一个都不相等 返回false
  * @param {any} k
- * @param  {...any} s
+ * @param  {Array<any>} s
  * @returns {boolean}
  */
 function isAmong(k, ...s)
 {
-    return forEach(s, o => o == k);
+    return s.some(o => o === k);
 }
 
 /**
@@ -1019,7 +1019,9 @@ class NElement
         }
         animate.cancel();
         if (errorObject != null)
-            throw errorObject;
+        {
+            console.error(errorObject);
+        }
     }
 
     /**
@@ -2535,4 +2537,4 @@ class EventHandler
     }
 }
 
-export { EventHandler, NAsse, NAttr, NElement, NEvent, NList, NStyle, NTagName, bindArrayHook, bindAttribute, bindValue, createHookArray, createHookObj, createNStyle, createNStyleList, cssG, delayPromise, divideLayout_DU, divideLayout_LR, divideLayout_RL, divideLayout_UD, expandElement, getNElement, keyboardBind, mouseBind, runOnce, tag, tagName, touchBind };
+export { EventHandler, NAsse, NAttr, NElement, NEvent, NList, NStyle, NTagName, bindArrayHook, bindAttribute, bindValue, createHookArray, createHookObj, createNStyle, createNStyleList, cssG, delayPromise, divideLayout_DU, divideLayout_LR, divideLayout_RL, divideLayout_UD, expandElement, getNElement, isAmong, keyboardBind, mouseBind, runOnce, tag, tagName, touchBind };

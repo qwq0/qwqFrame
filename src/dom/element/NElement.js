@@ -345,7 +345,9 @@ export class NElement
         }
         animate.cancel();
         if (errorObject != null)
-            throw errorObject;
+        {
+            console.error(errorObject);
+        }
     }
 
     /**

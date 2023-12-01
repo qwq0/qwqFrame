@@ -31,6 +31,7 @@ export { createHookArray, bindArrayHook } from "./data/hook/array/proxyArray.js"
 
 export { delayPromise } from "./util/delayPromise.js";
 export { EventHandler } from "./util/EventHandler.js";
+export { isAmong } from "./util/forEach.js";
 
 /**
  * @typedef {import("./dom/feature/NList.js").NList_list} NList_list
