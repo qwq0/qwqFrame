@@ -395,12 +395,12 @@ class NAttr
     {
         if (typeof (this.value) == "function")
         {
-            let cbRet = this.value(e.element[this.key]);
+            let cbRet = this.value(e);
             if (cbRet != undefined)
-                e.element[this.key] = cbRet;
+                e.element.setAttribute(this.key, cbRet);
         }
         else
-            e.element[this.key] = this.value;
+            e.element.setAttribute(this.key, this.value);
     }
 }
 
@@ -941,7 +941,7 @@ class NElement
      */
     setAttrs(obj)
     {
-        forEach(Object.keys(obj), (key) => { this.element[key] = obj[key]; });
+        forEach(Object.keys(obj), (key) => { this.element.setAttribute(key, obj[key]); });
     }
 
     /**
@@ -1007,7 +1007,7 @@ class NElement
             throw "(NElelemt) animateCommit can only be used when fill forwards or both";
         let animate = this.element.animate(keyframes, options);
         await animate.finished;
-        
+
         let errorObject = null;
         try
         {

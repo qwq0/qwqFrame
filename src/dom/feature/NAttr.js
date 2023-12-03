@@ -36,11 +36,11 @@ export class NAttr
     {
         if (typeof (this.value) == "function")
         {
-            let cbRet = this.value(e.element[this.key]);
+            let cbRet = this.value(e);
             if (cbRet != undefined)
-                e.element[this.key] = cbRet;
+                e.element.setAttribute(this.key, cbRet);
         }
         else
-            e.element[this.key] = this.value;
+            e.element.setAttribute(this.key, this.value);
     }
 }

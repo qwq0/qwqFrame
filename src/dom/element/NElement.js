@@ -267,7 +267,7 @@ export class NElement
      */
     setAttrs(obj)
     {
-        forEach(Object.keys(obj), (key) => { this.element[key] = obj[key]; });
+        forEach(Object.keys(obj), (key) => { this.element.setAttribute(key, obj[key]); });
     }
 
     /**
@@ -333,7 +333,7 @@ export class NElement
             throw "(NElelemt) animateCommit can only be used when fill forwards or both";
         let animate = this.element.animate(keyframes, options);
         await animate.finished;
-        
+
         let errorObject = null;
         try
         {
