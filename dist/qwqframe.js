@@ -891,6 +891,7 @@ class NElement
             // @ts-expect-error
             this.element.style[styleName] = value;
     }
+    
     /**
      * 获取样式
      * @param {import("../feature/NStyle").keyOfStyle} styleName
@@ -904,16 +905,11 @@ class NElement
 
     /**
      * 修改多个样式
-     * @param {{ [x in (import("../feature/NStyle").keyOfStyle)]?: string | number }} obj
+     * @param {{ [x in (import("../feature/NStyle").keyOfStyle)]?: string | number | HookBindInfo }} obj
      */
     setStyles(obj)
     {
-        forEach(Object.keys(obj), (key) =>
-        {
-            let value = obj[key];
-            if (isAmong(typeof (value), "number", "string"))
-                this.element.style[key] = obj[key];
-        });
+        forEach(Object.keys(obj), (key) => { this.setStyle(key, obj[key]); });
     }
 
     /**
@@ -936,12 +932,22 @@ class NElement
     }
 
     /**
+     * 设置HTMLElement属性
+     * @param {string} key
+     * @param {string} value
+     */
+    setAttr(key, value)
+    {
+        this.element.setAttribute(key, value);
+    }
+
+    /**
      * 设置多个HTMLElement属性
      * @param {Object<string, string>} obj
      */
     setAttrs(obj)
     {
-        forEach(Object.keys(obj), (key) => { this.element.setAttribute(key, obj[key]); });
+        forEach(Object.keys(obj), (key) => { this.setAttr(key, obj[key]); });
     }
 
     /**
@@ -2415,11 +2421,48 @@ function bindArrayHook(proxyArray, callbacks, option = {})
  */
 function delayPromise(time)
 {
-    return (new Promise((resolve, reject) =>
+    return (new Promise((resolve) =>
     {
         setTimeout(() =>
         {
             resolve();
+        }, time);
+    }));
+}
+
+/**
+ * 异步延迟带值
+ * 将创建一个Promise并在指定延迟时间后解决
+ * @template {any} T
+ * @param {number} time 单位:毫秒
+ * @param {T} resolveValue
+ * @returns {Promise<T>}
+ */
+function delayPromiseWithResolve(time, resolveValue)
+{
+    return (new Promise((resolve) =>
+    {
+        setTimeout(() =>
+        {
+            resolve(resolveValue);
+        }, time);
+    }));
+}
+
+/**
+ * 异步延迟拒绝
+ * 将创建一个Promise并在指定延迟时间后拒绝
+ * @param {number} time 单位:毫秒
+ * @param {any} rejectReason
+ * @returns {Promise<void>}
+ */
+function delayPromiseWithReject(time, rejectReason)
+{
+    return (new Promise((_resolve, reject) =>
+    {
+        setTimeout(() =>
+        {
+            reject(rejectReason);
         }, time);
     }));
 }
@@ -2537,4 +2580,4 @@ class EventHandler
     }
 }
 
-export { EventHandler, NAsse, NAttr, NElement, NEvent, NList, NStyle, NTagName, bindArrayHook, bindAttribute, bindValue, createHookArray, createHookObj, createNStyle, createNStyleList, cssG, delayPromise, divideLayout_DU, divideLayout_LR, divideLayout_RL, divideLayout_UD, expandElement, getNElement, isAmong, keyboardBind, mouseBind, runOnce, tag, tagName, touchBind };
+export { EventHandler, NAsse, NAttr, NElement, NEvent, NList, NStyle, NTagName, bindArrayHook, bindAttribute, bindValue, createHookArray, createHookObj, createNStyle, createNStyleList, cssG, delayPromise, delayPromiseWithReject, delayPromiseWithResolve, divideLayout_DU, divideLayout_LR, divideLayout_RL, divideLayout_UD, expandElement, getNElement, isAmong, keyboardBind, mouseBind, runOnce, tag, tagName, touchBind };

@@ -217,6 +217,7 @@ export class NElement
             // @ts-expect-error
             this.element.style[styleName] = value;
     }
+    
     /**
      * 获取样式
      * @param {import("../feature/NStyle").keyOfStyle} styleName
@@ -230,16 +231,11 @@ export class NElement
 
     /**
      * 修改多个样式
-     * @param {{ [x in (import("../feature/NStyle").keyOfStyle)]?: string | number }} obj
+     * @param {{ [x in (import("../feature/NStyle").keyOfStyle)]?: string | number | HookBindInfo }} obj
      */
     setStyles(obj)
     {
-        forEach(Object.keys(obj), (key) =>
-        {
-            let value = obj[key];
-            if (isAmong(typeof (value), "number", "string"))
-                this.element.style[key] = obj[key];
-        });
+        forEach(Object.keys(obj), (key) => { this.setStyle(key, obj[key]); });
     }
 
     /**
@@ -262,12 +258,22 @@ export class NElement
     }
 
     /**
+     * 设置HTMLElement属性
+     * @param {string} key
+     * @param {string} value
+     */
+    setAttr(key, value)
+    {
+        this.element.setAttribute(key, value);
+    }
+
+    /**
      * 设置多个HTMLElement属性
      * @param {Object<string, string>} obj
      */
     setAttrs(obj)
     {
-        forEach(Object.keys(obj), (key) => { this.element.setAttribute(key, obj[key]); });
+        forEach(Object.keys(obj), (key) => { this.setAttr(key, obj[key]); });
     }
 
     /**

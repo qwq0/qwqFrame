@@ -29,7 +29,7 @@ export { bindValue, createHookObj } from "./data/hook/object/proxyObject.js";
 export { createHookArray, bindArrayHook } from "./data/hook/array/proxyArray.js";
 
 
-export { delayPromise } from "./util/delayPromise.js";
+export { delayPromise, delayPromiseWithReject, delayPromiseWithResolve } from "./util/delayPromise.js";
 export { EventHandler } from "./util/EventHandler.js";
 export { isAmong } from "./util/forEach.js";
 
