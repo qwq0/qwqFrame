@@ -98,21 +98,6 @@ declare class HookBindValue {
      */
     constructor(info: HookBindInfo, targetObj: object, targetKey: string | symbol);
     /**
-     * 钩子信息
-     * @type {import("./HookBindInfo").HookBindInfo}
-     */
-    info: HookBindInfo;
-    /**
-     * 目标对象
-     * @type {WeakRef<object>}
-     */
-    targetRef: WeakRef<any>;
-    /**
-     * 目标对象的键
-     * @type {string | symbol}
-     */
-    targetKey: string | symbol;
-    /**
      * 触发此钩子
      * 销毁后仍可通过此方法手动触发
      */
@@ -122,6 +107,7 @@ declare class HookBindValue {
      * 销毁后钩子将不再自动触发
      */
     destroy(): void;
+    #private;
 }
 
 /**
@@ -133,22 +119,6 @@ declare class HookBindCallback {
      * @param {function(any): void} callback
      */
     constructor(info: HookBindInfo, callback: (arg0: any) => void);
-    /**
-     * 钩子信息
-     * @type {import("./HookBindInfo").HookBindInfo}
-     */
-    info: HookBindInfo;
-    /**
-     * 回调函数的弱引用
-     * @type {WeakRef<function(any): void>}
-     */
-    cbRef: WeakRef<(arg0: any) => void>;
-    /**
-     * 回调函数
-     * 当此钩子绑定自动释放时为null
-     * @type {function(any): void}
-     */
-    callback: (arg0: any) => void;
     /**
      * 触发此钩子
      */
@@ -165,6 +135,7 @@ declare class HookBindCallback {
      * @returns {HookBindCallback} 返回自身
      */
     bindDestroy(targetObj: object): HookBindCallback;
+    #private;
 }
 
 /**
@@ -179,32 +150,7 @@ declare class HookBindInfo {
      * @param {function(...any): any} ctFunc
      */
     constructor(proxyObj: object, srcObj: object, keys: Array<string | symbol>, hookMap: Map<string | symbol, Set<HookBindValue | HookBindCallback>>, ctFunc: (...args: any[]) => any);
-    /**
-     * 代理对象
-     * @type {object}
-     */
-    proxyObj: object;
-    /**
-     * 源对象
-     * @type {object}
-     */
-    srcObj: object;
-    /**
-     * 需要监听代理对象上的值
-     * @type {Array<string | symbol>}
-     */
-    keys: Array<string | symbol>;
-    /**
-     * 修改指定值时需要触发的钩子
-     * @type {Map<string | symbol, Set<HookBindValue | HookBindCallback>>}
-     */
-    hookMap: Map<string | symbol, Set<HookBindValue | HookBindCallback>>;
-    /**
-     * 值处理函数
-     * 若存在此函数则需要调用
-     * @type {function(...any): any}
-     */
-    ctFunc: (...args: any[]) => any;
+    proxyObj: any;
     /**
      * 获取此钩子绑定的值
      */
@@ -235,6 +181,7 @@ declare class HookBindInfo {
      * @returns {HookBindCallback}
      */
     bindToCallback(callback: (arg0: any) => void): HookBindCallback;
+    #private;
 }
 
 /**
@@ -2348,36 +2295,20 @@ declare function bindValue<T extends unknown>(proxyObj: T, ...keys: [symbol | (s
 
 /**
  * 数组钩子绑定类
+ *
+ * @typedef {{
+ *  set: (index: number, value: any) => void,
+ *  add: (index: number, value: any) => void,
+ *  del: (index: number) => void
+ * }} callbackType
  */
 declare class ArrayHookBind {
     /**
-     * @param {typeof ArrayHookBind.prototype.callback} callback
+     * @param {Array} proxyArr
+     * @param {Set<ArrayHookBind>} hookSet
+     * @param {callbackType} callback
      */
-    constructor(callback: typeof ArrayHookBind.prototype.callback);
-    /**
-     * 回调函数的弱引用
-     * @type {WeakRef<typeof ArrayHookBind.prototype.callback>}
-     */
-    cbRef: WeakRef<{
-        /** @type {(index: number, value: any) => void} */
-        set: (index: number, value: any) => void;
-        /** @type {(index: number, value: any) => void} */
-        add: (index: number, value: any) => void;
-        /** @type {(index: number) => void} */
-        del: (index: number) => void;
-    }>;
-    /**
-     * 回调函数
-     * 当此钩子绑定自动释放时为null
-     */
-    callback: {
-        /** @type {(index: number, value: any) => void} */
-        set: (index: number, value: any) => void;
-        /** @type {(index: number, value: any) => void} */
-        add: (index: number, value: any) => void;
-        /** @type {(index: number) => void} */
-        del: (index: number) => void;
-    };
+    constructor(proxyArr: any[], hookSet: Set<ArrayHookBind>, callback: callbackType);
     /**
      * 触发此钩子 (设置)
      * @param {number} index
@@ -2407,7 +2338,16 @@ declare class ArrayHookBind {
      * @returns {ArrayHookBind} 返回自身
      */
     bindDestroy(targetObj: object): ArrayHookBind;
+    #private;
 }
+/**
+ * 数组钩子绑定类
+ */
+type callbackType = {
+    set: (index: number, value: any) => void;
+    add: (index: number, value: any) => void;
+    del: (index: number) => void;
+};
 
 /**
  * 创建数组的代理

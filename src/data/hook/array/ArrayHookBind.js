@@ -1,36 +1,57 @@
+import { unboundHook as unboundHookSet } from "../../../debug/unboundHookSet.js";
 import { register, targetRefMap } from "./hookStatus.js";
 
 /**
  * 数组钩子绑定类
+ * 
+ * @typedef {{
+ *  set: (index: number, value: any) => void,
+ *  add: (index: number, value: any) => void,
+ *  del: (index: number) => void
+ * }} callbackType
  */
 export class ArrayHookBind
 {
     /**
-     * 回调函数的弱引用
-     * @type {WeakRef<typeof ArrayHookBind.prototype.callback>}
+     * 代理数组
+     * @type {Array}
      */
-    cbRef = null;
+    #proxyArr = null;
+
+    /**
+     * 修改数组时需要触发的钩子
+     * 此值为 hookStatus 文件中 arrayProxyMap 的 hookSet 的引用
+     * @type {Set<ArrayHookBind>}
+     */
+    #hookSet = null;
+
+    /**
+     * 回调函数的弱引用
+     * @type {WeakRef<callbackType>}
+     */
+    #cbRef = null;
 
     /**
      * 回调函数
      * 当此钩子绑定自动释放时为null
+     * @type {callbackType}
      */
-    callback = {
-        /** @type {(index: number, value: any) => void} */
-        set: null,
-        /** @type {(index: number, value: any) => void} */
-        add: null,
-        /** @type {(index: number) => void} */
-        del: null
-    };
+    #callback = null;
 
     /**
-     * @param {typeof ArrayHookBind.prototype.callback} callback
+     * @param {Array} proxyArr
+     * @param {Set<ArrayHookBind>} hookSet
+     * @param {callbackType} callback
      */
-    constructor(callback)
+    constructor(proxyArr, hookSet, callback)
     {
-        this.cbRef = new WeakRef(callback);
-        this.callback = Object.assign({}, callback);
+        this.#proxyArr = proxyArr;
+        this.#hookSet = hookSet;
+        this.#cbRef = new WeakRef(callback);
+        this.#callback = callback;
+
+        // 添加调试未绑定探针
+        unboundHookSet.add(this);
     }
 
     /**
@@ -40,7 +61,7 @@ export class ArrayHookBind
      */
     emitSet(index, value)
     {
-        let callback = this.cbRef.deref();
+        let callback = this.#cbRef.deref();
         if (callback)
         {
             try
@@ -61,7 +82,7 @@ export class ArrayHookBind
      */
     emitAdd(index, value)
     {
-        let callback = this.cbRef.deref();
+        let callback = this.#cbRef.deref();
         if (callback)
         {
             try
@@ -81,7 +102,7 @@ export class ArrayHookBind
      */
     emitDel(index)
     {
-        let callback = this.cbRef.deref();
+        let callback = this.#cbRef.deref();
         if (callback)
         {
             try
@@ -101,7 +122,11 @@ export class ArrayHookBind
      */
     destroy()
     {
+        this.#hookSet.delete(this);
         register.unregister(this);
+
+        // 移除调试未绑定探针
+        unboundHookSet.delete(this);
     }
 
     /**
@@ -118,9 +143,13 @@ export class ArrayHookBind
             targetRefSet = new Set();
             targetRefMap.set(targetObj, targetRefSet);
         }
-        targetRefSet.add(this.callback);
-        this.callback = null;
+        targetRefSet.add(this.#callback);
+        this.#callback = null;
         register.register(targetObj, this, this);
+
+        // 移除调试未绑定探针
+        unboundHookSet.delete(this);
+
         return this;
     }
 }

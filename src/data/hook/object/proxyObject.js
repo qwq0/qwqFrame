@@ -42,6 +42,7 @@ export function createHookObj(srcObj)
             return ret;
         },
 
+        // TODO 应当当作设置为undefined 并创建专用方法解除绑定钩子
         deleteProperty: (target, key) => // 删除值
         {
             let ret = Reflect.deleteProperty(target, key);

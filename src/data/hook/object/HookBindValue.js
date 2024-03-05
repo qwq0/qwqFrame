@@ -9,18 +9,18 @@ export class HookBindValue
      * 钩子信息
      * @type {import("./HookBindInfo").HookBindInfo}
      */
-    info = null;
+    #info = null;
 
     /**
      * 目标对象
      * @type {WeakRef<object>}
      */
-    targetRef = null;
+    #targetRef = null;
     /**
      * 目标对象的键
      * @type {string | symbol}
      */
-    targetKey = "";
+    #targetKey = "";
 
     /**
      * @param {import("./HookBindInfo").HookBindInfo} info
@@ -29,9 +29,9 @@ export class HookBindValue
      */
     constructor(info, targetObj, targetKey)
     {
-        this.info = info;
-        this.targetRef = new WeakRef(targetObj);
-        this.targetKey = targetKey;
+        this.#info = info;
+        this.#targetRef = new WeakRef(targetObj);
+        this.#targetKey = targetKey;
         info.addHook(this);
         register.register(targetObj, this, this);
     }
@@ -42,12 +42,12 @@ export class HookBindValue
      */
     emit()
     {
-        let target = this.targetRef.deref();
+        let target = this.#targetRef.deref();
         if (target != undefined)
         {
             try
             {
-                target[this.targetKey] = this.info.getValue();
+                target[this.#targetKey] = this.#info.getValue();
             }
             catch (err)
             {
@@ -62,7 +62,7 @@ export class HookBindValue
      */
     destroy()
     {
-        this.info.removeHook(this);
+        this.#info.removeHook(this);
         register.unregister(this);
     }
 }

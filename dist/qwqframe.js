@@ -32,6 +32,11 @@ function isAmong(k, ...s)
 }
 
 /**
+ * 为绑定回收的钩子
+ */
+let unboundHook = new Set();
+
+/**
  * 代理对象 到 钩子映射和源对象 映射
  * 
  * @type {WeakMap<object, {
@@ -69,19 +74,19 @@ class HookBindCallback
      * 钩子信息
      * @type {import("./HookBindInfo").HookBindInfo}
      */
-    info = null;
+    #info = null;
 
     /**
      * 回调函数的弱引用
      * @type {WeakRef<function(any): void>}
      */
-    cbRef = null;
+    #cbRef = null;
     /**
      * 回调函数
      * 当此钩子绑定自动释放时为null
      * @type {function(any): void}
      */
-    callback = null;
+    #callback = null;
 
     /**
      * @param {import("./HookBindInfo").HookBindInfo} info
@@ -89,10 +94,13 @@ class HookBindCallback
      */
     constructor(info, callback)
     {
-        this.info = info;
-        this.cbRef = new WeakRef(callback);
-        this.callback = callback;
+        this.#info = info;
+        this.#cbRef = new WeakRef(callback);
+        this.#callback = callback;
         info.addHook(this);
+
+        // 添加调试未绑定探针
+        unboundHook.add(this);
     }
 
     /**
@@ -100,12 +108,12 @@ class HookBindCallback
      */
     emit()
     {
-        let callback = this.cbRef.deref();
+        let callback = this.#cbRef.deref();
         if (callback)
         {
             try
             {
-                callback(this.info.getValue());
+                callback(this.#info.getValue());
             }
             catch (err)
             {
@@ -120,8 +128,11 @@ class HookBindCallback
      */
     destroy()
     {
-        this.info.removeHook(this);
+        this.#info.removeHook(this);
         register$1.unregister(this);
+
+        // 移除调试未绑定探针
+        unboundHook.delete(this);
     }
 
     /**
@@ -138,9 +149,13 @@ class HookBindCallback
             targetRefSet = new Set();
             targetRefMap$1.set(targetObj, targetRefSet);
         }
-        targetRefSet.add(this.callback);
-        this.callback = null;
+        targetRefSet.add(this.#callback);
+        this.#callback = null;
         register$1.register(targetObj, this, this);
+
+        // 移除调试未绑定探针
+        unboundHook.delete(this);
+
         return this;
     }
 }
@@ -154,18 +169,18 @@ class HookBindValue
      * 钩子信息
      * @type {import("./HookBindInfo").HookBindInfo}
      */
-    info = null;
+    #info = null;
 
     /**
      * 目标对象
      * @type {WeakRef<object>}
      */
-    targetRef = null;
+    #targetRef = null;
     /**
      * 目标对象的键
      * @type {string | symbol}
      */
-    targetKey = "";
+    #targetKey = "";
 
     /**
      * @param {import("./HookBindInfo").HookBindInfo} info
@@ -174,9 +189,9 @@ class HookBindValue
      */
     constructor(info, targetObj, targetKey)
     {
-        this.info = info;
-        this.targetRef = new WeakRef(targetObj);
-        this.targetKey = targetKey;
+        this.#info = info;
+        this.#targetRef = new WeakRef(targetObj);
+        this.#targetKey = targetKey;
         info.addHook(this);
         register$1.register(targetObj, this, this);
     }
@@ -187,12 +202,12 @@ class HookBindValue
      */
     emit()
     {
-        let target = this.targetRef.deref();
+        let target = this.#targetRef.deref();
         if (target != undefined)
         {
             try
             {
-                target[this.targetKey] = this.info.getValue();
+                target[this.#targetKey] = this.#info.getValue();
             }
             catch (err)
             {
@@ -207,7 +222,7 @@ class HookBindValue
      */
     destroy()
     {
-        this.info.removeHook(this);
+        this.#info.removeHook(this);
         register$1.unregister(this);
     }
 }
@@ -221,28 +236,29 @@ class HookBindInfo
      * 代理对象
      * @type {object}
      */
-    proxyObj = null;
+    #proxyObj = null;
     /**
      * 源对象
      * @type {object}
      */
-    srcObj = null;
+    #srcObj = null;
     /**
      * 需要监听代理对象上的值
      * @type {Array<string | symbol>}
      */
-    keys = [];
+    #keys = [];
     /**
      * 修改指定值时需要触发的钩子
+     * 此值为 hookStatus 文件中 proxyMap 的 hookMap 的引用
      * @type {Map<string | symbol, Set<HookBindValue | HookBindCallback>>}
      */
-    hookMap = null;
+    #hookMap = null;
     /**
      * 值处理函数
      * 若存在此函数则需要调用
      * @type {function(...any): any} 
      */
-    ctFunc = null;
+    #ctFunc = null;
 
     /**
      * @param {object} proxyObj
@@ -254,10 +270,10 @@ class HookBindInfo
     constructor(proxyObj, srcObj, keys, hookMap, ctFunc)
     {
         this.proxyObj = proxyObj;
-        this.srcObj = srcObj;
-        this.keys = keys;
-        this.hookMap = hookMap;
-        this.ctFunc = ctFunc;
+        this.#srcObj = srcObj;
+        this.#keys = keys;
+        this.#hookMap = hookMap;
+        this.#ctFunc = ctFunc;
     }
 
     /**
@@ -265,7 +281,7 @@ class HookBindInfo
      */
     getValue()
     {
-        return (this.ctFunc ? this.ctFunc(...this.keys.map(o => this.srcObj[o])) : this.srcObj[this.keys[0]]);
+        return (this.#ctFunc ? this.#ctFunc(...this.#keys.map(o => this.#srcObj[o])) : this.#srcObj[this.#keys[0]]);
     }
 
     /**
@@ -275,13 +291,13 @@ class HookBindInfo
      */
     addHook(hookObj)
     {
-        this.keys.forEach(o =>
+        this.#keys.forEach(o =>
         {
-            let set = this.hookMap.get(o);
+            let set = this.#hookMap.get(o);
             if (set == undefined)
             {
                 set = new Set();
-                this.hookMap.set(o, set);
+                this.#hookMap.set(o, set);
             }
             set.add(hookObj);
         });
@@ -294,14 +310,14 @@ class HookBindInfo
      */
     removeHook(hookObj)
     {
-        this.keys.forEach(o =>
+        this.#keys.forEach(o =>
         {
-            let set = this.hookMap.get(o);
+            let set = this.#hookMap.get(o);
             if (set)
             {
                 set.delete(hookObj);
                 if (set.size == 0)
-                    this.hookMap.delete(o);
+                    this.#hookMap.delete(o);
             }
         });
     }
@@ -1978,6 +1994,7 @@ function createHookObj(srcObj)
             return ret;
         },
 
+        // TODO 应当当作设置为undefined 并创建专用方法解除绑定钩子
         deleteProperty: (target, key) => // 删除值
         {
             let ret = Reflect.deleteProperty(target, key);
@@ -2047,35 +2064,55 @@ const register = new FinalizationRegistry(heldValue =>
 
 /**
  * 数组钩子绑定类
+ * 
+ * @typedef {{
+ *  set: (index: number, value: any) => void,
+ *  add: (index: number, value: any) => void,
+ *  del: (index: number) => void
+ * }} callbackType
  */
 class ArrayHookBind
 {
     /**
-     * 回调函数的弱引用
-     * @type {WeakRef<typeof ArrayHookBind.prototype.callback>}
+     * 代理数组
+     * @type {Array}
      */
-    cbRef = null;
+    #proxyArr = null;
+
+    /**
+     * 修改数组时需要触发的钩子
+     * 此值为 hookStatus 文件中 arrayProxyMap 的 hookSet 的引用
+     * @type {Set<ArrayHookBind>}
+     */
+    #hookSet = null;
+
+    /**
+     * 回调函数的弱引用
+     * @type {WeakRef<callbackType>}
+     */
+    #cbRef = null;
 
     /**
      * 回调函数
      * 当此钩子绑定自动释放时为null
+     * @type {callbackType}
      */
-    callback = {
-        /** @type {(index: number, value: any) => void} */
-        set: null,
-        /** @type {(index: number, value: any) => void} */
-        add: null,
-        /** @type {(index: number) => void} */
-        del: null
-    };
+    #callback = null;
 
     /**
-     * @param {typeof ArrayHookBind.prototype.callback} callback
+     * @param {Array} proxyArr
+     * @param {Set<ArrayHookBind>} hookSet
+     * @param {callbackType} callback
      */
-    constructor(callback)
+    constructor(proxyArr, hookSet, callback)
     {
-        this.cbRef = new WeakRef(callback);
-        this.callback = Object.assign({}, callback);
+        this.#proxyArr = proxyArr;
+        this.#hookSet = hookSet;
+        this.#cbRef = new WeakRef(callback);
+        this.#callback = callback;
+
+        // 添加调试未绑定探针
+        unboundHook.add(this);
     }
 
     /**
@@ -2085,7 +2122,7 @@ class ArrayHookBind
      */
     emitSet(index, value)
     {
-        let callback = this.cbRef.deref();
+        let callback = this.#cbRef.deref();
         if (callback)
         {
             try
@@ -2106,7 +2143,7 @@ class ArrayHookBind
      */
     emitAdd(index, value)
     {
-        let callback = this.cbRef.deref();
+        let callback = this.#cbRef.deref();
         if (callback)
         {
             try
@@ -2126,7 +2163,7 @@ class ArrayHookBind
      */
     emitDel(index)
     {
-        let callback = this.cbRef.deref();
+        let callback = this.#cbRef.deref();
         if (callback)
         {
             try
@@ -2146,7 +2183,11 @@ class ArrayHookBind
      */
     destroy()
     {
+        this.#hookSet.delete(this);
         register.unregister(this);
+
+        // 移除调试未绑定探针
+        unboundHook.delete(this);
     }
 
     /**
@@ -2163,9 +2204,13 @@ class ArrayHookBind
             targetRefSet = new Set();
             targetRefMap.set(targetObj, targetRefSet);
         }
-        targetRefSet.add(this.callback);
-        this.callback = null;
+        targetRefSet.add(this.#callback);
+        this.#callback = null;
         register.register(targetObj, this, this);
+
+        // 移除调试未绑定探针
+        unboundHook.delete(this);
+
         return this;
     }
 }
@@ -2408,7 +2453,7 @@ function bindArrayHook(proxyArray, callbacks, option = {})
         }
     }
 
-    let ret = new ArrayHookBind(callbackObj);
+    let ret = new ArrayHookBind(proxyArray, proxyMata.hookSet, callbackObj);
     proxyMata.hookSet.add(ret);
     return ret;
 }

@@ -239,7 +239,7 @@ export function bindArrayHook(proxyArray, callbacks, option = {})
         }
     }
 
-    let ret = new ArrayHookBind(callbackObj);
+    let ret = new ArrayHookBind(proxyArray, proxyMata.hookSet, callbackObj);
     proxyMata.hookSet.add(ret);
     return ret;
 }

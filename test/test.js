@@ -3,6 +3,7 @@ import { NEvent } from "../src/dom/feature/NEvent.js";
 import { tag, tagName } from "../src/dom/tool/parsingElement.js";
 import { cssG, expandElement, getNElement, NList, bindValue, createHookObj, createHookArray } from "../src/index.js";
 import { bindArrayHook } from "../src/data/hook/array/proxyArray.js";
+import { unboundHook } from "../src/debug/unboundHookSet.js";
 
 
 
@@ -99,6 +100,7 @@ setInterval(() => { dataObj.text += "-"; }, 500);
 setInterval(() => { dataObj.color = (dataObj.color == "black" ? "red" : "black"); }, 450);
 setInterval(() => { dataObj.colorR = (dataObj.colorR + 10) % 256; }, 100);
 setInterval(() => { dataArray.push(123); }, 450);
+setInterval(() => { console.log(unboundHook.size); }, 300);
 
 let testElement_2 = expandElement({
     text: "--测试2--",

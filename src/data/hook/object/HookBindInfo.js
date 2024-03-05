@@ -10,28 +10,29 @@ export class HookBindInfo
      * 代理对象
      * @type {object}
      */
-    proxyObj = null;
+    #proxyObj = null;
     /**
      * 源对象
      * @type {object}
      */
-    srcObj = null;
+    #srcObj = null;
     /**
      * 需要监听代理对象上的值
      * @type {Array<string | symbol>}
      */
-    keys = [];
+    #keys = [];
     /**
      * 修改指定值时需要触发的钩子
+     * 此值为 hookStatus 文件中 proxyMap 的 hookMap 的引用
      * @type {Map<string | symbol, Set<HookBindValue | HookBindCallback>>}
      */
-    hookMap = null;
+    #hookMap = null;
     /**
      * 值处理函数
      * 若存在此函数则需要调用
      * @type {function(...any): any} 
      */
-    ctFunc = null;
+    #ctFunc = null;
 
     /**
      * @param {object} proxyObj
@@ -43,10 +44,10 @@ export class HookBindInfo
     constructor(proxyObj, srcObj, keys, hookMap, ctFunc)
     {
         this.proxyObj = proxyObj;
-        this.srcObj = srcObj;
-        this.keys = keys;
-        this.hookMap = hookMap;
-        this.ctFunc = ctFunc;
+        this.#srcObj = srcObj;
+        this.#keys = keys;
+        this.#hookMap = hookMap;
+        this.#ctFunc = ctFunc;
     }
 
     /**
@@ -54,7 +55,7 @@ export class HookBindInfo
      */
     getValue()
     {
-        return (this.ctFunc ? this.ctFunc(...this.keys.map(o => this.srcObj[o])) : this.srcObj[this.keys[0]]);
+        return (this.#ctFunc ? this.#ctFunc(...this.#keys.map(o => this.#srcObj[o])) : this.#srcObj[this.#keys[0]]);
     }
 
     /**
@@ -64,13 +65,13 @@ export class HookBindInfo
      */
     addHook(hookObj)
     {
-        this.keys.forEach(o =>
+        this.#keys.forEach(o =>
         {
-            let set = this.hookMap.get(o);
+            let set = this.#hookMap.get(o);
             if (set == undefined)
             {
                 set = new Set();
-                this.hookMap.set(o, set);
+                this.#hookMap.set(o, set);
             }
             set.add(hookObj);
         });
@@ -83,14 +84,14 @@ export class HookBindInfo
      */
     removeHook(hookObj)
     {
-        this.keys.forEach(o =>
+        this.#keys.forEach(o =>
         {
-            let set = this.hookMap.get(o);
+            let set = this.#hookMap.get(o);
             if (set)
             {
                 set.delete(hookObj);
                 if (set.size == 0)
-                    this.hookMap.delete(o);
+                    this.#hookMap.delete(o);
             }
         });
     }

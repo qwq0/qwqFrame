@@ -1,3 +1,4 @@
+import { unboundHook } from "../../../debug/unboundHookSet.js";
 import { register, targetRefMap } from "./hookStatus.js";
 
 /**
@@ -9,19 +10,19 @@ export class HookBindCallback
      * 钩子信息
      * @type {import("./HookBindInfo").HookBindInfo}
      */
-    info = null;
+    #info = null;
 
     /**
      * 回调函数的弱引用
      * @type {WeakRef<function(any): void>}
      */
-    cbRef = null;
+    #cbRef = null;
     /**
      * 回调函数
      * 当此钩子绑定自动释放时为null
      * @type {function(any): void}
      */
-    callback = null;
+    #callback = null;
 
     /**
      * @param {import("./HookBindInfo").HookBindInfo} info
@@ -29,10 +30,13 @@ export class HookBindCallback
      */
     constructor(info, callback)
     {
-        this.info = info;
-        this.cbRef = new WeakRef(callback);
-        this.callback = callback;
+        this.#info = info;
+        this.#cbRef = new WeakRef(callback);
+        this.#callback = callback;
         info.addHook(this);
+
+        // 添加调试未绑定探针
+        unboundHook.add(this);
     }
 
     /**
@@ -40,12 +44,12 @@ export class HookBindCallback
      */
     emit()
     {
-        let callback = this.cbRef.deref();
+        let callback = this.#cbRef.deref();
         if (callback)
         {
             try
             {
-                callback(this.info.getValue());
+                callback(this.#info.getValue());
             }
             catch (err)
             {
@@ -60,8 +64,11 @@ export class HookBindCallback
      */
     destroy()
     {
-        this.info.removeHook(this);
+        this.#info.removeHook(this);
         register.unregister(this);
+
+        // 移除调试未绑定探针
+        unboundHook.delete(this);
     }
 
     /**
@@ -78,9 +85,13 @@ export class HookBindCallback
             targetRefSet = new Set();
             targetRefMap.set(targetObj, targetRefSet);
         }
-        targetRefSet.add(this.callback);
-        this.callback = null;
+        targetRefSet.add(this.#callback);
+        this.#callback = null;
         register.register(targetObj, this, this);
+
+        // 移除调试未绑定探针
+        unboundHook.delete(this);
+
         return this;
     }
 }
