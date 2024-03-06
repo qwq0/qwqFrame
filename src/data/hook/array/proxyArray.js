@@ -43,6 +43,7 @@ export function createHookArray(srcArray)
     const proxyArray = (new Proxy(srcArray, {
         get: (target, key) => // 取值
         {
+            // TODO 此处构建的函数可缓存
             switch (key)
             {
                 case "push":
@@ -175,7 +176,9 @@ export function createHookArray(srcArray)
             return ret;
         },
     }));
+
     arrayProxyMap.set(proxyArray, { hookSet: hookSet, srcArr: srcArray });
+
     return proxyArray;
 }
 
@@ -183,11 +186,11 @@ export function createHookArray(srcArray)
 /**
  * 绑定数组的代理
  * 回调函数中不应当进行可能触发钩子的操作
- * @template {Array} T
- * @param {T} proxyArray
+ * @template {any} K
+ * @param {Array<K>} proxyArray
  * @param {{
- *  set?: (index: number, value: any) => void;
- *  add: (index: number, value: any) => void;
+ *  set?: (index: number, value: K) => void;
+ *  add: (index: number, value: K) => void;
  *  del: (index: number) => void;
  * }} callbacks
  * @param {{ noSet?: boolean, addExisting?: boolean }} [option]

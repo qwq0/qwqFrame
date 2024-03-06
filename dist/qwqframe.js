@@ -52,7 +52,7 @@ const proxyMap = new WeakMap();
  * 目前仅在HookBindCallback中使用
  * @type {WeakMap<object, Set<any>>}
  */
-const targetRefMap$1 = new WeakMap();
+const targetRefMap$3 = new WeakMap();
 
 /**
  * 记录器
@@ -60,7 +60,7 @@ const targetRefMap$1 = new WeakMap();
  * 在目标对象销毁时销毁钩子
  * @type {FinalizationRegistry<import("./HookBindValue").HookBindValue | import("./HookBindCallback").HookBindCallback>}
  */
-const register$1 = new FinalizationRegistry(heldValue =>
+const register$3 = new FinalizationRegistry(heldValue =>
 {
     heldValue.destroy();
 });
@@ -129,7 +129,7 @@ class HookBindCallback
     destroy()
     {
         this.#info.removeHook(this);
-        register$1.unregister(this);
+        register$3.unregister(this);
 
         // 移除调试未绑定探针
         unboundHook.delete(this);
@@ -143,15 +143,15 @@ class HookBindCallback
      */
     bindDestroy(targetObj)
     {
-        let targetRefSet = targetRefMap$1.get(targetObj);
+        let targetRefSet = targetRefMap$3.get(targetObj);
         if (targetRefSet == undefined)
         {
             targetRefSet = new Set();
-            targetRefMap$1.set(targetObj, targetRefSet);
+            targetRefMap$3.set(targetObj, targetRefSet);
         }
         targetRefSet.add(this.#callback);
         this.#callback = null;
-        register$1.register(targetObj, this, this);
+        register$3.register(targetObj, this, this);
 
         // 移除调试未绑定探针
         unboundHook.delete(this);
@@ -193,7 +193,7 @@ class HookBindValue
         this.#targetRef = new WeakRef(targetObj);
         this.#targetKey = targetKey;
         info.addHook(this);
-        register$1.register(targetObj, this, this);
+        register$3.register(targetObj, this, this);
     }
 
     /**
@@ -223,7 +223,7 @@ class HookBindValue
     destroy()
     {
         this.#info.removeHook(this);
-        register$1.unregister(this);
+        register$3.unregister(this);
     }
 }
 
@@ -2049,7 +2049,7 @@ const arrayProxyMap = new WeakMap();
  * 确保当目标对象存活时引用集合的引用存活
  * @type {WeakMap<object, Set<any>>}
  */
-const targetRefMap = new WeakMap();
+const targetRefMap$2 = new WeakMap();
 
 /**
  * 记录器
@@ -2057,7 +2057,7 @@ const targetRefMap = new WeakMap();
  * 在目标对象销毁时销毁钩子
  * @type {FinalizationRegistry<import("./ArrayHookBind").ArrayHookBind>}
  */
-const register = new FinalizationRegistry(heldValue =>
+const register$2 = new FinalizationRegistry(heldValue =>
 {
     heldValue.destroy();
 });
@@ -2184,7 +2184,7 @@ class ArrayHookBind
     destroy()
     {
         this.#hookSet.delete(this);
-        register.unregister(this);
+        register$2.unregister(this);
 
         // 移除调试未绑定探针
         unboundHook.delete(this);
@@ -2198,15 +2198,15 @@ class ArrayHookBind
      */
     bindDestroy(targetObj)
     {
-        let targetRefSet = targetRefMap.get(targetObj);
+        let targetRefSet = targetRefMap$2.get(targetObj);
         if (targetRefSet == undefined)
         {
             targetRefSet = new Set();
-            targetRefMap.set(targetObj, targetRefSet);
+            targetRefMap$2.set(targetObj, targetRefSet);
         }
         targetRefSet.add(this.#callback);
         this.#callback = null;
-        register.register(targetObj, this, this);
+        register$2.register(targetObj, this, this);
 
         // 移除调试未绑定探针
         unboundHook.delete(this);
@@ -2257,6 +2257,7 @@ function createHookArray(srcArray)
     const proxyArray = (new Proxy(srcArray, {
         get: (target, key) => // 取值
         {
+            // TODO 此处构建的函数可缓存
             switch (key)
             {
                 case "push":
@@ -2389,7 +2390,9 @@ function createHookArray(srcArray)
             return ret;
         },
     }));
+
     arrayProxyMap.set(proxyArray, { hookSet: hookSet, srcArr: srcArray });
+
     return proxyArray;
 }
 
@@ -2397,11 +2400,11 @@ function createHookArray(srcArray)
 /**
  * 绑定数组的代理
  * 回调函数中不应当进行可能触发钩子的操作
- * @template {Array} T
- * @param {T} proxyArray
+ * @template {any} K
+ * @param {Array<K>} proxyArray
  * @param {{
- *  set?: (index: number, value: any) => void;
- *  add: (index: number, value: any) => void;
+ *  set?: (index: number, value: K) => void;
+ *  add: (index: number, value: K) => void;
  *  del: (index: number) => void;
  * }} callbacks
  * @param {{ noSet?: boolean, addExisting?: boolean }} [option]
@@ -2454,6 +2457,638 @@ function bindArrayHook(proxyArray, callbacks, option = {})
     }
 
     let ret = new ArrayHookBind(proxyArray, proxyMata.hookSet, callbackObj);
+    proxyMata.hookSet.add(ret);
+    return ret;
+}
+
+/**
+ * 代理数组 到 钩子映射和目标对象 映射
+ * 
+ * @type {WeakMap<object, {
+*  hookSet: Set<import("./MapHookBind").MapHookBind>,
+*  srcMap: Map
+* }>}
+*/
+const mapProxyMap = new WeakMap();
+
+/**
+ * 目标对象 到 引用集合 映射
+ *
+ * 确保当目标对象存活时引用集合的引用存活
+ * @type {WeakMap<object, Set<any>>}
+ */
+const targetRefMap$1 = new WeakMap();
+
+/**
+ * 记录器
+
+ * 在目标对象销毁时销毁钩子
+ * @type {FinalizationRegistry<import("./MapHookBind").MapHookBind>}
+ */
+const register$1 = new FinalizationRegistry(heldValue =>
+{
+    heldValue.destroy();
+});
+
+/**
+ * Map钩子绑定类
+ * 
+ * @typedef {{
+ *  add: (key: any, value: any) => void,
+ *  set: (key: any, value: any) => void,
+ *  del: (key: any) => void
+ * }} callbackType
+ */
+class MapHookBind
+{
+    /**
+     * 代理Map
+     * @type {Map}
+     */
+    #proxyMap = null;
+
+    /**
+     * 修改数组时需要触发的钩子
+     * 此值为 hookStatus 文件中 mapProxyMap 的 hookSet 的引用
+     * @type {Set<MapHookBind>}
+     */
+    #hookSet = null;
+
+    /**
+     * 回调函数的弱引用
+     * @type {WeakRef<callbackType>}
+     */
+    #cbRef = null;
+
+    /**
+     * 回调函数
+     * 当此钩子绑定自动释放时为null
+     * @type {callbackType}
+     */
+    #callback = null;
+
+    /**
+     * @param {Map} proxyMap
+     * @param {Set<MapHookBind>} hookSet
+     * @param {callbackType} callback
+     */
+    constructor(proxyMap, hookSet, callback)
+    {
+        this.#proxyMap = proxyMap;
+        this.#hookSet = hookSet;
+        this.#cbRef = new WeakRef(callback);
+        this.#callback = callback;
+
+        // 添加调试未绑定探针
+        unboundHook.add(this);
+    }
+
+    /**
+     * 触发此钩子 (增加)
+     * @param {any} key
+     * @param {any} value
+     */
+    emitAdd(key, value)
+    {
+        let callback = this.#cbRef.deref();
+        if (callback)
+        {
+            try
+            {
+                callback.add(key, value);
+            }
+            catch (err)
+            {
+                console.error(err);
+            }
+        }
+
+    }
+
+    /**
+     * 触发此钩子 (设置)
+     * @param {any} key
+     * @param {any} value
+     */
+    emitSet(key, value)
+    {
+        let callback = this.#cbRef.deref();
+        if (callback)
+        {
+            try
+            {
+                callback.set(key, value);
+            }
+            catch (err)
+            {
+                console.error(err);
+            }
+        }
+    }
+
+    /**
+     * 触发此钩子 (删除)
+     * @param {any} key
+     */
+    emitDel(key)
+    {
+        let callback = this.#cbRef.deref();
+        if (callback)
+        {
+            try
+            {
+                callback.del(key);
+            }
+            catch (err)
+            {
+                console.error(err);
+            }
+        }
+    }
+
+    /**
+     * 销毁此钩子
+     * 销毁后钩子将不再自动触发
+     */
+    destroy()
+    {
+        this.#hookSet.delete(this);
+        register$1.unregister(this);
+
+        // 移除调试未绑定探针
+        unboundHook.delete(this);
+    }
+
+    /**
+     * 绑定销毁
+     * 当目标对象释放时销毁
+     * @param {object} targetObj
+     * @returns {MapHookBind} 返回自身
+     */
+    bindDestroy(targetObj)
+    {
+        let targetRefSet = targetRefMap$1.get(targetObj);
+        if (targetRefSet == undefined)
+        {
+            targetRefSet = new Set();
+            targetRefMap$1.set(targetObj, targetRefSet);
+        }
+        targetRefSet.add(this.#callback);
+        this.#callback = null;
+        register$1.register(targetObj, this, this);
+
+        // 移除调试未绑定探针
+        unboundHook.delete(this);
+
+        return this;
+    }
+}
+
+/**
+ * 创建Map的代理
+ * @template {Map} T
+ * @param {T} srcMap
+ * @returns {T}
+ */
+function createHookMap(srcMap)
+{
+    /**
+     * @type {Set<MapHookBind>}
+     */
+    let hookSet = new Set();
+
+    /**
+     * @param {any} key
+     * @param {any} value
+     */
+    function emitAdd(key, value)
+    {
+        hookSet.forEach(o => { o.emitAdd(key, value); });
+    }
+
+    /**
+     * @param {any} key
+     * @param {any} value
+     */
+    function emitSet(key, value)
+    {
+        hookSet.forEach(o => { o.emitSet(key, value); });
+    }
+
+    /**
+     * @param {any} key
+     */
+    function emitDel(key)
+    {
+        hookSet.forEach(o => { o.emitDel(key); });
+    }
+
+    const proxyMap = (new Proxy(srcMap, {
+        get: (target, key) => // 取值
+        {
+            // TODO 此处构建的函数可缓存
+            switch (key)
+            {
+                case "set":
+                    return (/** @type {any} */ key, /** @type {any} */ value) =>
+                    {
+                        let has = srcMap.has(key);
+
+                        srcMap.set(key, value);
+
+                        if (has)
+                            emitSet(key, value);
+                        else
+                            emitAdd(key, value);
+
+                        return proxyMap;
+                    };
+                case "delete":
+                    return (/** @type {any} */ key) =>
+                    {
+                        let has = srcMap.delete(key);
+
+                        if (has)
+                            emitDel(key);
+
+                        return has;
+                    };
+                case "clear":
+                    return () =>
+                    {
+                        let keys = srcMap.keys();
+
+                        srcMap.clear();
+
+                        for (let key of keys)
+                        {
+                            emitDel(key);
+                        }
+                    };
+                default:
+                    return Reflect.get(target, key);
+            }
+        },
+
+    }));
+
+    mapProxyMap.set(proxyMap, { hookSet: hookSet, srcMap: srcMap });
+
+    return proxyMap;
+}
+
+/**
+ * 绑定Map的代理
+ * 回调函数中不应当进行可能触发钩子的操作
+ * @template {any} K
+ * @template {any} V
+ * @param {Map<K, V>} proxyMap
+ * @param {{
+ *  set?: (key: K, value: V) => void;
+ *  add: (key: K, value: V) => void;
+ *  del: (key: K) => void;
+ * }} callbacks
+ * @param {{ noSet?: boolean, addExisting?: boolean }} [option]
+ * @returns {MapHookBind}
+ */
+function bindMapHook(proxyMap, callbacks, option = {})
+{
+    const proxyMata = mapProxyMap.get(proxyMap);
+    if (proxyMata == undefined)
+        throw "bindMapHook: Hook callbacks can only be bound from proxy array";
+
+    option = Object.assign({
+        noSet: false,
+        addExisting: false
+    }, option);
+
+    let callbackObj = Object.assign({
+        set: () => { },
+        add: () => { },
+        del: () => { },
+    }, callbacks);
+
+    if (option.noSet)
+    {
+        if (callbacks.set != undefined)
+        {
+            throw "bindMapHook: cannot pass the set function when setting the noSet option";
+        }
+        callbackObj.set = (ind, value) =>
+        {
+            callbackObj.del(ind);
+            callbackObj.add(ind, value);
+        };
+    }
+
+
+    if (option.addExisting)
+    {
+        try
+        {
+            proxyMata.srcMap.forEach((value, key) =>
+            {
+                callbackObj.add(key, value);
+            });
+        }
+        catch (err)
+        {
+            console.log(err);
+        }
+    }
+
+    let ret = new MapHookBind(proxyMap, proxyMata.hookSet, callbackObj);
+    proxyMata.hookSet.add(ret);
+    return ret;
+}
+
+/**
+ * 代理数组 到 钩子映射和目标对象 映射
+ * 
+ * @type {WeakMap<object, {
+*  hookSet: Set<import("./SetHookBind").SetHookBind>,
+*  srcMap: Set
+* }>}
+*/
+const setProxyMap = new WeakMap();
+
+/**
+ * 目标对象 到 引用集合 映射
+ *
+ * 确保当目标对象存活时引用集合的引用存活
+ * @type {WeakMap<object, Set<any>>}
+ */
+const targetRefMap = new WeakMap();
+
+/**
+ * 记录器
+
+ * 在目标对象销毁时销毁钩子
+ * @type {FinalizationRegistry<import("./SetHookBind").SetHookBind>}
+ */
+const register = new FinalizationRegistry(heldValue =>
+{
+    heldValue.destroy();
+});
+
+/**
+ * Set钩子绑定类
+ * 
+ * @typedef {{
+ *  add: (value: any) => void,
+ *  del: (value: any) => void
+ * }} callbackType
+ */
+class SetHookBind
+{
+    /**
+     * 代理Set
+     * @type {Set}
+     */
+    #proxySet = null;
+
+    /**
+     * 修改数组时需要触发的钩子
+     * 此值为 hookStatus 文件中 mapProxyMap 的 hookSet 的引用
+     * @type {Set<SetHookBind>}
+     */
+    #hookSet = null;
+
+    /**
+     * 回调函数的弱引用
+     * @type {WeakRef<callbackType>}
+     */
+    #cbRef = null;
+
+    /**
+     * 回调函数
+     * 当此钩子绑定自动释放时为null
+     * @type {callbackType}
+     */
+    #callback = null;
+
+    /**
+     * @param {Set} proxyMap
+     * @param {Set<SetHookBind>} hookSet
+     * @param {callbackType} callback
+     */
+    constructor(proxyMap, hookSet, callback)
+    {
+        this.#proxySet = proxyMap;
+        this.#hookSet = hookSet;
+        this.#cbRef = new WeakRef(callback);
+        this.#callback = callback;
+
+        // 添加调试未绑定探针
+        unboundHook.add(this);
+    }
+
+    /**
+     * 触发此钩子 (增加)
+     * @param {any} value
+     */
+    emitAdd(value)
+    {
+        let callback = this.#cbRef.deref();
+        if (callback)
+        {
+            try
+            {
+                callback.add(value);
+            }
+            catch (err)
+            {
+                console.error(err);
+            }
+        }
+
+    }
+
+    /**
+     * 触发此钩子 (删除)
+     * @param {any} value
+     */
+    emitDel(value)
+    {
+        let callback = this.#cbRef.deref();
+        if (callback)
+        {
+            try
+            {
+                callback.del(value);
+            }
+            catch (err)
+            {
+                console.error(err);
+            }
+        }
+    }
+
+    /**
+     * 销毁此钩子
+     * 销毁后钩子将不再自动触发
+     */
+    destroy()
+    {
+        this.#hookSet.delete(this);
+        register.unregister(this);
+
+        // 移除调试未绑定探针
+        unboundHook.delete(this);
+    }
+
+    /**
+     * 绑定销毁
+     * 当目标对象释放时销毁
+     * @param {object} targetObj
+     * @returns {SetHookBind} 返回自身
+     */
+    bindDestroy(targetObj)
+    {
+        let targetRefSet = targetRefMap.get(targetObj);
+        if (targetRefSet == undefined)
+        {
+            targetRefSet = new Set();
+            targetRefMap.set(targetObj, targetRefSet);
+        }
+        targetRefSet.add(this.#callback);
+        this.#callback = null;
+        register.register(targetObj, this, this);
+
+        // 移除调试未绑定探针
+        unboundHook.delete(this);
+
+        return this;
+    }
+}
+
+/**
+ * 创建Set的代理
+ * @template {Set} T
+ * @param {T} srcSet
+ * @returns {T}
+ */
+function createHookSet(srcSet)
+{
+    /**
+     * @type {Set<SetHookBind>}
+     */
+    let hookSet = new Set();
+
+    /**
+     * @param {any} value
+     */
+    function emitAdd(value)
+    {
+        hookSet.forEach(o => { o.emitAdd(value); });
+    }
+
+    /**
+     * @param {any} value
+     */
+    function emitDel(value)
+    {
+        hookSet.forEach(o => { o.emitDel(value); });
+    }
+
+    const proxyMap = (new Proxy(srcSet, {
+        get: (target, key) => // 取值
+        {
+            // TODO 此处构建的函数可缓存
+            switch (key)
+            {
+                case "add":
+                    return (/** @type {any} */ value) =>
+                    {
+                        let has = srcSet.has(value);
+
+                        srcSet.add(value);
+
+                        if (!has)
+                            emitAdd(value);
+
+                        return proxyMap;
+                    };
+                case "delete":
+                    return (/** @type {any} */ key) =>
+                    {
+                        let has = srcSet.delete(key);
+
+                        if (has)
+                            emitDel(key);
+
+                        return has;
+                    };
+                case "clear":
+                    return () =>
+                    {
+                        let values = srcSet.values();
+
+                        srcSet.clear();
+
+                        for (let value of values)
+                        {
+                            emitDel(value);
+                        }
+                    };
+                default:
+                    return Reflect.get(target, key);
+            }
+        },
+
+    }));
+
+    setProxyMap.set(proxyMap, { hookSet: hookSet, srcMap: srcSet });
+
+    return proxyMap;
+}
+
+/**
+ * 绑定Set的代理
+ * 回调函数中不应当进行可能触发钩子的操作
+ * @template {any} K
+ * @param {Set<K>} proxySet
+ * @param {{
+ *  add: (value: K) => void;
+ *  del: (value: K) => void;
+ * }} callbacks
+ * @param {{ addExisting?: boolean }} [option]
+ * @returns {SetHookBind}
+ */
+function bindSetHook(proxySet, callbacks, option = {})
+{
+    const proxyMata = setProxyMap.get(proxySet);
+    if (proxyMata == undefined)
+        throw "bindMapHook: Hook callbacks can only be bound from proxy array";
+
+    option = Object.assign({
+        noSet: false,
+        addExisting: false
+    }, option);
+
+    let callbackObj = Object.assign({
+        add: () => { },
+        del: () => { },
+    }, callbacks);
+
+
+
+    if (option.addExisting)
+    {
+        try
+        {
+            proxyMata.srcMap.forEach((value) =>
+            {
+                callbackObj.add(value);
+            });
+        }
+        catch (err)
+        {
+            console.log(err);
+        }
+    }
+
+    let ret = new SetHookBind(proxySet, proxyMata.hookSet, callbackObj);
     proxyMata.hookSet.add(ret);
     return ret;
 }
@@ -2625,4 +3260,4 @@ class EventHandler
     }
 }
 
-export { EventHandler, NAsse, NAttr, NElement, NEvent, NList, NStyle, NTagName, bindArrayHook, bindAttribute, bindValue, createHookArray, createHookObj, createNStyle, createNStyleList, cssG, delayPromise, delayPromiseWithReject, delayPromiseWithResolve, divideLayout_DU, divideLayout_LR, divideLayout_RL, divideLayout_UD, expandElement, getNElement, isAmong, keyboardBind, mouseBind, runOnce, tag, tagName, touchBind };
+export { EventHandler, NAsse, NAttr, NElement, NEvent, NList, NStyle, NTagName, bindArrayHook, bindAttribute, bindMapHook, bindSetHook, bindValue, createHookArray, createHookMap, createHookObj, createHookSet, createNStyle, createNStyleList, cssG, delayPromise, delayPromiseWithReject, delayPromiseWithResolve, divideLayout_DU, divideLayout_LR, divideLayout_RL, divideLayout_UD, expandElement, getNElement, isAmong, keyboardBind, mouseBind, runOnce, tag, tagName, touchBind };

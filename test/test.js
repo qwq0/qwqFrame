@@ -4,6 +4,8 @@ import { tag, tagName } from "../src/dom/tool/parsingElement.js";
 import { cssG, expandElement, getNElement, NList, bindValue, createHookObj, createHookArray } from "../src/index.js";
 import { bindArrayHook } from "../src/data/hook/array/proxyArray.js";
 import { unboundHook } from "../src/debug/unboundHookSet.js";
+import { bindMapHook, createHookMap } from "../src/data/hook/map/proxyMap.js";
+import { bindSetHook, createHookSet } from "../src/data/hook/set/proxySet.js";
 
 
 
@@ -21,6 +23,20 @@ bindArrayHook(dataArray, {
     add: (ind, val) => { console.log("dataArray add", ind, val); },
     del: (ind) => { console.log("dataArray del", ind); },
 });
+
+let dataMap = createHookMap(new Map());
+bindMapHook(dataMap, {
+    set: (key, val) => { console.log("dataMap set", key, val); },
+    add: (key, val) => { console.log("dataMap add", key, val); },
+    del: (key) => { console.log("dataMap del", key); },
+});
+
+let dataSet = createHookSet(new Set());
+bindSetHook(dataSet, {
+    add: (val) => { console.log("dataSet add", val); },
+    del: (val) => { console.log("dataSet del", val); },
+});
+
 
 console.log(dataObj);
 console.log(dataArray);
@@ -99,8 +115,7 @@ setInterval(() =>
 setInterval(() => { dataObj.text += "-"; }, 500);
 setInterval(() => { dataObj.color = (dataObj.color == "black" ? "red" : "black"); }, 450);
 setInterval(() => { dataObj.colorR = (dataObj.colorR + 10) % 256; }, 100);
-setInterval(() => { dataArray.push(123); }, 450);
-setInterval(() => { console.log(unboundHook.size); }, 300);
+setInterval(() => { console.log("unboundHook", unboundHook.size); }, 300);
 
 let testElement_2 = expandElement({
     text: "--测试2--",

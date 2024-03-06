@@ -25,8 +25,10 @@ export { runOnce } from "./flow/runOnce.js";
 
 
 
-export { bindValue, createHookObj } from "./data/hook/object/proxyObject.js";
+export { createHookObj, bindValue } from "./data/hook/object/proxyObject.js";
 export { createHookArray, bindArrayHook } from "./data/hook/array/proxyArray.js";
+export { createHookMap, bindMapHook } from "./data/hook/map/proxyMap.js";
+export { createHookSet, bindSetHook } from "./data/hook/set/proxySet.js";
 
 
 export { delayPromise, delayPromiseWithReject, delayPromiseWithResolve } from "./util/delayPromise.js";

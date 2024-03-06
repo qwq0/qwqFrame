@@ -2308,7 +2308,7 @@ declare class ArrayHookBind {
      * @param {Set<ArrayHookBind>} hookSet
      * @param {callbackType} callback
      */
-    constructor(proxyArr: any[], hookSet: Set<ArrayHookBind>, callback: callbackType);
+    constructor(proxyArr: any[], hookSet: Set<ArrayHookBind>, callback: callbackType$2);
     /**
      * 触发此钩子 (设置)
      * @param {number} index
@@ -2343,7 +2343,7 @@ declare class ArrayHookBind {
 /**
  * 数组钩子绑定类
  */
-type callbackType = {
+type callbackType$2 = {
     set: (index: number, value: any) => void;
     add: (index: number, value: any) => void;
     del: (index: number) => void;
@@ -2359,24 +2359,183 @@ declare function createHookArray<T extends any[]>(srcArray: T): T;
 /**
  * 绑定数组的代理
  * 回调函数中不应当进行可能触发钩子的操作
- * @template {Array} T
- * @param {T} proxyArray
+ * @template {any} K
+ * @param {Array<K>} proxyArray
  * @param {{
- *  set?: (index: number, value: any) => void;
- *  add: (index: number, value: any) => void;
+ *  set?: (index: number, value: K) => void;
+ *  add: (index: number, value: K) => void;
  *  del: (index: number) => void;
  * }} callbacks
  * @param {{ noSet?: boolean, addExisting?: boolean }} [option]
  * @returns {ArrayHookBind}
  */
-declare function bindArrayHook<T extends any[]>(proxyArray: T, callbacks: {
-    set?: (index: number, value: any) => void;
-    add: (index: number, value: any) => void;
+declare function bindArrayHook<K extends unknown>(proxyArray: K[], callbacks: {
+    set?: (index: number, value: K) => void;
+    add: (index: number, value: K) => void;
     del: (index: number) => void;
 }, option?: {
     noSet?: boolean;
     addExisting?: boolean;
 } | undefined): ArrayHookBind;
+
+/**
+ * Map钩子绑定类
+ *
+ * @typedef {{
+ *  add: (key: any, value: any) => void,
+ *  set: (key: any, value: any) => void,
+ *  del: (key: any) => void
+ * }} callbackType
+ */
+declare class MapHookBind {
+    /**
+     * @param {Map} proxyMap
+     * @param {Set<MapHookBind>} hookSet
+     * @param {callbackType} callback
+     */
+    constructor(proxyMap: Map<any, any>, hookSet: Set<MapHookBind>, callback: callbackType$1);
+    /**
+     * 触发此钩子 (增加)
+     * @param {any} key
+     * @param {any} value
+     */
+    emitAdd(key: any, value: any): void;
+    /**
+     * 触发此钩子 (设置)
+     * @param {any} key
+     * @param {any} value
+     */
+    emitSet(key: any, value: any): void;
+    /**
+     * 触发此钩子 (删除)
+     * @param {any} key
+     */
+    emitDel(key: any): void;
+    /**
+     * 销毁此钩子
+     * 销毁后钩子将不再自动触发
+     */
+    destroy(): void;
+    /**
+     * 绑定销毁
+     * 当目标对象释放时销毁
+     * @param {object} targetObj
+     * @returns {MapHookBind} 返回自身
+     */
+    bindDestroy(targetObj: object): MapHookBind;
+    #private;
+}
+/**
+ * Map钩子绑定类
+ */
+type callbackType$1 = {
+    add: (key: any, value: any) => void;
+    set: (key: any, value: any) => void;
+    del: (key: any) => void;
+};
+
+/**
+ * 创建Map的代理
+ * @template {Map} T
+ * @param {T} srcMap
+ * @returns {T}
+ */
+declare function createHookMap<T extends Map<any, any>>(srcMap: T): T;
+/**
+ * 绑定Map的代理
+ * 回调函数中不应当进行可能触发钩子的操作
+ * @template {any} K
+ * @template {any} V
+ * @param {Map<K, V>} proxyMap
+ * @param {{
+ *  set?: (key: K, value: V) => void;
+ *  add: (key: K, value: V) => void;
+ *  del: (key: K) => void;
+ * }} callbacks
+ * @param {{ noSet?: boolean, addExisting?: boolean }} [option]
+ * @returns {MapHookBind}
+ */
+declare function bindMapHook<K extends unknown, V extends unknown>(proxyMap: Map<K, V>, callbacks: {
+    set?: (key: K, value: V) => void;
+    add: (key: K, value: V) => void;
+    del: (key: K) => void;
+}, option?: {
+    noSet?: boolean;
+    addExisting?: boolean;
+} | undefined): MapHookBind;
+
+/**
+ * Set钩子绑定类
+ *
+ * @typedef {{
+ *  add: (value: any) => void,
+ *  del: (value: any) => void
+ * }} callbackType
+ */
+declare class SetHookBind {
+    /**
+     * @param {Set} proxyMap
+     * @param {Set<SetHookBind>} hookSet
+     * @param {callbackType} callback
+     */
+    constructor(proxyMap: Set<any>, hookSet: Set<SetHookBind>, callback: callbackType);
+    /**
+     * 触发此钩子 (增加)
+     * @param {any} value
+     */
+    emitAdd(value: any): void;
+    /**
+     * 触发此钩子 (删除)
+     * @param {any} value
+     */
+    emitDel(value: any): void;
+    /**
+     * 销毁此钩子
+     * 销毁后钩子将不再自动触发
+     */
+    destroy(): void;
+    /**
+     * 绑定销毁
+     * 当目标对象释放时销毁
+     * @param {object} targetObj
+     * @returns {SetHookBind} 返回自身
+     */
+    bindDestroy(targetObj: object): SetHookBind;
+    #private;
+}
+/**
+ * Set钩子绑定类
+ */
+type callbackType = {
+    add: (value: any) => void;
+    del: (value: any) => void;
+};
+
+/**
+ * 创建Set的代理
+ * @template {Set} T
+ * @param {T} srcSet
+ * @returns {T}
+ */
+declare function createHookSet<T extends Set<any>>(srcSet: T): T;
+/**
+ * 绑定Set的代理
+ * 回调函数中不应当进行可能触发钩子的操作
+ * @template {any} K
+ * @param {Set<K>} proxySet
+ * @param {{
+ *  add: (value: K) => void;
+ *  del: (value: K) => void;
+ * }} callbacks
+ * @param {{ addExisting?: boolean }} [option]
+ * @returns {SetHookBind}
+ */
+declare function bindSetHook<K extends unknown>(proxySet: Set<K>, callbacks: {
+    add: (value: K) => void;
+    del: (value: K) => void;
+}, option?: {
+    addExisting?: boolean;
+} | undefined): SetHookBind;
 
 /**
  * 异步延迟
@@ -2407,4 +2566,4 @@ type NList_list = NList_list$1;
 type PointerData = PointerData$1;
 type KeyboardData = KeyboardData$1;
 
-export { EventHandler, KeyboardData, NAsse, NAttr, NElement, NEvent, NList, NList_list, NStyle, NTagName, PointerData, bindArrayHook, bindAttribute, bindValue, createHookArray, createHookObj, createNStyle, createNStyleList, cssG, delayPromise, delayPromiseWithReject, delayPromiseWithResolve, divideLayout_DU, divideLayout_LR, divideLayout_RL, divideLayout_UD, expandElement, getNElement, isAmong, keyboardBind, mouseBind, runOnce, tag, tagName, touchBind };
+export { EventHandler, KeyboardData, NAsse, NAttr, NElement, NEvent, NList, NList_list, NStyle, NTagName, PointerData, bindArrayHook, bindAttribute, bindMapHook, bindSetHook, bindValue, createHookArray, createHookMap, createHookObj, createHookSet, createNStyle, createNStyleList, cssG, delayPromise, delayPromiseWithReject, delayPromiseWithResolve, divideLayout_DU, divideLayout_LR, divideLayout_RL, divideLayout_UD, expandElement, getNElement, isAmong, keyboardBind, mouseBind, runOnce, tag, tagName, touchBind };
