@@ -70,8 +70,13 @@ export function createHookSet(srcSet)
                             emitDel(value);
                         }
                     };
-                default:
-                    return Reflect.get(target, key);
+                default: {
+                    let value = Reflect.get(target, key);
+                    if (typeof (value) == "function")
+                        return value.bind(srcSet);
+                    else
+                        return value;
+                }
             }
         },
 

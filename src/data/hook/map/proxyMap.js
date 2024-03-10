@@ -82,8 +82,13 @@ export function createHookMap(srcMap)
                             emitDel(key);
                         }
                     };
-                default:
-                    return Reflect.get(target, key);
+                default: {
+                    let value = Reflect.get(target, key);
+                    if (typeof (value) == "function")
+                        return value.bind(srcMap);
+                    else
+                        return value;
+                }
             }
         },
 
