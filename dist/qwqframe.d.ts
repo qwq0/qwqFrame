@@ -2382,9 +2382,9 @@ declare function bindArrayHook<K extends unknown>(proxyArray: K[], callbacks: {
  * Map钩子绑定类
  *
  * @typedef {{
- *  add: (key: any, value: any) => void,
- *  set: (key: any, value: any) => void,
- *  del: (key: any) => void
+ *  add?: (key: any, value: any) => void | (() => void),
+ *  set?: (key: any, value: any) => void | (() => void),
+ *  del?: (key: any) => void
  * }} callbackType
  */
 declare class MapHookBind {
@@ -2429,9 +2429,9 @@ declare class MapHookBind {
  * Map钩子绑定类
  */
 type callbackType$1 = {
-    add: (key: any, value: any) => void;
-    set: (key: any, value: any) => void;
-    del: (key: any) => void;
+    add?: (key: any, value: any) => void | (() => void);
+    set?: (key: any, value: any) => void | (() => void);
+    del?: (key: any) => void;
 };
 
 /**
@@ -2447,19 +2447,11 @@ declare function createHookMap<T extends Map<any, any>>(srcMap: T): T;
  * @template {any} K
  * @template {any} V
  * @param {Map<K, V>} proxyMap
- * @param {{
- *  set?: (key: K, value: V) => void;
- *  add: (key: K, value: V) => void;
- *  del: (key: K) => void;
- * }} callbacks
+ * @param {import("./MapHookBind.js").callbackType} callbacks
  * @param {{ noSet?: boolean, addExisting?: boolean }} [option]
  * @returns {MapHookBind}
  */
-declare function bindMapHook<K extends unknown, V extends unknown>(proxyMap: Map<K, V>, callbacks: {
-    set?: (key: K, value: V) => void;
-    add: (key: K, value: V) => void;
-    del: (key: K) => void;
-}, option?: {
+declare function bindMapHook<K extends unknown, V extends unknown>(proxyMap: Map<K, V>, callbacks: callbackType$1, option?: {
     noSet?: boolean;
     addExisting?: boolean;
 } | undefined): MapHookBind;
@@ -2468,8 +2460,8 @@ declare function bindMapHook<K extends unknown, V extends unknown>(proxyMap: Map
  * Set钩子绑定类
  *
  * @typedef {{
- *  add: (value: any) => void,
- *  del: (value: any) => void
+ *  add?: (value: any) => void | (() => void),
+ *  del?: (value: any) => void
  * }} callbackType
  */
 declare class SetHookBind {
@@ -2507,8 +2499,8 @@ declare class SetHookBind {
  * Set钩子绑定类
  */
 type callbackType = {
-    add: (value: any) => void;
-    del: (value: any) => void;
+    add?: (value: any) => void | (() => void);
+    del?: (value: any) => void;
 };
 
 /**
@@ -2523,17 +2515,11 @@ declare function createHookSet<T extends Set<any>>(srcSet: T): T;
  * 回调函数中不应当进行可能触发钩子的操作
  * @template {any} K
  * @param {Set<K>} proxySet
- * @param {{
- *  add: (value: K) => void;
- *  del: (value: K) => void;
- * }} callbacks
+ * @param {import("./SetHookBind.js").callbackType} callbacks
  * @param {{ addExisting?: boolean }} [option]
  * @returns {SetHookBind}
  */
-declare function bindSetHook<K extends unknown>(proxySet: Set<K>, callbacks: {
-    add: (value: K) => void;
-    del: (value: K) => void;
-}, option?: {
+declare function bindSetHook<K extends unknown>(proxySet: Set<K>, callbacks: callbackType, option?: {
     addExisting?: boolean;
 } | undefined): SetHookBind;
 

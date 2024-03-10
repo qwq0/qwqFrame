@@ -1,5 +1,5 @@
 import { unboundHook } from "../../../debug/unboundHookSet.js";
-import { register, targetRefMap } from "./hookStatus.js";
+import { freeHookBindDestroy, hookBindDestroy } from "../shareHookStatus.js";
 
 /**
  * 钩子绑定到回调类
@@ -23,6 +23,13 @@ export class HookBindCallback
      * @type {function(any): void}
      */
     #callback = null;
+
+    /**
+     * 目标对象引用映射
+     * 用于建立目标对象到指定对象的强引用关系
+     * @type {WeakMap<object, Set<object>>}
+     */
+    #targetRefMap = new WeakMap();
 
     /**
      * @param {import("./HookBindInfo").HookBindInfo} info
@@ -65,7 +72,7 @@ export class HookBindCallback
     destroy()
     {
         this.#info.removeHook(this);
-        register.unregister(this);
+        freeHookBindDestroy(this);
 
         // 移除调试未绑定探针
         unboundHook.delete(this);
@@ -79,15 +86,15 @@ export class HookBindCallback
      */
     bindDestroy(targetObj)
     {
-        let targetRefSet = targetRefMap.get(targetObj);
+        let targetRefSet = this.#targetRefMap.get(targetObj);
         if (targetRefSet == undefined)
         {
             targetRefSet = new Set();
-            targetRefMap.set(targetObj, targetRefSet);
+            this.#targetRefMap.set(targetObj, targetRefSet);
         }
         targetRefSet.add(this.#callback);
         this.#callback = null;
-        register.register(targetObj, this, this);
+        hookBindDestroy(targetObj, this);
 
         // 移除调试未绑定探针
         unboundHook.delete(this);

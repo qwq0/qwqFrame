@@ -1,13 +1,13 @@
 import { unboundHook as unboundHookSet } from "../../../debug/unboundHookSet.js";
-import { register, targetRefMap } from "./hookStatus.js";
+import { hookBindDestroy, freeHookBindDestroy } from "../shareHookStatus.js";
 
 /**
  * Map钩子绑定类
  * 
  * @typedef {{
- *  add: (key: any, value: any) => void,
- *  set: (key: any, value: any) => void,
- *  del: (key: any) => void
+ *  add?: (key: any, value: any) => void | (() => void),
+ *  set?: (key: any, value: any) => void | (() => void),
+ *  del?: (key: any) => void
  * }} callbackType
  */
 export class MapHookBind
@@ -39,6 +39,19 @@ export class MapHookBind
     #callback = null;
 
     /**
+     * 当触发删除钩子时调用的回调函数
+     * @type {Map<any, () => void>}
+     */
+    #delCallbackMap = new Map();
+
+    /**
+     * 目标对象引用映射
+     * 用于建立目标对象到指定对象的强引用关系
+     * @type {WeakMap<object, Set<object>>}
+     */
+    #targetRefMap = new WeakMap();
+
+    /**
      * @param {Map} proxyMap
      * @param {Set<MapHookBind>} hookSet
      * @param {callbackType} callback
@@ -66,7 +79,9 @@ export class MapHookBind
         {
             try
             {
-                callback.add(key, value);
+                let specificCallback = callback.add(key, value);
+                if (typeof (specificCallback) == "function")
+                    this.#delCallbackMap.set(value, specificCallback);
             }
             catch (err)
             {
@@ -83,12 +98,28 @@ export class MapHookBind
      */
     emitSet(key, value)
     {
+        let oldSpecificCallback = this.#delCallbackMap.get(value);
+        if (oldSpecificCallback)
+        {
+            this.#delCallbackMap.delete(value);
+            try
+            {
+                oldSpecificCallback();
+            }
+            catch (err)
+            {
+                console.error(err);
+            }
+        }
+
         let callback = this.#cbRef.deref();
         if (callback)
         {
             try
             {
-                callback.set(key, value);
+                let newSpecificCallback = callback.set(key, value);
+                if (typeof (newSpecificCallback) == "function")
+                    this.#delCallbackMap.set(value, newSpecificCallback);
             }
             catch (err)
             {
@@ -103,6 +134,20 @@ export class MapHookBind
      */
     emitDel(key)
     {
+        let specificCallback = this.#delCallbackMap.get(key);
+        if (specificCallback)
+        {
+            this.#delCallbackMap.delete(key);
+            try
+            {
+                specificCallback();
+            }
+            catch (err)
+            {
+                console.error(err);
+            }
+        }
+
         let callback = this.#cbRef.deref();
         if (callback)
         {
@@ -124,7 +169,7 @@ export class MapHookBind
     destroy()
     {
         this.#hookSet.delete(this);
-        register.unregister(this);
+        freeHookBindDestroy(this);
 
         // 移除调试未绑定探针
         unboundHookSet.delete(this);
@@ -138,15 +183,16 @@ export class MapHookBind
      */
     bindDestroy(targetObj)
     {
-        let targetRefSet = targetRefMap.get(targetObj);
+        let targetRefSet = this.#targetRefMap.get(targetObj);
         if (targetRefSet == undefined)
         {
             targetRefSet = new Set();
-            targetRefMap.set(targetObj, targetRefSet);
+            this.#targetRefMap.set(targetObj, targetRefSet);
         }
         targetRefSet.add(this.#callback);
         this.#callback = null;
-        register.register(targetObj, this, this);
+
+        hookBindDestroy(targetObj, this);
 
         // 移除调试未绑定探针
         unboundHookSet.delete(this);

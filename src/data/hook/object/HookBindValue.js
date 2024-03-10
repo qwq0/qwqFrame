@@ -1,4 +1,4 @@
-import { register } from "./hookStatus.js";
+import { freeHookBindDestroy, hookBindDestroy } from "../shareHookStatus.js";
 
 /**
  * 钩子绑定到值类
@@ -33,7 +33,7 @@ export class HookBindValue
         this.#targetRef = new WeakRef(targetObj);
         this.#targetKey = targetKey;
         info.addHook(this);
-        register.register(targetObj, this, this);
+        hookBindDestroy(targetObj, this);
     }
 
     /**
@@ -63,6 +63,6 @@ export class HookBindValue
     destroy()
     {
         this.#info.removeHook(this);
-        register.unregister(this);
+        freeHookBindDestroy(this);
     }
 }
