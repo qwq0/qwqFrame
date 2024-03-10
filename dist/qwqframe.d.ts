@@ -813,6 +813,9 @@ declare class NElement<ElementObjectType extends HTMLElement> {
      * @type {Map<string, HookBindValue | HookBindCallback>}
      */
     private styleHooks;
+    /**
+     * @returns {ElementObjectType}
+     */
     get element(): ElementObjectType;
     /**
      * 添加单个子节点
@@ -1540,6 +1543,7 @@ declare class NAsse {
 /**
  * 特征列表
  * @typedef {Array<string | HookBindInfo | NTagName | NStyle | NAttr | NEvent | NAsse | NList | NList_list | NElement | NText | NLocate | ((e: NElement) => void)>} NList_list
+ * @typedef {NList_list[number]} NList_item
  */
 declare class NList {
     /**
@@ -2640,7 +2644,8 @@ declare function delayPromiseWithResolve<T extends unknown>(time: number, resolv
 declare function delayPromiseWithReject(time: number, rejectReason: any): Promise<void>;
 
 type NList_list = NList_list$1;
+type NList_item = NList_list$1;
 type PointerData = PointerData$1;
 type KeyboardData = KeyboardData$1;
 
-export { EventHandler, KeyboardData, NAsse, NAttr, NElement, NEvent, NList, NList_list, NLocate, NStyle, NTagName, NText$1 as NText, PointerData, bindArrayHook, bindAttribute, bindMapHook, bindSetHook, bindValue, createHookArray, createHookMap, createHookObj, createHookSet, createNStyle, createNStyleList, cssG, delayPromise, delayPromiseWithReject, delayPromiseWithResolve, divideLayout_DU, divideLayout_LR, divideLayout_RL, divideLayout_UD, expandElement, getNElement, isAmong, keyboardBind, mouseBind, runOnce, tag, tagName, touchBind };
+export { EventHandler, KeyboardData, NAsse, NAttr, NElement, NEvent, NList, NList_item, NList_list, NLocate, NStyle, NTagName, NText$1 as NText, PointerData, bindArrayHook, bindAttribute, bindMapHook, bindSetHook, bindValue, createHookArray, createHookMap, createHookObj, createHookSet, createNStyle, createNStyleList, cssG, delayPromise, delayPromiseWithReject, delayPromiseWithResolve, divideLayout_DU, divideLayout_LR, divideLayout_RL, divideLayout_UD, expandElement, getNElement, isAmong, keyboardBind, mouseBind, runOnce, tag, tagName, touchBind };

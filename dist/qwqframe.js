@@ -700,6 +700,7 @@ class NTagName
 /**
  * 特征列表
  * @typedef {Array<string | HookBindInfo | NTagName | NStyle | NAttr | NEvent | NAsse | NList | NList_list | NElement | NText | NLocate | ((e: NElement) => void)>} NList_list
+ * @typedef {NList_list[number]} NList_item
  */
 class NList
 {
@@ -887,6 +888,9 @@ class NElement
         this.node = elementObj;
     }
 
+    /**
+     * @returns {ElementObjectType}
+     */
     get element()
     {
         return this.node;

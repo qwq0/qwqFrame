@@ -11,6 +11,7 @@ import { NTagName } from "./NTagName.js";
 /**
  * 特征列表
  * @typedef {Array<string | HookBindInfo | NTagName | NStyle | NAttr | NEvent | NAsse | NList | NList_list | NElement | NText | NLocate | ((e: NElement) => void)>} NList_list
+ * @typedef {NList_list[number]} NList_item
  */
 export class NList
 {
