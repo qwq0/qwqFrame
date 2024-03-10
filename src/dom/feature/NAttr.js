@@ -30,7 +30,7 @@ export class NAttr
 
     /**
      * 将此特征应用于元素
-     * @param {import("../element/NElement").NElement} e
+     * @param {import("../node/NElement").NElement} e
      */
     apply(e)
     {
@@ -38,9 +38,9 @@ export class NAttr
         {
             let cbRet = this.value(e);
             if (cbRet != undefined)
-                e.element.setAttribute(this.key, cbRet);
+                e.node.setAttribute(this.key, cbRet);
         }
         else
-            e.element.setAttribute(this.key, this.value);
+            e.node.setAttribute(this.key, this.value);
     }
 }

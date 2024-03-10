@@ -3,6 +3,8 @@ import { HookBindInfo } from "../../data/hook/object/HookBindInfo.js";
 import { HookBindValue } from "../../data/hook/object/HookBindValue.js";
 import { HookBindCallback } from "../../data/hook/object/HookBindCallback.js";
 import { NList } from "../feature/NList.js";
+import { NLocate } from "./NLocate.js";
+import { NText } from "./NText.js";
 
 /**
  * NElement的symbol
@@ -21,7 +23,7 @@ export class NElement
      * @readonly
      * @type {ElementObjectType}
      */
-    element = null;
+    node = null;
     /**
      * 样式名 到 钩子绑定 映射
      * @private
@@ -35,40 +37,53 @@ export class NElement
      */
     constructor(elementObj)
     {
-        this.element = elementObj;
+        this.node = elementObj;
+    }
+
+    /**
+     * @returns {ElementObjectType}
+     */
+    get element()
+    {
+        return this.node;
     }
 
     /**
      * 添加单个子节点
-     * @param {NElement | Node | string | HookBindInfo} chi
+     * @param {NElement | NLocate | NText | Node | string | HookBindInfo} chi
      */
     addChild(chi)
     {
-        if (chi instanceof NElement)
-            this.element.appendChild(chi.element);
+        if (
+            chi instanceof NElement ||
+            chi instanceof NLocate ||
+            chi instanceof NText
+        )
+            this.node.appendChild(chi.node);
         else if (chi instanceof Node)
-            this.element.appendChild(chi);
+            this.node.appendChild(chi);
         else if (typeof (chi) == "string")
             this.addText(chi);
         else if (chi instanceof HookBindInfo)
         {
+            /** @type {NElement | NText | NLocate} */
             let currentNode = null;
-            {
-                let initVal = chi.getValue();
-                currentNode = (initVal == null ? new Comment() : (typeof (initVal) == "string" ? new Text(initVal) : (initVal instanceof NElement ? initVal.element : initVal)));
-                this.element.appendChild(currentNode);
-            }
+
+            let initVal = chi.getValue();
+            currentNode = (initVal == null ? new NLocate() : (typeof (initVal) == "string" ? new NText(initVal) : initVal));
+            this.node.appendChild(currentNode.node);
+
             chi.bindToCallback(val =>
             {
-                if (currentNode instanceof Text && typeof (val) == "string")
+                if (currentNode instanceof NText && typeof (val) == "string")
                 {
-                    currentNode.data = val;
+                    currentNode.setText(val);
                     return;
                 }
                 else
                 {
-                    let newNode = (val == null ? new Comment() : (typeof (val) == "string" ? new Text(val) : (val instanceof NElement ? val.element : val)));
-                    this.element.replaceChild(newNode, currentNode);
+                    let newNode = (initVal == null ? new NLocate() : (typeof (initVal) == "string" ? new NText(initVal) : initVal));
+                    currentNode.replaceWith(currentNode);
                     currentNode = newNode;
                 }
             }).bindDestroy(this);
@@ -79,7 +94,7 @@ export class NElement
 
     /**
      * 添加多个子节点
-     * @param {Array<NElement | Node | string | HookBindInfo | Array<NElement | Node | string | HookBindInfo>>} chi
+     * @param {Array<Parameters<NElement["addChild"]>[0] | Array<Parameters<NElement["addChild"]>[0]>>} chi
      */
     addChilds(...chi)
     {
@@ -95,29 +110,29 @@ export class NElement
     /**
      * 插入单个子节点(在中间)
      * 如果此节点之前在树中则先移除后加入
-     * @param {NElement} chi
-     * @param {number | NElement} pos 添加到的位置 负数从后到前 超过范围添加到最后
+     * @param {NElement | NLocate | NText} chi
+     * @param {number | NElement | NLocate | NText} pos 添加到的位置 负数从后到前 超过范围添加到最后
      */
     insChild(chi, pos)
     {
-        let e = this.element;
+        let e = this.node;
         if (typeof (pos) == "number")
         {
             if (pos >= 0 || pos < e.childElementCount)
             {
-                e.insertBefore(chi.element, e.children[pos]);
+                e.insertBefore(chi.node, e.children[pos]);
             }
             else if (pos < 0 || pos >= (-e.childElementCount))
             {
-                e.insertBefore(chi.element, e.children[e.childElementCount + pos]);
+                e.insertBefore(chi.node, e.children[e.childElementCount + pos]);
             }
             else
             {
-                e.appendChild(chi.element);
+                e.appendChild(chi.node);
             }
         }
         else
-            e.insertBefore(chi.element, pos.element);
+            e.insertBefore(chi.node, pos.node);
     }
 
     /**
@@ -130,9 +145,9 @@ export class NElement
     childInd(chi)
     {
         let ind = -1;
-        forEach(this.element.children, (o, i) =>
+        forEach(this.node.children, (o, i) =>
         {
-            if (o == chi.element)
+            if (o == chi.node)
             {
                 ind = i;
                 return true;
@@ -142,11 +157,29 @@ export class NElement
     }
 
     /**
+     * 在此节点之前插入节点
+     * @param {NElement | NLocate | NText} target
+     */
+    insBefore(target)
+    {
+        this.node.before(target.node);
+    }
+
+    /**
+     * 在此节点之后插入节点
+     * @param {NElement | NLocate | NText} target
+     */
+    insAfter(target)
+    {
+        this.node.after(target.node);
+    }
+
+    /**
      * 移除此节点
      */
     remove()
     {
-        this.element.remove();
+        this.node.remove();
     }
 
     /**
@@ -156,7 +189,7 @@ export class NElement
      */
     removeChilds(begin = 0, end = Infinity)
     {
-        let e = this.element;
+        let e = this.node;
         if (end > e.childElementCount)
             end = e.childElementCount;
         for (let i = begin; i < end; i++)
@@ -170,7 +203,7 @@ export class NElement
      */
     getChilds()
     {
-        return Array.from(this.element.children).map(o => getNElement(/** @type {HTMLElement} */(o)));
+        return Array.from(this.node.children).map(o => getNElement(/** @type {HTMLElement} */(o)));
     }
 
     /**
@@ -180,58 +213,56 @@ export class NElement
      */
     getChild(ind)
     {
-        return getNElement(/** @type {HTMLElement} */(this.element.children[ind]));
+        return getNElement(/** @type {HTMLElement} */(this.node.children[ind]));
     }
 
     /**
-     * 使用指定元素替换此元素
-     * @param {Array<NElement>} elements
+     * 使用指定节点替换此节点
+     * @param {Array<NElement | NText | NLocate>} elements
      */
     replaceWith(...elements)
     {
-        this.element.replaceWith(...(elements.map(o => o.element)));
+        this.node.replaceWith(...(elements.map(o => o.node)));
     }
 
     /**
      * 修改样式
-     * @param {import("../feature/NStyle").keyOfStyle} styleName
+     * @param {import("../feature/NStyle.js").keyOfStyle} styleName
      * @param {string | number | HookBindInfo} value
-     * @param {HookBindValue | HookBindCallback} [hookObj]
      */
-    setStyle(styleName, value, hookObj)
+    setStyle(styleName, value)
     {
-        if (hookObj != this.styleHooks.get(styleName))
+        if (this.styleHooks.has(styleName))
         {
             this.styleHooks.get(styleName)?.destroy();
-            if (hookObj != undefined)
-                this.styleHooks.set(styleName, hookObj);
-            else
-                this.styleHooks.delete(styleName);
+            this.styleHooks.delete(styleName);
         }
+
         if (value instanceof HookBindInfo)
-            value.bindToCallback(o =>
-            {
-                this.setStyle(styleName, o, hookObj);
-            }).bindDestroy(this).emit();
+        {
+            let hookBind = value.bindToValue(this.node.style, styleName);
+            this.styleHooks.set(styleName, hookBind);
+            hookBind.emit();
+        }
         else
             // @ts-expect-error
-            this.element.style[styleName] = value;
+            this.node.style[styleName] = value;
     }
-    
+
     /**
      * 获取样式
-     * @param {import("../feature/NStyle").keyOfStyle} styleName
+     * @param {import("../feature/NStyle.js").keyOfStyle} styleName
      * @returns {string | number}
      */
     getStyle(styleName)
     {
         if (typeof (styleName) == "string")
-            return this.element.style[styleName];
+            return this.node.style[styleName];
     }
 
     /**
      * 修改多个样式
-     * @param {{ [x in (import("../feature/NStyle").keyOfStyle)]?: string | number | HookBindInfo }} obj
+     * @param {{ [x in (import("../feature/NStyle.js").keyOfStyle)]?: string | number | HookBindInfo }} obj
      */
     setStyles(obj)
     {
@@ -244,7 +275,7 @@ export class NElement
      */
     setText(text)
     {
-        this.element.innerText = text;
+        this.node.innerText = text;
     }
 
     /**
@@ -254,7 +285,7 @@ export class NElement
      */
     addText(text)
     {
-        return this.element.appendChild(document.createTextNode(text));
+        return this.node.appendChild(document.createTextNode(text));
     }
 
     /**
@@ -264,7 +295,7 @@ export class NElement
      */
     setAttr(key, value)
     {
-        this.element.setAttribute(key, value);
+        this.node.setAttribute(key, value);
     }
 
     /**
@@ -294,7 +325,7 @@ export class NElement
      */
     addEventListener(eventName, callBack, options)
     {
-        this.element.addEventListener(eventName, callBack, options);
+        this.node.addEventListener(eventName, callBack, options);
     }
 
     /**
@@ -305,7 +336,7 @@ export class NElement
      */
     removeEventListener(eventName, callBack, options)
     {
-        this.element.removeEventListener(eventName, callBack, options);
+        this.node.removeEventListener(eventName, callBack, options);
     }
 
     /**
@@ -316,7 +347,7 @@ export class NElement
      */
     animate(keyframes, options)
     {
-        return this.element.animate(keyframes, options);
+        return this.node.animate(keyframes, options);
     }
 
     /**
@@ -337,7 +368,7 @@ export class NElement
             options = Object.assign({ fill: "forwards" }, options);
         if (options.fill != "forwards" && options.fill != "both")
             throw "(NElelemt) animateCommit can only be used when fill forwards or both";
-        let animate = this.element.animate(keyframes, options);
+        let animate = this.node.animate(keyframes, options);
         await animate.finished;
 
         let errorObject = null;
@@ -374,7 +405,7 @@ export class NElement
      */
     getTagName()
     {
-        return (/** @type {keyof HTMLElementTagNameMap} */(this.element.tagName.toLowerCase()));
+        return (/** @type {keyof HTMLElementTagNameMap} */(this.node.tagName.toLowerCase()));
     }
 
     /**

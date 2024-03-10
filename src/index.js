@@ -1,4 +1,6 @@
-export { NElement, getNElement } from "./dom/element/NElement.js";
+export { NElement, getNElement } from "./dom/node/NElement.js";
+export { NLocate } from "./dom/node/NLocate.js";
+export { NText } from "./dom/node/NText.js";
 
 export { NAsse } from "./dom/feature/NAsse.js";
 export { NAttr } from "./dom/feature/NAttr.js";

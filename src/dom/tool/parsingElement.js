@@ -1,4 +1,4 @@
-import { NElement, getNElement } from "../element/NElement.js";
+import { NElement, getNElement } from "../node/NElement.js";
 import { NEvent } from "../feature/NEvent.js";
 import { NStyle } from "../feature/NStyle.js";
 
@@ -17,7 +17,7 @@ function parsingElement(tagName, strings, ...keys)
     {
         let text = strings[i].trim();
         if (text)
-            ret.element.appendChild(document.createTextNode(text));
+            ret.node.appendChild(document.createTextNode(text));
         if (keys[i])
         {
             let nowKey = keys[i];

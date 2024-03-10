@@ -31,7 +31,7 @@ export class NStyle
 
     /**
      * 将此特征应用于元素
-     * @param {import("../element/NElement").NElement} e
+     * @param {import("../node/NElement.js").NElement} e
      */
     apply(e)
     {

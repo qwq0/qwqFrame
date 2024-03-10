@@ -1,4 +1,4 @@
-import { NElement } from "../element/NElement.js";
+import { NElement } from "../node/NElement.js";
 
 /**
  * 绑定元素属性到对象作为getter/setter
@@ -18,18 +18,18 @@ export function bindAttribute(attrName, obj, key, noInitialize = false)
         {
             if (!noInitialize)
                 // @ts-ignore
-                ele.element[attrName] = obj[key];
+                ele.node[attrName] = obj[key];
             // @ts-ignore
             delete obj[key];
         }
         Object.defineProperty(obj, key, {
             get: () =>
             {
-                return ele.element[attrName];
+                return ele.node[attrName];
             },
             set: (newValue) =>
             {
-                ele.element[attrName] = newValue;
+                ele.node[attrName] = newValue;
             },
             enumerable: true,
             configurable: true

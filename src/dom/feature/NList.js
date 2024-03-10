@@ -1,5 +1,7 @@
 import { HookBindInfo } from "../../data/hook/object/HookBindInfo.js";
-import { getNElement, NElement } from "../element/NElement.js";
+import { getNElement, NElement } from "../node/NElement.js";
+import { NLocate } from "../node/NLocate.js";
+import { NText } from "../node/NText.js";
 import { NAsse } from "./NAsse.js";
 import { NAttr } from "./NAttr.js";
 import { NEvent } from "./NEvent.js";
@@ -8,7 +10,7 @@ import { NTagName } from "./NTagName.js";
 
 /**
  * 特征列表
- * @typedef {Array<string | HookBindInfo | NTagName | NStyle | NAttr | NEvent | NAsse | NList | NList_list | NElement | ((e: NElement) => void)>} NList_list
+ * @typedef {Array<string | HookBindInfo | NTagName | NStyle | NAttr | NEvent | NAsse | NList | NList_list | NElement | NText | NLocate | ((e: NElement) => void)>} NList_list
  */
 export class NList
 {

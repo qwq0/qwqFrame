@@ -1,4 +1,4 @@
-import { NElement, getNElement } from "../element/NElement.js";
+import { NElement, getNElement } from "../node/NElement.js";
 
 /**
  * 遍历展开元素
@@ -55,7 +55,7 @@ function expEle(obj)
     if (obj.attr)
         now.setAttrs(obj.attr);
     if (obj.classList)
-        now.element.classList.add(...obj.classList);
+        now.node.classList.add(...obj.classList);
     if (obj.event) // 如果有绑定事件
     {
         Object.keys(obj.event).forEach(key =>

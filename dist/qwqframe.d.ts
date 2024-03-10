@@ -690,11 +690,92 @@ declare class NStyle<T extends keyOfStyle> {
     value: string | HookBindInfo;
     /**
      * 将此特征应用于元素
-     * @param {import("../element/NElement").NElement} e
+     * @param {import("../node/NElement.js").NElement} e
      */
     apply(e: NElement<any>): void;
 }
 type keyOfStyle = (keyof CSSStyleDeclaration & string) | (string & {});
+
+/**
+ * Text节点的封装
+ * 用于进行节点定位
+ * @typedef {import("./NElement").NElement} NElement
+ * @typedef {import("./NLocate").NLocate} NLocate
+ */
+declare class NText$1 {
+    /**
+     * @param {string | Text} text
+     */
+    constructor(text: string | Text);
+    /**
+     * Text节点
+     * @type {Text}
+     */
+    node: Text;
+    /**
+     * 设置此文本节点的文本
+     * @param {string} text
+     */
+    setText(text: string): void;
+    /**
+     * 在此节点之前插入节点
+     * @param {NElement | NLocate | NText} target
+     */
+    insBefore(target: NElement<any> | NLocate$1 | NText$1): void;
+    /**
+     * 在此节点之后插入节点
+     * @param {NElement | NLocate | NText} target
+     */
+    insAfter(target: NElement<any> | NLocate$1 | NText$1): void;
+    /**
+     * 使用指定节点替换此节点
+     * @param {Array<NElement | NText | NLocate>} elements
+     */
+    replaceWith(...elements: Array<NElement<any> | NText$1 | NLocate$1>): void;
+}
+/**
+ * Text节点的封装
+ * 用于进行节点定位
+ */
+type NLocate$1 = NLocate;
+
+/**
+ * Comment节点的封装
+ * 用于进行节点定位
+ * @typedef {import("./NElement").NElement} NElement
+ * @typedef {import("./NText").NText} NText
+ */
+declare class NLocate {
+    /**
+     * @param {Comment} [node]
+     */
+    constructor(node?: Comment | undefined);
+    /**
+     * Comment节点
+     * @type {Comment}
+     */
+    node: Comment;
+    /**
+     * 在此节点之前插入节点
+     * @param {NElement | NLocate | NText} target
+     */
+    insBefore(target: NElement<any> | NLocate | NText): void;
+    /**
+     * 在此节点之后插入节点
+     * @param {NElement | NLocate | NText} target
+     */
+    insAfter(target: NElement<any> | NLocate | NText): void;
+    /**
+     * 使用指定节点替换此节点
+     * @param {Array<NElement | NText | NLocate>} elements
+     */
+    replaceWith(...elements: Array<NElement<any> | NText | NLocate>): void;
+}
+/**
+ * Comment节点的封装
+ * 用于进行节点定位
+ */
+type NText = NText$1;
 
 /**
  * 根据HTMLElement对象获取NElement对象
@@ -725,30 +806,31 @@ declare class NElement<ElementObjectType extends HTMLElement> {
      * @readonly
      * @type {ElementObjectType}
      */
-    readonly element: ElementObjectType;
+    readonly node: ElementObjectType;
     /**
      * 样式名 到 钩子绑定 映射
      * @private
      * @type {Map<string, HookBindValue | HookBindCallback>}
      */
     private styleHooks;
+    get element(): ElementObjectType;
     /**
      * 添加单个子节点
-     * @param {NElement | Node | string | HookBindInfo} chi
+     * @param {NElement | NLocate | NText | Node | string | HookBindInfo} chi
      */
-    addChild(chi: NElement<any> | Node | string | HookBindInfo): void;
+    addChild(chi: NElement<any> | NLocate | NText$1 | Node | string | HookBindInfo): void;
     /**
      * 添加多个子节点
-     * @param {Array<NElement | Node | string | HookBindInfo | Array<NElement | Node | string | HookBindInfo>>} chi
+     * @param {Array<Parameters<NElement["addChild"]>[0] | Array<Parameters<NElement["addChild"]>[0]>>} chi
      */
-    addChilds(...chi: Array<NElement<any> | Node | string | HookBindInfo | Array<NElement<any> | Node | string | HookBindInfo>>): void;
+    addChilds(...chi: Array<Parameters<NElement<any>["addChild"]>[0] | Array<Parameters<NElement<any>["addChild"]>[0]>>): void;
     /**
      * 插入单个子节点(在中间)
      * 如果此节点之前在树中则先移除后加入
-     * @param {NElement} chi
-     * @param {number | NElement} pos 添加到的位置 负数从后到前 超过范围添加到最后
+     * @param {NElement | NLocate | NText} chi
+     * @param {number | NElement | NLocate | NText} pos 添加到的位置 负数从后到前 超过范围添加到最后
      */
-    insChild(chi: NElement<any>, pos: number | NElement<any>): void;
+    insChild(chi: NElement<any> | NLocate | NText$1, pos: number | NElement<any> | NLocate | NText$1): void;
     /**
      * 查找子节点在当前节点中的位置
      * 从0开始
@@ -757,6 +839,16 @@ declare class NElement<ElementObjectType extends HTMLElement> {
      * @returns {number}
      */
     childInd(chi: NElement<any>): number;
+    /**
+     * 在此节点之前插入节点
+     * @param {NElement | NLocate | NText} target
+     */
+    insBefore(target: NElement<any> | NLocate | NText$1): void;
+    /**
+     * 在此节点之后插入节点
+     * @param {NElement | NLocate | NText} target
+     */
+    insAfter(target: NElement<any> | NLocate | NText$1): void;
     /**
      * 移除此节点
      */
@@ -780,26 +872,25 @@ declare class NElement<ElementObjectType extends HTMLElement> {
      */
     getChild(ind: number): NElement<any>;
     /**
-     * 使用指定元素替换此元素
-     * @param {Array<NElement>} elements
+     * 使用指定节点替换此节点
+     * @param {Array<NElement | NText | NLocate>} elements
      */
-    replaceWith(...elements: Array<NElement<any>>): void;
+    replaceWith(...elements: Array<NElement<any> | NText$1 | NLocate>): void;
     /**
      * 修改样式
-     * @param {import("../feature/NStyle").keyOfStyle} styleName
+     * @param {import("../feature/NStyle.js").keyOfStyle} styleName
      * @param {string | number | HookBindInfo} value
-     * @param {HookBindValue | HookBindCallback} [hookObj]
      */
-    setStyle(styleName: keyOfStyle, value: string | number | HookBindInfo, hookObj?: HookBindValue | HookBindCallback | undefined): void;
+    setStyle(styleName: keyOfStyle, value: string | number | HookBindInfo): void;
     /**
      * 获取样式
-     * @param {import("../feature/NStyle").keyOfStyle} styleName
+     * @param {import("../feature/NStyle.js").keyOfStyle} styleName
      * @returns {string | number}
      */
     getStyle(styleName: keyOfStyle): string | number;
     /**
      * 修改多个样式
-     * @param {{ [x in (import("../feature/NStyle").keyOfStyle)]?: string | number | HookBindInfo }} obj
+     * @param {{ [x in (import("../feature/NStyle.js").keyOfStyle)]?: string | number | HookBindInfo }} obj
      */
     setStyles(obj: {
         [x: string & {}]: string | number | HookBindInfo | undefined;
@@ -1396,7 +1487,7 @@ declare class NAttr<T extends keyObjectOfHtmlElementAttr> {
     value: string | number | boolean | Function;
     /**
      * 将此特征应用于元素
-     * @param {import("../element/NElement").NElement} e
+     * @param {import("../node/NElement").NElement} e
      */
     apply(e: NElement<any>): void;
 }
@@ -1409,7 +1500,7 @@ type keyObjectOfHtmlElementAttr = (keyof HTMLElement & string) | (string & {});
 declare class NEvent<T extends keyof HTMLElementEventMap> {
     /**
      * @param {T} key
-     * @param {(event: HTMLElementEventMap[T], currentElement: import("../element/NElement").NElement) => void} callback
+     * @param {(event: HTMLElementEventMap[T], currentElement: import("../node/NElement").NElement) => void} callback
      */
     constructor(key: T, callback: (event: HTMLElementEventMap[T], currentElement: NElement<any>) => void);
     /**
@@ -1417,12 +1508,12 @@ declare class NEvent<T extends keyof HTMLElementEventMap> {
      */
     eventName: T;
     /**
-     * @type {(event: HTMLElementEventMap[T], currentElement: import("../element/NElement").NElement) => void}
+     * @type {(event: HTMLElementEventMap[T], currentElement: import("../node/NElement").NElement) => void}
      */
     callback: (event: HTMLElementEventMap[T], currentElement: NElement<any>) => void;
     /**
      * 将此特征应用于元素
-     * @param {import("../element/NElement").NElement} element
+     * @param {import("../node/NElement").NElement} element
      */
     apply(element: NElement<any>): void;
 }
@@ -1432,23 +1523,23 @@ declare class NEvent<T extends keyof HTMLElementEventMap> {
  */
 declare class NAsse {
     /**
-     * @param {function(import("../element/NElement").NElement): void} callback
+     * @param {function(import("../node/NElement").NElement): void} callback
      */
     constructor(callback: (arg0: NElement<any>) => void);
     /**
-     * @type {function(import("../element/NElement").NElement): void}
+     * @type {function(import("../node/NElement").NElement): void}
      */
     callback: (arg0: NElement<any>) => void;
     /**
      * 将此特征应用于元素
-     * @param {import("../element/NElement").NElement} e
+     * @param {import("../node/NElement").NElement} e
      */
     apply(e: NElement<any>): void;
 }
 
 /**
  * 特征列表
- * @typedef {Array<string | HookBindInfo | NTagName | NStyle | NAttr | NEvent | NAsse | NList | NList_list | NElement | ((e: NElement) => void)>} NList_list
+ * @typedef {Array<string | HookBindInfo | NTagName | NStyle | NAttr | NEvent | NAsse | NList | NList_list | NElement | NText | NLocate | ((e: NElement) => void)>} NList_list
  */
 declare class NList {
     /**
@@ -1495,7 +1586,7 @@ declare class NList {
 /**
  * 特征列表
  */
-type NList_list$1 = (string | HookBindInfo | NAsse | NElement<any> | NList | NList_list$1 | NTagName<any> | NStyle<any> | NAttr<any> | NEvent<any> | ((e: NElement<any>) => void))[];
+type NList_list$1 = (string | HookBindInfo | NElement<any> | NLocate | NText$1 | NAsse | NList | NList_list$1 | NTagName<any> | NStyle<any> | NAttr<any> | NEvent<any> | ((e: NElement<any>) => void))[];
 
 declare namespace cssG {
     function diFull(value: string): string;
@@ -2552,4 +2643,4 @@ type NList_list = NList_list$1;
 type PointerData = PointerData$1;
 type KeyboardData = KeyboardData$1;
 
-export { EventHandler, KeyboardData, NAsse, NAttr, NElement, NEvent, NList, NList_list, NStyle, NTagName, PointerData, bindArrayHook, bindAttribute, bindMapHook, bindSetHook, bindValue, createHookArray, createHookMap, createHookObj, createHookSet, createNStyle, createNStyleList, cssG, delayPromise, delayPromiseWithReject, delayPromiseWithResolve, divideLayout_DU, divideLayout_LR, divideLayout_RL, divideLayout_UD, expandElement, getNElement, isAmong, keyboardBind, mouseBind, runOnce, tag, tagName, touchBind };
+export { EventHandler, KeyboardData, NAsse, NAttr, NElement, NEvent, NList, NList_list, NLocate, NStyle, NTagName, NText$1 as NText, PointerData, bindArrayHook, bindAttribute, bindMapHook, bindSetHook, bindValue, createHookArray, createHookMap, createHookObj, createHookSet, createNStyle, createNStyleList, cssG, delayPromise, delayPromiseWithReject, delayPromiseWithResolve, divideLayout_DU, divideLayout_LR, divideLayout_RL, divideLayout_UD, expandElement, getNElement, isAmong, keyboardBind, mouseBind, runOnce, tag, tagName, touchBind };

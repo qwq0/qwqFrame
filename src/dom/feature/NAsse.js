@@ -4,12 +4,12 @@
 export class NAsse
 {
     /**
-     * @type {function(import("../element/NElement").NElement): void}
+     * @type {function(import("../node/NElement").NElement): void}
      */
     callback = null;
 
     /**
-     * @param {function(import("../element/NElement").NElement): void} callback
+     * @param {function(import("../node/NElement").NElement): void} callback
      */
     constructor(callback)
     {
@@ -18,7 +18,7 @@ export class NAsse
 
     /**
      * 将此特征应用于元素
-     * @param {import("../element/NElement").NElement} e
+     * @param {import("../node/NElement").NElement} e
      */
     apply(e)
     {

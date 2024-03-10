@@ -1,4 +1,4 @@
-import { NElement } from "../../element/NElement.js";
+import { NElement } from "../../node/NElement.js";
 import { PointerData } from "./PointerData.js";
 
 /**

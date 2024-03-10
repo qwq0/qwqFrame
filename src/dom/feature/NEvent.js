@@ -9,13 +9,13 @@ export class NEvent
      */
     eventName = null;
     /**
-     * @type {(event: HTMLElementEventMap[T], currentElement: import("../element/NElement").NElement) => void}
+     * @type {(event: HTMLElementEventMap[T], currentElement: import("../node/NElement").NElement) => void}
      */
     callback = null;
 
     /**
      * @param {T} key
-     * @param {(event: HTMLElementEventMap[T], currentElement: import("../element/NElement").NElement) => void} callback
+     * @param {(event: HTMLElementEventMap[T], currentElement: import("../node/NElement").NElement) => void} callback
      */
     constructor(key, callback)
     {
@@ -25,7 +25,7 @@ export class NEvent
 
     /**
      * 将此特征应用于元素
-     * @param {import("../element/NElement").NElement} element
+     * @param {import("../node/NElement").NElement} element
      */
     apply(element)
     {
