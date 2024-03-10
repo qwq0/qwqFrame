@@ -766,8 +766,10 @@ class NList
                         break;
                     }
 
-                    case NElement: { // 子元素
-                        element.addChild(/** @type {NElement} */(o));
+                    case NElement: // 子元素
+                    case NLocate: // 定位节点
+                    case NText: { // 子文本节点
+                        element.addChild(/** @type {NElement | NLocate | NText} */(o));
                         break;
                     }
 
@@ -784,7 +786,7 @@ class NList
                         element.addChild(NList.getElement((/** @type {Array} */(o))));
                         break;
                     }
-                    
+
                     default:
                         throw "(NList) Untractable feature types were found";
                 }
