@@ -2731,7 +2731,7 @@ class MapHookBind
             {
                 let specificCallback = callback.add(key, value);
                 if (typeof (specificCallback) == "function")
-                    this.#delCallbackMap.set(value, specificCallback);
+                    this.#delCallbackMap.set(key, specificCallback);
             }
             catch (err)
             {
@@ -2748,10 +2748,10 @@ class MapHookBind
      */
     emitSet(key, value)
     {
-        let oldSpecificCallback = this.#delCallbackMap.get(value);
+        let oldSpecificCallback = this.#delCallbackMap.get(key);
         if (oldSpecificCallback)
         {
-            this.#delCallbackMap.delete(value);
+            this.#delCallbackMap.delete(key);
             try
             {
                 oldSpecificCallback();
@@ -2769,7 +2769,7 @@ class MapHookBind
             {
                 let newSpecificCallback = callback.set(key, value);
                 if (typeof (newSpecificCallback) == "function")
-                    this.#delCallbackMap.set(value, newSpecificCallback);
+                    this.#delCallbackMap.set(key, newSpecificCallback);
             }
             catch (err)
             {
