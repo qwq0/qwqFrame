@@ -2655,9 +2655,9 @@ function bindArrayHook(proxyArray, callbacks, option = {})
  * Map钩子绑定类
  * 
  * @typedef {{
- *  add?: (key: any, value: any) => void | (() => void),
- *  set?: (key: any, value: any) => void | (() => void),
- *  del?: (key: any) => void
+ *  add: (key: any, value: any) => void | (() => void),
+ *  set: (key: any, value: any) => void | (() => void),
+ *  del: (key: any) => void
  * }} callbackType
  */
 class MapHookBind
@@ -2965,7 +2965,11 @@ function createHookMap(srcMap)
  * @template {any} K
  * @template {any} V
  * @param {Map<K, V>} proxyMap
- * @param {import("./MapHookBind.js").callbackType} callbacks
+ * @param {{
+ *  add?: (key: K, value: V) => void | (() => void),
+ *  set?: (key: K, value: V) => void | (() => void),
+ *  del?: (key: K) => void
+ * }} callbacks
  * @param {{ noSet?: boolean, addExisting?: boolean }} [option]
  * @returns {MapHookBind}
  */
@@ -3024,8 +3028,8 @@ function bindMapHook(proxyMap, callbacks, option = {})
  * Set钩子绑定类
  * 
  * @typedef {{
- *  add?: (value: any) => void | (() => void),
- *  del?: (value: any) => void
+ *  add: (value: any) => void | (() => void),
+ *  del: (value: any) => void
  * }} callbackType
  */
 class SetHookBind
@@ -3282,7 +3286,10 @@ function createHookSet(srcSet)
  * 回调函数中不应当进行可能触发钩子的操作
  * @template {any} K
  * @param {Set<K>} proxySet
- * @param {import("./SetHookBind.js").callbackType} callbacks
+ * @param {{
+ *  add?: (value: K) => void | (() => void),
+ *  del?: (value: K) => void
+ * }} callbacks
  * @param {{ addExisting?: boolean }} [option]
  * @returns {SetHookBind}
  */

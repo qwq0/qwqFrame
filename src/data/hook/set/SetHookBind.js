@@ -5,8 +5,8 @@ import { freeHookBindDestroy, hookBindDestroy } from "../shareHookStatus.js";
  * Set钩子绑定类
  * 
  * @typedef {{
- *  add?: (value: any) => void | (() => void),
- *  del?: (value: any) => void
+ *  add: (value: any) => void | (() => void),
+ *  del: (value: any) => void
  * }} callbackType
  */
 export class SetHookBind

@@ -105,7 +105,11 @@ export function createHookMap(srcMap)
  * @template {any} K
  * @template {any} V
  * @param {Map<K, V>} proxyMap
- * @param {import("./MapHookBind.js").callbackType} callbacks
+ * @param {{
+ *  add?: (key: K, value: V) => void | (() => void),
+ *  set?: (key: K, value: V) => void | (() => void),
+ *  del?: (key: K) => void
+ * }} callbacks
  * @param {{ noSet?: boolean, addExisting?: boolean }} [option]
  * @returns {MapHookBind}
  */

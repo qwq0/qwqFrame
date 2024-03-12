@@ -5,9 +5,9 @@ import { hookBindDestroy, freeHookBindDestroy } from "../shareHookStatus.js";
  * Map钩子绑定类
  * 
  * @typedef {{
- *  add?: (key: any, value: any) => void | (() => void),
- *  set?: (key: any, value: any) => void | (() => void),
- *  del?: (key: any) => void
+ *  add: (key: any, value: any) => void | (() => void),
+ *  set: (key: any, value: any) => void | (() => void),
+ *  del: (key: any) => void
  * }} callbackType
  */
 export class MapHookBind

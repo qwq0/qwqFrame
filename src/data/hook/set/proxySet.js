@@ -92,7 +92,10 @@ export function createHookSet(srcSet)
  * 回调函数中不应当进行可能触发钩子的操作
  * @template {any} K
  * @param {Set<K>} proxySet
- * @param {import("./SetHookBind.js").callbackType} callbacks
+ * @param {{
+ *  add?: (value: K) => void | (() => void),
+ *  del?: (value: K) => void
+ * }} callbacks
  * @param {{ addExisting?: boolean }} [option]
  * @returns {SetHookBind}
  */
