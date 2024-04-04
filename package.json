@@ -1,0 +1,11 @@
+{
+    "name": "qwq-frame",
+    "author": "qwq0",
+    "repository": "https://github.com/qwq0/qwqFrame",
+
+    "version": "1.0.0",
+
+    "type": "module",
+    "main": "./dist/qwqframe.js",
+    "types": "./dist/qwqframe.d.ts"
+}
