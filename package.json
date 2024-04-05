@@ -2,10 +2,13 @@
     "name": "qwq-frame",
     "author": "qwq0",
     "repository": "https://github.com/qwq0/qwqFrame",
-
-    "version": "1.1.0",
-
+    "version": "1.1.1",
     "type": "module",
     "main": "./dist/qwqframe.js",
-    "types": "./dist/qwqframe.d.ts"
+    "types": "./dist/qwqframe.d.ts",
+    "devDependencies": {
+        "rollup": "^4.14.0",
+        "rollup-plugin-dts": "^6.1.0",
+        "typescript": "^5.4.4"
+    }
 }

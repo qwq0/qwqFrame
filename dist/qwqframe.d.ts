@@ -199,13 +199,17 @@ declare function createNStyleList(obj: {
     length?: string | HookBindInfo;
     filter?: string | HookBindInfo;
     fill?: string | HookBindInfo;
+    stroke?: string | HookBindInfo;
     animationName?: string | HookBindInfo;
+    flex?: string | HookBindInfo;
     all?: string | HookBindInfo;
     offset?: string | HookBindInfo;
     height?: string | HookBindInfo;
     width?: string | HookBindInfo;
     left?: string | HookBindInfo;
     top?: string | HookBindInfo;
+    cssText?: string | HookBindInfo;
+    parentRule?: string | HookBindInfo;
     item?: string | HookBindInfo;
     accentColor?: string | HookBindInfo;
     alignContent?: string | HookBindInfo;
@@ -213,6 +217,7 @@ declare function createNStyleList(obj: {
     alignSelf?: string | HookBindInfo;
     alignmentBaseline?: string | HookBindInfo;
     animation?: string | HookBindInfo;
+    animationComposition?: string | HookBindInfo;
     animationDelay?: string | HookBindInfo;
     animationDirection?: string | HookBindInfo;
     animationDuration?: string | HookBindInfo;
@@ -237,6 +242,7 @@ declare function createNStyleList(obj: {
     backgroundRepeat?: string | HookBindInfo;
     backgroundSize?: string | HookBindInfo;
     baselineShift?: string | HookBindInfo;
+    baselineSource?: string | HookBindInfo;
     blockSize?: string | HookBindInfo;
     border?: string | HookBindInfo;
     borderBlock?: string | HookBindInfo;
@@ -326,6 +332,11 @@ declare function createNStyleList(obj: {
     columnWidth?: string | HookBindInfo;
     columns?: string | HookBindInfo;
     contain?: string | HookBindInfo;
+    containIntrinsicBlockSize?: string | HookBindInfo;
+    containIntrinsicHeight?: string | HookBindInfo;
+    containIntrinsicInlineSize?: string | HookBindInfo;
+    containIntrinsicSize?: string | HookBindInfo;
+    containIntrinsicWidth?: string | HookBindInfo;
     container?: string | HookBindInfo;
     containerName?: string | HookBindInfo;
     containerType?: string | HookBindInfo;
@@ -334,15 +345,16 @@ declare function createNStyleList(obj: {
     counterReset?: string | HookBindInfo;
     counterSet?: string | HookBindInfo;
     cssFloat?: string | HookBindInfo;
-    cssText?: string | HookBindInfo;
     cursor?: string | HookBindInfo;
+    cx?: string | HookBindInfo;
+    cy?: string | HookBindInfo;
+    d?: string | HookBindInfo;
     direction?: string | HookBindInfo;
     display?: string | HookBindInfo;
     dominantBaseline?: string | HookBindInfo;
     emptyCells?: string | HookBindInfo;
     fillOpacity?: string | HookBindInfo;
     fillRule?: string | HookBindInfo;
-    flex?: string | HookBindInfo;
     flexBasis?: string | HookBindInfo;
     flexDirection?: string | HookBindInfo;
     flexFlow?: string | HookBindInfo;
@@ -363,6 +375,9 @@ declare function createNStyleList(obj: {
     fontStretch?: string | HookBindInfo;
     fontStyle?: string | HookBindInfo;
     fontSynthesis?: string | HookBindInfo;
+    fontSynthesisSmallCaps?: string | HookBindInfo;
+    fontSynthesisStyle?: string | HookBindInfo;
+    fontSynthesisWeight?: string | HookBindInfo;
     fontVariant?: string | HookBindInfo;
     fontVariantAlternates?: string | HookBindInfo;
     fontVariantCaps?: string | HookBindInfo;
@@ -372,6 +387,7 @@ declare function createNStyleList(obj: {
     fontVariantPosition?: string | HookBindInfo;
     fontVariationSettings?: string | HookBindInfo;
     fontWeight?: string | HookBindInfo;
+    forcedColorAdjust?: string | HookBindInfo;
     gap?: string | HookBindInfo;
     grid?: string | HookBindInfo;
     gridArea?: string | HookBindInfo;
@@ -440,6 +456,8 @@ declare function createNStyleList(obj: {
     maskRepeat?: string | HookBindInfo;
     maskSize?: string | HookBindInfo;
     maskType?: string | HookBindInfo;
+    mathDepth?: string | HookBindInfo;
+    mathStyle?: string | HookBindInfo;
     maxBlockSize?: string | HookBindInfo;
     maxHeight?: string | HookBindInfo;
     maxInlineSize?: string | HookBindInfo;
@@ -451,8 +469,10 @@ declare function createNStyleList(obj: {
     mixBlendMode?: string | HookBindInfo;
     objectFit?: string | HookBindInfo;
     objectPosition?: string | HookBindInfo;
+    offsetAnchor?: string | HookBindInfo;
     offsetDistance?: string | HookBindInfo;
     offsetPath?: string | HookBindInfo;
+    offsetPosition?: string | HookBindInfo;
     offsetRotate?: string | HookBindInfo;
     opacity?: string | HookBindInfo;
     order?: string | HookBindInfo;
@@ -484,11 +504,11 @@ declare function createNStyleList(obj: {
     paddingLeft?: string | HookBindInfo;
     paddingRight?: string | HookBindInfo;
     paddingTop?: string | HookBindInfo;
+    page?: string | HookBindInfo;
     pageBreakAfter?: string | HookBindInfo;
     pageBreakBefore?: string | HookBindInfo;
     pageBreakInside?: string | HookBindInfo;
     paintOrder?: string | HookBindInfo;
-    parentRule?: string | HookBindInfo;
     perspective?: string | HookBindInfo;
     perspectiveOrigin?: string | HookBindInfo;
     placeContent?: string | HookBindInfo;
@@ -498,11 +518,14 @@ declare function createNStyleList(obj: {
     position?: string | HookBindInfo;
     printColorAdjust?: string | HookBindInfo;
     quotes?: string | HookBindInfo;
+    r?: string | HookBindInfo;
     resize?: string | HookBindInfo;
     right?: string | HookBindInfo;
     rotate?: string | HookBindInfo;
     rowGap?: string | HookBindInfo;
     rubyPosition?: string | HookBindInfo;
+    rx?: string | HookBindInfo;
+    ry?: string | HookBindInfo;
     scale?: string | HookBindInfo;
     scrollBehavior?: string | HookBindInfo;
     scrollMargin?: string | HookBindInfo;
@@ -530,14 +553,15 @@ declare function createNStyleList(obj: {
     scrollSnapAlign?: string | HookBindInfo;
     scrollSnapStop?: string | HookBindInfo;
     scrollSnapType?: string | HookBindInfo;
+    scrollbarColor?: string | HookBindInfo;
     scrollbarGutter?: string | HookBindInfo;
+    scrollbarWidth?: string | HookBindInfo;
     shapeImageThreshold?: string | HookBindInfo;
     shapeMargin?: string | HookBindInfo;
     shapeOutside?: string | HookBindInfo;
     shapeRendering?: string | HookBindInfo;
     stopColor?: string | HookBindInfo;
     stopOpacity?: string | HookBindInfo;
-    stroke?: string | HookBindInfo;
     strokeDasharray?: string | HookBindInfo;
     strokeDashoffset?: string | HookBindInfo;
     strokeLinecap?: string | HookBindInfo;
@@ -569,6 +593,7 @@ declare function createNStyleList(obj: {
     textTransform?: string | HookBindInfo;
     textUnderlineOffset?: string | HookBindInfo;
     textUnderlinePosition?: string | HookBindInfo;
+    textWrap?: string | HookBindInfo;
     touchAction?: string | HookBindInfo;
     transform?: string | HookBindInfo;
     transformBox?: string | HookBindInfo;
@@ -582,6 +607,7 @@ declare function createNStyleList(obj: {
     translate?: string | HookBindInfo;
     unicodeBidi?: string | HookBindInfo;
     userSelect?: string | HookBindInfo;
+    vectorEffect?: string | HookBindInfo;
     verticalAlign?: string | HookBindInfo;
     visibility?: string | HookBindInfo;
     webkitAlignContent?: string | HookBindInfo;
@@ -661,6 +687,8 @@ declare function createNStyleList(obj: {
     wordSpacing?: string | HookBindInfo;
     wordWrap?: string | HookBindInfo;
     writingMode?: string | HookBindInfo;
+    x?: string | HookBindInfo;
+    y?: string | HookBindInfo;
     zIndex?: string | HookBindInfo;
     getPropertyPriority?: string | HookBindInfo;
     getPropertyValue?: string | HookBindInfo;
@@ -900,13 +928,17 @@ declare class NElement<ElementObjectType extends HTMLElement> {
         length?: string | number | HookBindInfo;
         filter?: string | number | HookBindInfo;
         fill?: string | number | HookBindInfo;
+        stroke?: string | number | HookBindInfo;
         animationName?: string | number | HookBindInfo;
+        flex?: string | number | HookBindInfo;
         all?: string | number | HookBindInfo;
         offset?: string | number | HookBindInfo;
         height?: string | number | HookBindInfo;
         width?: string | number | HookBindInfo;
         left?: string | number | HookBindInfo;
         top?: string | number | HookBindInfo;
+        cssText?: string | number | HookBindInfo;
+        parentRule?: string | number | HookBindInfo;
         item?: string | number | HookBindInfo;
         accentColor?: string | number | HookBindInfo;
         alignContent?: string | number | HookBindInfo;
@@ -914,6 +946,7 @@ declare class NElement<ElementObjectType extends HTMLElement> {
         alignSelf?: string | number | HookBindInfo;
         alignmentBaseline?: string | number | HookBindInfo;
         animation?: string | number | HookBindInfo;
+        animationComposition?: string | number | HookBindInfo;
         animationDelay?: string | number | HookBindInfo;
         animationDirection?: string | number | HookBindInfo;
         animationDuration?: string | number | HookBindInfo;
@@ -938,6 +971,7 @@ declare class NElement<ElementObjectType extends HTMLElement> {
         backgroundRepeat?: string | number | HookBindInfo;
         backgroundSize?: string | number | HookBindInfo;
         baselineShift?: string | number | HookBindInfo;
+        baselineSource?: string | number | HookBindInfo;
         blockSize?: string | number | HookBindInfo;
         border?: string | number | HookBindInfo;
         borderBlock?: string | number | HookBindInfo;
@@ -1027,6 +1061,11 @@ declare class NElement<ElementObjectType extends HTMLElement> {
         columnWidth?: string | number | HookBindInfo;
         columns?: string | number | HookBindInfo;
         contain?: string | number | HookBindInfo;
+        containIntrinsicBlockSize?: string | number | HookBindInfo;
+        containIntrinsicHeight?: string | number | HookBindInfo;
+        containIntrinsicInlineSize?: string | number | HookBindInfo;
+        containIntrinsicSize?: string | number | HookBindInfo;
+        containIntrinsicWidth?: string | number | HookBindInfo;
         container?: string | number | HookBindInfo;
         containerName?: string | number | HookBindInfo;
         containerType?: string | number | HookBindInfo;
@@ -1035,15 +1074,16 @@ declare class NElement<ElementObjectType extends HTMLElement> {
         counterReset?: string | number | HookBindInfo;
         counterSet?: string | number | HookBindInfo;
         cssFloat?: string | number | HookBindInfo;
-        cssText?: string | number | HookBindInfo;
         cursor?: string | number | HookBindInfo;
+        cx?: string | number | HookBindInfo;
+        cy?: string | number | HookBindInfo;
+        d?: string | number | HookBindInfo;
         direction?: string | number | HookBindInfo;
         display?: string | number | HookBindInfo;
         dominantBaseline?: string | number | HookBindInfo;
         emptyCells?: string | number | HookBindInfo;
         fillOpacity?: string | number | HookBindInfo;
         fillRule?: string | number | HookBindInfo;
-        flex?: string | number | HookBindInfo;
         flexBasis?: string | number | HookBindInfo;
         flexDirection?: string | number | HookBindInfo;
         flexFlow?: string | number | HookBindInfo;
@@ -1064,6 +1104,9 @@ declare class NElement<ElementObjectType extends HTMLElement> {
         fontStretch?: string | number | HookBindInfo;
         fontStyle?: string | number | HookBindInfo;
         fontSynthesis?: string | number | HookBindInfo;
+        fontSynthesisSmallCaps?: string | number | HookBindInfo;
+        fontSynthesisStyle?: string | number | HookBindInfo;
+        fontSynthesisWeight?: string | number | HookBindInfo;
         fontVariant?: string | number | HookBindInfo;
         fontVariantAlternates?: string | number | HookBindInfo;
         fontVariantCaps?: string | number | HookBindInfo;
@@ -1073,6 +1116,7 @@ declare class NElement<ElementObjectType extends HTMLElement> {
         fontVariantPosition?: string | number | HookBindInfo;
         fontVariationSettings?: string | number | HookBindInfo;
         fontWeight?: string | number | HookBindInfo;
+        forcedColorAdjust?: string | number | HookBindInfo;
         gap?: string | number | HookBindInfo;
         grid?: string | number | HookBindInfo;
         gridArea?: string | number | HookBindInfo;
@@ -1141,6 +1185,8 @@ declare class NElement<ElementObjectType extends HTMLElement> {
         maskRepeat?: string | number | HookBindInfo;
         maskSize?: string | number | HookBindInfo;
         maskType?: string | number | HookBindInfo;
+        mathDepth?: string | number | HookBindInfo;
+        mathStyle?: string | number | HookBindInfo;
         maxBlockSize?: string | number | HookBindInfo;
         maxHeight?: string | number | HookBindInfo;
         maxInlineSize?: string | number | HookBindInfo;
@@ -1152,8 +1198,10 @@ declare class NElement<ElementObjectType extends HTMLElement> {
         mixBlendMode?: string | number | HookBindInfo;
         objectFit?: string | number | HookBindInfo;
         objectPosition?: string | number | HookBindInfo;
+        offsetAnchor?: string | number | HookBindInfo;
         offsetDistance?: string | number | HookBindInfo;
         offsetPath?: string | number | HookBindInfo;
+        offsetPosition?: string | number | HookBindInfo;
         offsetRotate?: string | number | HookBindInfo;
         opacity?: string | number | HookBindInfo;
         order?: string | number | HookBindInfo;
@@ -1185,11 +1233,11 @@ declare class NElement<ElementObjectType extends HTMLElement> {
         paddingLeft?: string | number | HookBindInfo;
         paddingRight?: string | number | HookBindInfo;
         paddingTop?: string | number | HookBindInfo;
+        page?: string | number | HookBindInfo;
         pageBreakAfter?: string | number | HookBindInfo;
         pageBreakBefore?: string | number | HookBindInfo;
         pageBreakInside?: string | number | HookBindInfo;
         paintOrder?: string | number | HookBindInfo;
-        parentRule?: string | number | HookBindInfo;
         perspective?: string | number | HookBindInfo;
         perspectiveOrigin?: string | number | HookBindInfo;
         placeContent?: string | number | HookBindInfo;
@@ -1199,11 +1247,14 @@ declare class NElement<ElementObjectType extends HTMLElement> {
         position?: string | number | HookBindInfo;
         printColorAdjust?: string | number | HookBindInfo;
         quotes?: string | number | HookBindInfo;
+        r?: string | number | HookBindInfo;
         resize?: string | number | HookBindInfo;
         right?: string | number | HookBindInfo;
         rotate?: string | number | HookBindInfo;
         rowGap?: string | number | HookBindInfo;
         rubyPosition?: string | number | HookBindInfo;
+        rx?: string | number | HookBindInfo;
+        ry?: string | number | HookBindInfo;
         scale?: string | number | HookBindInfo;
         scrollBehavior?: string | number | HookBindInfo;
         scrollMargin?: string | number | HookBindInfo;
@@ -1231,14 +1282,15 @@ declare class NElement<ElementObjectType extends HTMLElement> {
         scrollSnapAlign?: string | number | HookBindInfo;
         scrollSnapStop?: string | number | HookBindInfo;
         scrollSnapType?: string | number | HookBindInfo;
+        scrollbarColor?: string | number | HookBindInfo;
         scrollbarGutter?: string | number | HookBindInfo;
+        scrollbarWidth?: string | number | HookBindInfo;
         shapeImageThreshold?: string | number | HookBindInfo;
         shapeMargin?: string | number | HookBindInfo;
         shapeOutside?: string | number | HookBindInfo;
         shapeRendering?: string | number | HookBindInfo;
         stopColor?: string | number | HookBindInfo;
         stopOpacity?: string | number | HookBindInfo;
-        stroke?: string | number | HookBindInfo;
         strokeDasharray?: string | number | HookBindInfo;
         strokeDashoffset?: string | number | HookBindInfo;
         strokeLinecap?: string | number | HookBindInfo;
@@ -1270,6 +1322,7 @@ declare class NElement<ElementObjectType extends HTMLElement> {
         textTransform?: string | number | HookBindInfo;
         textUnderlineOffset?: string | number | HookBindInfo;
         textUnderlinePosition?: string | number | HookBindInfo;
+        textWrap?: string | number | HookBindInfo;
         touchAction?: string | number | HookBindInfo;
         transform?: string | number | HookBindInfo;
         transformBox?: string | number | HookBindInfo;
@@ -1283,6 +1336,7 @@ declare class NElement<ElementObjectType extends HTMLElement> {
         translate?: string | number | HookBindInfo;
         unicodeBidi?: string | number | HookBindInfo;
         userSelect?: string | number | HookBindInfo;
+        vectorEffect?: string | number | HookBindInfo;
         verticalAlign?: string | number | HookBindInfo;
         visibility?: string | number | HookBindInfo;
         webkitAlignContent?: string | number | HookBindInfo;
@@ -1362,6 +1416,8 @@ declare class NElement<ElementObjectType extends HTMLElement> {
         wordSpacing?: string | number | HookBindInfo;
         wordWrap?: string | number | HookBindInfo;
         writingMode?: string | number | HookBindInfo;
+        x?: string | number | HookBindInfo;
+        y?: string | number | HookBindInfo;
         zIndex?: string | number | HookBindInfo;
         getPropertyPriority?: string | number | HookBindInfo;
         getPropertyValue?: string | number | HookBindInfo;
@@ -1554,6 +1610,7 @@ declare let nTagName: {
     s?: NTagName<"s">;
     samp?: NTagName<"samp">;
     script?: NTagName<"script">;
+    search?: NTagName<"search">;
     section?: NTagName<"section">;
     select?: NTagName<"select">;
     slot?: NTagName<"slot">;
@@ -1648,9 +1705,6 @@ declare class NEvent<T extends keyof HTMLElementEventMap> {
 declare let eventName: {
     fullscreenchange?: (callback: (event: Event, currentElement: NElement<any>) => void) => NEvent<"fullscreenchange">;
     fullscreenerror?: (callback: (event: Event, currentElement: NElement<any>) => void) => NEvent<"fullscreenerror">;
-    copy?: (callback: (event: ClipboardEvent, currentElement: NElement<any>) => void) => NEvent<"copy">;
-    cut?: (callback: (event: ClipboardEvent, currentElement: NElement<any>) => void) => NEvent<"cut">;
-    paste?: (callback: (event: ClipboardEvent, currentElement: NElement<any>) => void) => NEvent<"paste">;
     abort?: (callback: (event: UIEvent, currentElement: NElement<any>) => void) => NEvent<"abort">;
     animationcancel?: (callback: (event: AnimationEvent, currentElement: NElement<any>) => void) => NEvent<"animationcancel">;
     animationend?: (callback: (event: AnimationEvent, currentElement: NElement<any>) => void) => NEvent<"animationend">;
@@ -1658,6 +1712,7 @@ declare let eventName: {
     animationstart?: (callback: (event: AnimationEvent, currentElement: NElement<any>) => void) => NEvent<"animationstart">;
     auxclick?: (callback: (event: MouseEvent, currentElement: NElement<any>) => void) => NEvent<"auxclick">;
     beforeinput?: (callback: (event: InputEvent, currentElement: NElement<any>) => void) => NEvent<"beforeinput">;
+    beforetoggle?: (callback: (event: Event, currentElement: NElement<any>) => void) => NEvent<"beforetoggle">;
     blur?: (callback: (event: FocusEvent, currentElement: NElement<any>) => void) => NEvent<"blur">;
     cancel?: (callback: (event: Event, currentElement: NElement<any>) => void) => NEvent<"cancel">;
     canplay?: (callback: (event: Event, currentElement: NElement<any>) => void) => NEvent<"canplay">;
@@ -1669,7 +1724,9 @@ declare let eventName: {
     compositionstart?: (callback: (event: CompositionEvent, currentElement: NElement<any>) => void) => NEvent<"compositionstart">;
     compositionupdate?: (callback: (event: CompositionEvent, currentElement: NElement<any>) => void) => NEvent<"compositionupdate">;
     contextmenu?: (callback: (event: MouseEvent, currentElement: NElement<any>) => void) => NEvent<"contextmenu">;
+    copy?: (callback: (event: ClipboardEvent, currentElement: NElement<any>) => void) => NEvent<"copy">;
     cuechange?: (callback: (event: Event, currentElement: NElement<any>) => void) => NEvent<"cuechange">;
+    cut?: (callback: (event: ClipboardEvent, currentElement: NElement<any>) => void) => NEvent<"cut">;
     dblclick?: (callback: (event: MouseEvent, currentElement: NElement<any>) => void) => NEvent<"dblclick">;
     drag?: (callback: (event: DragEvent, currentElement: NElement<any>) => void) => NEvent<"drag">;
     dragend?: (callback: (event: DragEvent, currentElement: NElement<any>) => void) => NEvent<"dragend">;
@@ -1704,6 +1761,7 @@ declare let eventName: {
     mouseout?: (callback: (event: MouseEvent, currentElement: NElement<any>) => void) => NEvent<"mouseout">;
     mouseover?: (callback: (event: MouseEvent, currentElement: NElement<any>) => void) => NEvent<"mouseover">;
     mouseup?: (callback: (event: MouseEvent, currentElement: NElement<any>) => void) => NEvent<"mouseup">;
+    paste?: (callback: (event: ClipboardEvent, currentElement: NElement<any>) => void) => NEvent<"paste">;
     pause?: (callback: (event: Event, currentElement: NElement<any>) => void) => NEvent<"pause">;
     play?: (callback: (event: Event, currentElement: NElement<any>) => void) => NEvent<"play">;
     playing?: (callback: (event: Event, currentElement: NElement<any>) => void) => NEvent<"playing">;
@@ -1720,6 +1778,7 @@ declare let eventName: {
     reset?: (callback: (event: Event, currentElement: NElement<any>) => void) => NEvent<"reset">;
     resize?: (callback: (event: UIEvent, currentElement: NElement<any>) => void) => NEvent<"resize">;
     scroll?: (callback: (event: Event, currentElement: NElement<any>) => void) => NEvent<"scroll">;
+    scrollend?: (callback: (event: Event, currentElement: NElement<any>) => void) => NEvent<"scrollend">;
     securitypolicyviolation?: (callback: (event: SecurityPolicyViolationEvent, currentElement: NElement<any>) => void) => NEvent<"securitypolicyviolation">;
     seeked?: (callback: (event: Event, currentElement: NElement<any>) => void) => NEvent<"seeked">;
     seeking?: (callback: (event: Event, currentElement: NElement<any>) => void) => NEvent<"seeking">;
@@ -1818,7 +1877,7 @@ declare class NList {
 /**
  * 特征列表
  */
-type NList_list$1 = (string | HookBindInfo | NElement<any> | NLocate | NText$1 | NAsse | NList | NList_list$1 | NTagName<any> | NStyle<any> | NAttr<any> | NEvent<any> | ((e: NElement<any>) => void))[];
+type NList_list$1 = Array<string | HookBindInfo | NTagName<any> | NStyle<any> | NAttr<any> | NEvent<any> | NAsse | NList | (string | HookBindInfo | NElement<any> | NLocate | NText$1 | NAsse | NList | NList_list$1 | NTagName<any> | NStyle<any> | NAttr<any> | NEvent<any> | ((e: NElement<any>) => void))[] | NElement<any> | NText$1 | NLocate | ((e: NElement<any>) => void)>;
 
 declare namespace cssG {
     function diFull(value: string): string;
@@ -1864,16 +1923,21 @@ type EDObj = {
     text?: string;
     style?: {
         [x: number]: string | number | undefined;
+        [Symbol.iterator]?: string | number;
         length?: string | number;
         filter?: string | number;
         fill?: string | number;
+        stroke?: string | number;
         animationName?: string | number;
+        flex?: string | number;
         all?: string | number;
         offset?: string | number;
         height?: string | number;
         width?: string | number;
         left?: string | number;
         top?: string | number;
+        cssText?: string | number;
+        parentRule?: string | number;
         item?: string | number;
         accentColor?: string | number;
         alignContent?: string | number;
@@ -1881,6 +1945,7 @@ type EDObj = {
         alignSelf?: string | number;
         alignmentBaseline?: string | number;
         animation?: string | number;
+        animationComposition?: string | number;
         animationDelay?: string | number;
         animationDirection?: string | number;
         animationDuration?: string | number;
@@ -1905,6 +1970,7 @@ type EDObj = {
         backgroundRepeat?: string | number;
         backgroundSize?: string | number;
         baselineShift?: string | number;
+        baselineSource?: string | number;
         blockSize?: string | number;
         border?: string | number;
         borderBlock?: string | number;
@@ -1994,6 +2060,11 @@ type EDObj = {
         columnWidth?: string | number;
         columns?: string | number;
         contain?: string | number;
+        containIntrinsicBlockSize?: string | number;
+        containIntrinsicHeight?: string | number;
+        containIntrinsicInlineSize?: string | number;
+        containIntrinsicSize?: string | number;
+        containIntrinsicWidth?: string | number;
         container?: string | number;
         containerName?: string | number;
         containerType?: string | number;
@@ -2002,15 +2073,16 @@ type EDObj = {
         counterReset?: string | number;
         counterSet?: string | number;
         cssFloat?: string | number;
-        cssText?: string | number;
         cursor?: string | number;
+        cx?: string | number;
+        cy?: string | number;
+        d?: string | number;
         direction?: string | number;
         display?: string | number;
         dominantBaseline?: string | number;
         emptyCells?: string | number;
         fillOpacity?: string | number;
         fillRule?: string | number;
-        flex?: string | number;
         flexBasis?: string | number;
         flexDirection?: string | number;
         flexFlow?: string | number;
@@ -2031,6 +2103,9 @@ type EDObj = {
         fontStretch?: string | number;
         fontStyle?: string | number;
         fontSynthesis?: string | number;
+        fontSynthesisSmallCaps?: string | number;
+        fontSynthesisStyle?: string | number;
+        fontSynthesisWeight?: string | number;
         fontVariant?: string | number;
         fontVariantAlternates?: string | number;
         fontVariantCaps?: string | number;
@@ -2040,6 +2115,7 @@ type EDObj = {
         fontVariantPosition?: string | number;
         fontVariationSettings?: string | number;
         fontWeight?: string | number;
+        forcedColorAdjust?: string | number;
         gap?: string | number;
         grid?: string | number;
         gridArea?: string | number;
@@ -2108,6 +2184,8 @@ type EDObj = {
         maskRepeat?: string | number;
         maskSize?: string | number;
         maskType?: string | number;
+        mathDepth?: string | number;
+        mathStyle?: string | number;
         maxBlockSize?: string | number;
         maxHeight?: string | number;
         maxInlineSize?: string | number;
@@ -2119,8 +2197,10 @@ type EDObj = {
         mixBlendMode?: string | number;
         objectFit?: string | number;
         objectPosition?: string | number;
+        offsetAnchor?: string | number;
         offsetDistance?: string | number;
         offsetPath?: string | number;
+        offsetPosition?: string | number;
         offsetRotate?: string | number;
         opacity?: string | number;
         order?: string | number;
@@ -2152,11 +2232,11 @@ type EDObj = {
         paddingLeft?: string | number;
         paddingRight?: string | number;
         paddingTop?: string | number;
+        page?: string | number;
         pageBreakAfter?: string | number;
         pageBreakBefore?: string | number;
         pageBreakInside?: string | number;
         paintOrder?: string | number;
-        parentRule?: string | number;
         perspective?: string | number;
         perspectiveOrigin?: string | number;
         placeContent?: string | number;
@@ -2166,11 +2246,14 @@ type EDObj = {
         position?: string | number;
         printColorAdjust?: string | number;
         quotes?: string | number;
+        r?: string | number;
         resize?: string | number;
         right?: string | number;
         rotate?: string | number;
         rowGap?: string | number;
         rubyPosition?: string | number;
+        rx?: string | number;
+        ry?: string | number;
         scale?: string | number;
         scrollBehavior?: string | number;
         scrollMargin?: string | number;
@@ -2198,14 +2281,15 @@ type EDObj = {
         scrollSnapAlign?: string | number;
         scrollSnapStop?: string | number;
         scrollSnapType?: string | number;
+        scrollbarColor?: string | number;
         scrollbarGutter?: string | number;
+        scrollbarWidth?: string | number;
         shapeImageThreshold?: string | number;
         shapeMargin?: string | number;
         shapeOutside?: string | number;
         shapeRendering?: string | number;
         stopColor?: string | number;
         stopOpacity?: string | number;
-        stroke?: string | number;
         strokeDasharray?: string | number;
         strokeDashoffset?: string | number;
         strokeLinecap?: string | number;
@@ -2237,6 +2321,7 @@ type EDObj = {
         textTransform?: string | number;
         textUnderlineOffset?: string | number;
         textUnderlinePosition?: string | number;
+        textWrap?: string | number;
         touchAction?: string | number;
         transform?: string | number;
         transformBox?: string | number;
@@ -2250,6 +2335,7 @@ type EDObj = {
         translate?: string | number;
         unicodeBidi?: string | number;
         userSelect?: string | number;
+        vectorEffect?: string | number;
         verticalAlign?: string | number;
         visibility?: string | number;
         webkitAlignContent?: string | number;
@@ -2329,6 +2415,8 @@ type EDObj = {
         wordSpacing?: string | number;
         wordWrap?: string | number;
         writingMode?: string | number;
+        x?: string | number;
+        y?: string | number;
         zIndex?: string | number;
         getPropertyPriority?: string | number;
         getPropertyValue?: string | number;
@@ -2356,14 +2444,13 @@ type EDObj = {
         select?: (arg0: Event) => void;
         fullscreenchange?: (arg0: Event) => void;
         fullscreenerror?: (arg0: Event) => void;
-        cut?: (arg0: Event) => void;
-        paste?: (arg0: Event) => void;
         animationcancel?: (arg0: Event) => void;
         animationend?: (arg0: Event) => void;
         animationiteration?: (arg0: Event) => void;
         animationstart?: (arg0: Event) => void;
         auxclick?: (arg0: Event) => void;
         beforeinput?: (arg0: Event) => void;
+        beforetoggle?: (arg0: Event) => void;
         blur?: (arg0: Event) => void;
         canplay?: (arg0: Event) => void;
         canplaythrough?: (arg0: Event) => void;
@@ -2375,6 +2462,7 @@ type EDObj = {
         compositionupdate?: (arg0: Event) => void;
         contextmenu?: (arg0: Event) => void;
         cuechange?: (arg0: Event) => void;
+        cut?: (arg0: Event) => void;
         dblclick?: (arg0: Event) => void;
         drag?: (arg0: Event) => void;
         dragend?: (arg0: Event) => void;
@@ -2406,6 +2494,7 @@ type EDObj = {
         mouseout?: (arg0: Event) => void;
         mouseover?: (arg0: Event) => void;
         mouseup?: (arg0: Event) => void;
+        paste?: (arg0: Event) => void;
         playing?: (arg0: Event) => void;
         pointercancel?: (arg0: Event) => void;
         pointerdown?: (arg0: Event) => void;
@@ -2418,6 +2507,7 @@ type EDObj = {
         ratechange?: (arg0: Event) => void;
         reset?: (arg0: Event) => void;
         scroll?: (arg0: Event) => void;
+        scrollend?: (arg0: Event) => void;
         securitypolicyviolation?: (arg0: Event) => void;
         seeked?: (arg0: Event) => void;
         seeking?: (arg0: Event) => void;
@@ -2890,4 +2980,4 @@ type NList_item = NList_list$1;
 type PointerData = PointerData$1;
 type KeyboardData = KeyboardData$1;
 
-export { EventHandler, KeyboardData, NAsse, NAttr, NElement, NEvent, NList, NList_item, NList_list, NLocate, NStyle, NTagName, NText$1 as NText, PointerData, bindArrayHook, bindAttribute, bindMapHook, bindSetHook, bindValue, createHookArray, createHookMap, createHookObj, createHookSet, createNStyle, createNStyleList, cssG, delayPromise, delayPromiseWithReject, delayPromiseWithResolve, divideLayout_DU, divideLayout_LR, divideLayout_RL, divideLayout_UD, eventName, expandElement, getNElement, isAmong, keyboardBind, mouseBind, nTagName, runOnce, tag, tagName, touchBind };
+export { EventHandler, type KeyboardData, NAsse, NAttr, NElement, NEvent, NList, type NList_item, type NList_list, NLocate, NStyle, NTagName, NText$1 as NText, type PointerData, bindArrayHook, bindAttribute, bindMapHook, bindSetHook, bindValue, createHookArray, createHookMap, createHookObj, createHookSet, createNStyle, createNStyleList, cssG, delayPromise, delayPromiseWithReject, delayPromiseWithResolve, divideLayout_DU, divideLayout_LR, divideLayout_RL, divideLayout_UD, eventName, expandElement, getNElement, isAmong, keyboardBind, mouseBind, nTagName, runOnce, tag, tagName, touchBind };
