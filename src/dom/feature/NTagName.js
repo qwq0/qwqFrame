@@ -20,3 +20,18 @@ export class NTagName
         this.tagName = /** @type {T} */(tagName.toLowerCase());
     }
 }
+
+/**
+ * 快速创建 NTagName 实例
+ * @type {{
+ *  [x in keyof HTMLElementTagNameMap]?: NTagName<x>
+ * }}
+ */
+export let nTagName = new Proxy({}, {
+    get: (_target, key) =>
+    {
+        // @ts-ignore
+        return new NTagName(key);
+    },
+    set: () => false
+});

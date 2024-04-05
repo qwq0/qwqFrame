@@ -320,23 +320,23 @@ export class NElement
      * 添加事件监听器
      * @template {keyof HTMLElementEventMap} K
      * @param {K} eventName
-     * @param {function(HTMLElementEventMap[K]): any} callBack
+     * @param {function(HTMLElementEventMap[K]): any} callback
      * @param {boolean | AddEventListenerOptions} [options]
      */
-    addEventListener(eventName, callBack, options)
+    addEventListener(eventName, callback, options)
     {
-        this.node.addEventListener(eventName, callBack, options);
+        this.node.addEventListener(eventName, callback, options);
     }
 
     /**
      * 移除事件监听器
      * @param {string} eventName
-     * @param {function(Event) : void} callBack
+     * @param {function(Event) : void} callback
      * @param {boolean | EventListenerOptions} [options]
      */
-    removeEventListener(eventName, callBack, options)
+    removeEventListener(eventName, callback, options)
     {
-        this.node.removeEventListener(eventName, callBack, options);
+        this.node.removeEventListener(eventName, callback, options);
     }
 
     /**

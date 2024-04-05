@@ -5,10 +5,10 @@ import { PointerData } from "./PointerData.js";
 /**
  * 触摸(拖拽) 事件处理
  * @param {NElement} element 
- * @param {function(PointerData):void} callBack
+ * @param {function(PointerData):void} callback
  * @param {boolean} [preventDefault]
  */
-export function touchBind(element, callBack, preventDefault = true)
+export function touchBind(element, callback, preventDefault = true)
 {
     element.addEventListener("touchstart", e => touchStart(/** @type {TouchEvent} */(e)), {
         capture: false,
@@ -57,7 +57,7 @@ export function touchBind(element, callBack, preventDefault = true)
                 y: o.clientY
             };
             touchesSet.set(o.identifier, t);
-            callBack(new PointerData(
+            callback(new PointerData(
                 t.x, t.y,
                 0, 0,
                 t.sx, t.sy,
@@ -81,7 +81,7 @@ export function touchBind(element, callBack, preventDefault = true)
                 let vy = o.clientY - touchInfo.y;
                 touchInfo.x = o.clientX;
                 touchInfo.y = o.clientY;
-                callBack(new PointerData(
+                callback(new PointerData(
                     touchInfo.x, touchInfo.y,
                     vx, vy,
                     touchInfo.sx, touchInfo.sy,
@@ -107,7 +107,7 @@ export function touchBind(element, callBack, preventDefault = true)
                 let vy = o.clientY - touchInfo.y;
                 touchInfo.x = o.clientX;
                 touchInfo.y = o.clientY;
-                callBack(new PointerData(
+                callback(new PointerData(
                     touchInfo.x, touchInfo.y,
                     vx, vy,
                     touchInfo.sx, touchInfo.sy,
@@ -129,7 +129,7 @@ export function touchBind(element, callBack, preventDefault = true)
             if (touchInfo)
             {
                 touchesSet.delete(o.identifier);
-                callBack(new PointerData(
+                callback(new PointerData(
                     touchInfo.x, touchInfo.y,
                     0, 0,
                     touchInfo.sx, touchInfo.sy,

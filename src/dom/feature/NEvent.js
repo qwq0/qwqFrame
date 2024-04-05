@@ -35,3 +35,21 @@ export class NEvent
         });
     }
 }
+
+/**
+ * 快速创建 NEvent 实例
+ * @type {{
+ *  [x in keyof HTMLElementEventMap]?: (callback: (event: HTMLElementEventMap[x], currentElement: import("../node/NElement").NElement) => void) => NEvent<x>
+ * }}
+ */
+export let eventName = new Proxy({}, {
+    get: (_target, key) =>
+    {
+        return (/** @type {(event: Event , currentElement: import("../node/NElement").NElement<any>) => void} */ callback) =>
+        {
+            // @ts-ignore
+            return new NEvent(key, callback);
+        };
+    },
+    set: () => false
+});

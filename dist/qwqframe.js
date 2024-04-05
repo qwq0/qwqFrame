@@ -618,6 +618,24 @@ class NEvent
 }
 
 /**
+ * 快速创建 NEvent 实例
+ * @type {{
+ *  [x in keyof HTMLElementEventMap]?: (callback: (event: HTMLElementEventMap[x], currentElement: import("../node/NElement").NElement) => void) => NEvent<x>
+ * }}
+ */
+let eventName = new Proxy({}, {
+    get: (_target, key) =>
+    {
+        return (/** @type {(event: Event , currentElement: import("../node/NElement").NElement<any>) => void} */ callback) =>
+        {
+            // @ts-ignore
+            return new NEvent(key, callback);
+        };
+    },
+    set: () => false
+});
+
+/**
  * @typedef {(keyof CSSStyleDeclaration & string) | (string & {})} keyOfStyle
  */
 /**
@@ -696,6 +714,21 @@ class NTagName
         this.tagName = /** @type {T} */(tagName.toLowerCase());
     }
 }
+
+/**
+ * 快速创建 NTagName 实例
+ * @type {{
+ *  [x in keyof HTMLElementTagNameMap]?: NTagName<x>
+ * }}
+ */
+let nTagName = new Proxy({}, {
+    get: (_target, key) =>
+    {
+        // @ts-ignore
+        return new NTagName(key);
+    },
+    set: () => false
+});
 
 /**
  * 特征列表
@@ -1170,23 +1203,23 @@ class NElement
      * 添加事件监听器
      * @template {keyof HTMLElementEventMap} K
      * @param {K} eventName
-     * @param {function(HTMLElementEventMap[K]): any} callBack
+     * @param {function(HTMLElementEventMap[K]): any} callback
      * @param {boolean | AddEventListenerOptions} [options]
      */
-    addEventListener(eventName, callBack, options)
+    addEventListener(eventName, callback, options)
     {
-        this.node.addEventListener(eventName, callBack, options);
+        this.node.addEventListener(eventName, callback, options);
     }
 
     /**
      * 移除事件监听器
      * @param {string} eventName
-     * @param {function(Event) : void} callBack
+     * @param {function(Event) : void} callback
      * @param {boolean | EventListenerOptions} [options]
      */
-    removeEventListener(eventName, callBack, options)
+    removeEventListener(eventName, callback, options)
     {
-        this.node.removeEventListener(eventName, callBack, options);
+        this.node.removeEventListener(eventName, callback, options);
     }
 
     /**
@@ -1782,11 +1815,11 @@ class PointerData
 /**
  * 鼠标(拖拽)事件处理
  * @param {NElement} element 绑定到元素
- * @param {function(PointerData):void} callBack 回调
+ * @param {function(PointerData):void} callback 回调
  * @param {number} [button] 绑定的按键
  * @param {HTMLElement | Window} [extensionRegion] 延伸区域 (实际捕获鼠标移动和按钮抬起的区域)
  */
-function mouseBind(element, callBack, button = 0, extensionRegion = window)
+function mouseBind(element, callback, button = 0, extensionRegion = window)
 {
     element.addEventListener("mousedown", (/** @type {MouseEvent} */ e) => mouseDown(e), false);
 
@@ -1811,7 +1844,7 @@ function mouseBind(element, callBack, button = 0, extensionRegion = window)
         if (e.button == button)
         {
             leftDown = true;
-            callBack(new PointerData(
+            callback(new PointerData(
                 x, y,
                 0, 0,
                 x, y,
@@ -1832,7 +1865,7 @@ function mouseBind(element, callBack, button = 0, extensionRegion = window)
             let vy = e.clientY - y;
             x = e.clientX;
             y = e.clientY;
-            callBack(new PointerData(
+            callback(new PointerData(
                 x, y,
                 vx, vy,
                 sx, sy,
@@ -1855,7 +1888,7 @@ function mouseBind(element, callBack, button = 0, extensionRegion = window)
         if (leftDown && e.button == button)
         {
             leftDown = false;
-            callBack(new PointerData(
+            callback(new PointerData(
                 x, y,
                 vx, vy,
                 sx, sy,
@@ -1868,10 +1901,10 @@ function mouseBind(element, callBack, button = 0, extensionRegion = window)
 /**
  * 触摸(拖拽) 事件处理
  * @param {NElement} element 
- * @param {function(PointerData):void} callBack
+ * @param {function(PointerData):void} callback
  * @param {boolean} [preventDefault]
  */
-function touchBind(element, callBack, preventDefault = true)
+function touchBind(element, callback, preventDefault = true)
 {
     element.addEventListener("touchstart", e => touchStart(/** @type {TouchEvent} */(e)), {
         capture: false,
@@ -1920,7 +1953,7 @@ function touchBind(element, callBack, preventDefault = true)
                 y: o.clientY
             };
             touchesSet.set(o.identifier, t);
-            callBack(new PointerData(
+            callback(new PointerData(
                 t.x, t.y,
                 0, 0,
                 t.sx, t.sy,
@@ -1944,7 +1977,7 @@ function touchBind(element, callBack, preventDefault = true)
                 let vy = o.clientY - touchInfo.y;
                 touchInfo.x = o.clientX;
                 touchInfo.y = o.clientY;
-                callBack(new PointerData(
+                callback(new PointerData(
                     touchInfo.x, touchInfo.y,
                     vx, vy,
                     touchInfo.sx, touchInfo.sy,
@@ -1970,7 +2003,7 @@ function touchBind(element, callBack, preventDefault = true)
                 let vy = o.clientY - touchInfo.y;
                 touchInfo.x = o.clientX;
                 touchInfo.y = o.clientY;
-                callBack(new PointerData(
+                callback(new PointerData(
                     touchInfo.x, touchInfo.y,
                     vx, vy,
                     touchInfo.sx, touchInfo.sy,
@@ -1992,7 +2025,7 @@ function touchBind(element, callBack, preventDefault = true)
             if (touchInfo)
             {
                 touchesSet.delete(o.identifier);
-                callBack(new PointerData(
+                callback(new PointerData(
                     touchInfo.x, touchInfo.y,
                     0, 0,
                     touchInfo.sx, touchInfo.sy,
@@ -2099,14 +2132,14 @@ class KeyboardData
 /**
  * 键盘 事件处理
  * @param {HTMLElement} element
- * @param {function(KeyboardData) : void} callBack
+ * @param {function(KeyboardData) : void} callback
  */
-function keyboardBind(element, callBack)
+function keyboardBind(element, callback)
 {
     element.addEventListener("keydown", e =>
     {
         let keyName = (keyNameTable[e.key] ? keyNameTable[e.key] : e.key);
-        callBack(new KeyboardData(
+        callback(new KeyboardData(
             keyName,
             true,
             keyPress(keyName)
@@ -2116,7 +2149,7 @@ function keyboardBind(element, callBack)
     {
         let keyName = (keyNameTable[e.key] ? keyNameTable[e.key] : e.key);
         keyUp(keyName);
-        callBack(new KeyboardData(
+        callback(new KeyboardData(
             keyName,
             false,
             false
@@ -3498,4 +3531,4 @@ class EventHandler
     }
 }
 
-export { EventHandler, NAsse, NAttr, NElement, NEvent, NList, NLocate, NStyle, NTagName, NText, bindArrayHook, bindAttribute, bindMapHook, bindSetHook, bindValue, createHookArray, createHookMap, createHookObj, createHookSet, createNStyle, createNStyleList, cssG, delayPromise, delayPromiseWithReject, delayPromiseWithResolve, divideLayout_DU, divideLayout_LR, divideLayout_RL, divideLayout_UD, expandElement, getNElement, isAmong, keyboardBind, mouseBind, runOnce, tag, tagName, touchBind };
+export { EventHandler, NAsse, NAttr, NElement, NEvent, NList, NLocate, NStyle, NTagName, NText, bindArrayHook, bindAttribute, bindMapHook, bindSetHook, bindValue, createHookArray, createHookMap, createHookObj, createHookSet, createNStyle, createNStyleList, cssG, delayPromise, delayPromiseWithReject, delayPromiseWithResolve, divideLayout_DU, divideLayout_LR, divideLayout_RL, divideLayout_UD, eventName, expandElement, getNElement, isAmong, keyboardBind, mouseBind, nTagName, runOnce, tag, tagName, touchBind };

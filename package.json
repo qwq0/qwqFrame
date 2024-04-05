@@ -3,7 +3,7 @@
     "author": "qwq0",
     "repository": "https://github.com/qwq0/qwqFrame",
 
-    "version": "1.0.0",
+    "version": "1.1.0",
 
     "type": "module",
     "main": "./dist/qwqframe.js",

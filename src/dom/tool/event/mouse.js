@@ -4,11 +4,11 @@ import { PointerData } from "./PointerData.js";
 /**
  * 鼠标(拖拽)事件处理
  * @param {NElement} element 绑定到元素
- * @param {function(PointerData):void} callBack 回调
+ * @param {function(PointerData):void} callback 回调
  * @param {number} [button] 绑定的按键
  * @param {HTMLElement | Window} [extensionRegion] 延伸区域 (实际捕获鼠标移动和按钮抬起的区域)
  */
-export function mouseBind(element, callBack, button = 0, extensionRegion = window)
+export function mouseBind(element, callback, button = 0, extensionRegion = window)
 {
     element.addEventListener("mousedown", (/** @type {MouseEvent} */ e) => mouseDown(e), false);
 
@@ -33,7 +33,7 @@ export function mouseBind(element, callBack, button = 0, extensionRegion = windo
         if (e.button == button)
         {
             leftDown = true;
-            callBack(new PointerData(
+            callback(new PointerData(
                 x, y,
                 0, 0,
                 x, y,
@@ -54,7 +54,7 @@ export function mouseBind(element, callBack, button = 0, extensionRegion = windo
             let vy = e.clientY - y;
             x = e.clientX;
             y = e.clientY;
-            callBack(new PointerData(
+            callback(new PointerData(
                 x, y,
                 vx, vy,
                 sx, sy,
@@ -77,7 +77,7 @@ export function mouseBind(element, callBack, button = 0, extensionRegion = windo
         if (leftDown && e.button == button)
         {
             leftDown = false;
-            callBack(new PointerData(
+            callback(new PointerData(
                 x, y,
                 vx, vy,
                 sx, sy,

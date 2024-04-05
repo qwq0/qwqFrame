@@ -1401,17 +1401,17 @@ declare class NElement<ElementObjectType extends HTMLElement> {
      * 添加事件监听器
      * @template {keyof HTMLElementEventMap} K
      * @param {K} eventName
-     * @param {function(HTMLElementEventMap[K]): any} callBack
+     * @param {function(HTMLElementEventMap[K]): any} callback
      * @param {boolean | AddEventListenerOptions} [options]
      */
-    addEventListener<K extends keyof HTMLElementEventMap>(eventName: K, callBack: (arg0: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions | undefined): void;
+    addEventListener<K extends keyof HTMLElementEventMap>(eventName: K, callback: (arg0: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions | undefined): void;
     /**
      * 移除事件监听器
      * @param {string} eventName
-     * @param {function(Event) : void} callBack
+     * @param {function(Event) : void} callback
      * @param {boolean | EventListenerOptions} [options]
      */
-    removeEventListener(eventName: string, callBack: (arg0: Event) => void, options?: boolean | EventListenerOptions | undefined): void;
+    removeEventListener(eventName: string, callback: (arg0: Event) => void, options?: boolean | EventListenerOptions | undefined): void;
     /**
      * 执行动画
      * @param {Array<Keyframe> | PropertyIndexedKeyframes} keyframes
@@ -1464,6 +1464,125 @@ declare class NTagName<T extends keyof HTMLElementTagNameMap> {
      */
     tagName: T;
 }
+/**
+ * 快速创建 NTagName 实例
+ * @type {{
+ *  [x in keyof HTMLElementTagNameMap]?: NTagName<x>
+ * }}
+ */
+declare let nTagName: {
+    a?: NTagName<"a">;
+    abbr?: NTagName<"abbr">;
+    address?: NTagName<"address">;
+    area?: NTagName<"area">;
+    article?: NTagName<"article">;
+    aside?: NTagName<"aside">;
+    audio?: NTagName<"audio">;
+    b?: NTagName<"b">;
+    base?: NTagName<"base">;
+    bdi?: NTagName<"bdi">;
+    bdo?: NTagName<"bdo">;
+    blockquote?: NTagName<"blockquote">;
+    body?: NTagName<"body">;
+    br?: NTagName<"br">;
+    button?: NTagName<"button">;
+    canvas?: NTagName<"canvas">;
+    caption?: NTagName<"caption">;
+    cite?: NTagName<"cite">;
+    code?: NTagName<"code">;
+    col?: NTagName<"col">;
+    colgroup?: NTagName<"colgroup">;
+    data?: NTagName<"data">;
+    datalist?: NTagName<"datalist">;
+    dd?: NTagName<"dd">;
+    del?: NTagName<"del">;
+    details?: NTagName<"details">;
+    dfn?: NTagName<"dfn">;
+    dialog?: NTagName<"dialog">;
+    div?: NTagName<"div">;
+    dl?: NTagName<"dl">;
+    dt?: NTagName<"dt">;
+    em?: NTagName<"em">;
+    embed?: NTagName<"embed">;
+    fieldset?: NTagName<"fieldset">;
+    figcaption?: NTagName<"figcaption">;
+    figure?: NTagName<"figure">;
+    footer?: NTagName<"footer">;
+    form?: NTagName<"form">;
+    h1?: NTagName<"h1">;
+    h2?: NTagName<"h2">;
+    h3?: NTagName<"h3">;
+    h4?: NTagName<"h4">;
+    h5?: NTagName<"h5">;
+    h6?: NTagName<"h6">;
+    head?: NTagName<"head">;
+    header?: NTagName<"header">;
+    hgroup?: NTagName<"hgroup">;
+    hr?: NTagName<"hr">;
+    html?: NTagName<"html">;
+    i?: NTagName<"i">;
+    iframe?: NTagName<"iframe">;
+    img?: NTagName<"img">;
+    input?: NTagName<"input">;
+    ins?: NTagName<"ins">;
+    kbd?: NTagName<"kbd">;
+    label?: NTagName<"label">;
+    legend?: NTagName<"legend">;
+    li?: NTagName<"li">;
+    link?: NTagName<"link">;
+    main?: NTagName<"main">;
+    map?: NTagName<"map">;
+    mark?: NTagName<"mark">;
+    menu?: NTagName<"menu">;
+    meta?: NTagName<"meta">;
+    meter?: NTagName<"meter">;
+    nav?: NTagName<"nav">;
+    noscript?: NTagName<"noscript">;
+    object?: NTagName<"object">;
+    ol?: NTagName<"ol">;
+    optgroup?: NTagName<"optgroup">;
+    option?: NTagName<"option">;
+    output?: NTagName<"output">;
+    p?: NTagName<"p">;
+    picture?: NTagName<"picture">;
+    pre?: NTagName<"pre">;
+    progress?: NTagName<"progress">;
+    q?: NTagName<"q">;
+    rp?: NTagName<"rp">;
+    rt?: NTagName<"rt">;
+    ruby?: NTagName<"ruby">;
+    s?: NTagName<"s">;
+    samp?: NTagName<"samp">;
+    script?: NTagName<"script">;
+    section?: NTagName<"section">;
+    select?: NTagName<"select">;
+    slot?: NTagName<"slot">;
+    small?: NTagName<"small">;
+    source?: NTagName<"source">;
+    span?: NTagName<"span">;
+    strong?: NTagName<"strong">;
+    style?: NTagName<"style">;
+    sub?: NTagName<"sub">;
+    summary?: NTagName<"summary">;
+    sup?: NTagName<"sup">;
+    table?: NTagName<"table">;
+    tbody?: NTagName<"tbody">;
+    td?: NTagName<"td">;
+    template?: NTagName<"template">;
+    textarea?: NTagName<"textarea">;
+    tfoot?: NTagName<"tfoot">;
+    th?: NTagName<"th">;
+    thead?: NTagName<"thead">;
+    time?: NTagName<"time">;
+    title?: NTagName<"title">;
+    tr?: NTagName<"tr">;
+    track?: NTagName<"track">;
+    u?: NTagName<"u">;
+    ul?: NTagName<"ul">;
+    var?: NTagName<"var">;
+    video?: NTagName<"video">;
+    wbr?: NTagName<"wbr">;
+};
 
 /**
  * @typedef {(keyof HTMLElement & string) | (string & {})} keyObjectOfHtmlElementAttr
@@ -1520,6 +1639,115 @@ declare class NEvent<T extends keyof HTMLElementEventMap> {
      */
     apply(element: NElement<any>): void;
 }
+/**
+ * 快速创建 NEvent 实例
+ * @type {{
+ *  [x in keyof HTMLElementEventMap]?: (callback: (event: HTMLElementEventMap[x], currentElement: import("../node/NElement").NElement) => void) => NEvent<x>
+ * }}
+ */
+declare let eventName: {
+    fullscreenchange?: (callback: (event: Event, currentElement: NElement<any>) => void) => NEvent<"fullscreenchange">;
+    fullscreenerror?: (callback: (event: Event, currentElement: NElement<any>) => void) => NEvent<"fullscreenerror">;
+    copy?: (callback: (event: ClipboardEvent, currentElement: NElement<any>) => void) => NEvent<"copy">;
+    cut?: (callback: (event: ClipboardEvent, currentElement: NElement<any>) => void) => NEvent<"cut">;
+    paste?: (callback: (event: ClipboardEvent, currentElement: NElement<any>) => void) => NEvent<"paste">;
+    abort?: (callback: (event: UIEvent, currentElement: NElement<any>) => void) => NEvent<"abort">;
+    animationcancel?: (callback: (event: AnimationEvent, currentElement: NElement<any>) => void) => NEvent<"animationcancel">;
+    animationend?: (callback: (event: AnimationEvent, currentElement: NElement<any>) => void) => NEvent<"animationend">;
+    animationiteration?: (callback: (event: AnimationEvent, currentElement: NElement<any>) => void) => NEvent<"animationiteration">;
+    animationstart?: (callback: (event: AnimationEvent, currentElement: NElement<any>) => void) => NEvent<"animationstart">;
+    auxclick?: (callback: (event: MouseEvent, currentElement: NElement<any>) => void) => NEvent<"auxclick">;
+    beforeinput?: (callback: (event: InputEvent, currentElement: NElement<any>) => void) => NEvent<"beforeinput">;
+    blur?: (callback: (event: FocusEvent, currentElement: NElement<any>) => void) => NEvent<"blur">;
+    cancel?: (callback: (event: Event, currentElement: NElement<any>) => void) => NEvent<"cancel">;
+    canplay?: (callback: (event: Event, currentElement: NElement<any>) => void) => NEvent<"canplay">;
+    canplaythrough?: (callback: (event: Event, currentElement: NElement<any>) => void) => NEvent<"canplaythrough">;
+    change?: (callback: (event: Event, currentElement: NElement<any>) => void) => NEvent<"change">;
+    click?: (callback: (event: MouseEvent, currentElement: NElement<any>) => void) => NEvent<"click">;
+    close?: (callback: (event: Event, currentElement: NElement<any>) => void) => NEvent<"close">;
+    compositionend?: (callback: (event: CompositionEvent, currentElement: NElement<any>) => void) => NEvent<"compositionend">;
+    compositionstart?: (callback: (event: CompositionEvent, currentElement: NElement<any>) => void) => NEvent<"compositionstart">;
+    compositionupdate?: (callback: (event: CompositionEvent, currentElement: NElement<any>) => void) => NEvent<"compositionupdate">;
+    contextmenu?: (callback: (event: MouseEvent, currentElement: NElement<any>) => void) => NEvent<"contextmenu">;
+    cuechange?: (callback: (event: Event, currentElement: NElement<any>) => void) => NEvent<"cuechange">;
+    dblclick?: (callback: (event: MouseEvent, currentElement: NElement<any>) => void) => NEvent<"dblclick">;
+    drag?: (callback: (event: DragEvent, currentElement: NElement<any>) => void) => NEvent<"drag">;
+    dragend?: (callback: (event: DragEvent, currentElement: NElement<any>) => void) => NEvent<"dragend">;
+    dragenter?: (callback: (event: DragEvent, currentElement: NElement<any>) => void) => NEvent<"dragenter">;
+    dragleave?: (callback: (event: DragEvent, currentElement: NElement<any>) => void) => NEvent<"dragleave">;
+    dragover?: (callback: (event: DragEvent, currentElement: NElement<any>) => void) => NEvent<"dragover">;
+    dragstart?: (callback: (event: DragEvent, currentElement: NElement<any>) => void) => NEvent<"dragstart">;
+    drop?: (callback: (event: DragEvent, currentElement: NElement<any>) => void) => NEvent<"drop">;
+    durationchange?: (callback: (event: Event, currentElement: NElement<any>) => void) => NEvent<"durationchange">;
+    emptied?: (callback: (event: Event, currentElement: NElement<any>) => void) => NEvent<"emptied">;
+    ended?: (callback: (event: Event, currentElement: NElement<any>) => void) => NEvent<"ended">;
+    error?: (callback: (event: ErrorEvent, currentElement: NElement<any>) => void) => NEvent<"error">;
+    focus?: (callback: (event: FocusEvent, currentElement: NElement<any>) => void) => NEvent<"focus">;
+    focusin?: (callback: (event: FocusEvent, currentElement: NElement<any>) => void) => NEvent<"focusin">;
+    focusout?: (callback: (event: FocusEvent, currentElement: NElement<any>) => void) => NEvent<"focusout">;
+    formdata?: (callback: (event: FormDataEvent, currentElement: NElement<any>) => void) => NEvent<"formdata">;
+    gotpointercapture?: (callback: (event: PointerEvent, currentElement: NElement<any>) => void) => NEvent<"gotpointercapture">;
+    input?: (callback: (event: Event, currentElement: NElement<any>) => void) => NEvent<"input">;
+    invalid?: (callback: (event: Event, currentElement: NElement<any>) => void) => NEvent<"invalid">;
+    keydown?: (callback: (event: KeyboardEvent, currentElement: NElement<any>) => void) => NEvent<"keydown">;
+    keypress?: (callback: (event: KeyboardEvent, currentElement: NElement<any>) => void) => NEvent<"keypress">;
+    keyup?: (callback: (event: KeyboardEvent, currentElement: NElement<any>) => void) => NEvent<"keyup">;
+    load?: (callback: (event: Event, currentElement: NElement<any>) => void) => NEvent<"load">;
+    loadeddata?: (callback: (event: Event, currentElement: NElement<any>) => void) => NEvent<"loadeddata">;
+    loadedmetadata?: (callback: (event: Event, currentElement: NElement<any>) => void) => NEvent<"loadedmetadata">;
+    loadstart?: (callback: (event: Event, currentElement: NElement<any>) => void) => NEvent<"loadstart">;
+    lostpointercapture?: (callback: (event: PointerEvent, currentElement: NElement<any>) => void) => NEvent<"lostpointercapture">;
+    mousedown?: (callback: (event: MouseEvent, currentElement: NElement<any>) => void) => NEvent<"mousedown">;
+    mouseenter?: (callback: (event: MouseEvent, currentElement: NElement<any>) => void) => NEvent<"mouseenter">;
+    mouseleave?: (callback: (event: MouseEvent, currentElement: NElement<any>) => void) => NEvent<"mouseleave">;
+    mousemove?: (callback: (event: MouseEvent, currentElement: NElement<any>) => void) => NEvent<"mousemove">;
+    mouseout?: (callback: (event: MouseEvent, currentElement: NElement<any>) => void) => NEvent<"mouseout">;
+    mouseover?: (callback: (event: MouseEvent, currentElement: NElement<any>) => void) => NEvent<"mouseover">;
+    mouseup?: (callback: (event: MouseEvent, currentElement: NElement<any>) => void) => NEvent<"mouseup">;
+    pause?: (callback: (event: Event, currentElement: NElement<any>) => void) => NEvent<"pause">;
+    play?: (callback: (event: Event, currentElement: NElement<any>) => void) => NEvent<"play">;
+    playing?: (callback: (event: Event, currentElement: NElement<any>) => void) => NEvent<"playing">;
+    pointercancel?: (callback: (event: PointerEvent, currentElement: NElement<any>) => void) => NEvent<"pointercancel">;
+    pointerdown?: (callback: (event: PointerEvent, currentElement: NElement<any>) => void) => NEvent<"pointerdown">;
+    pointerenter?: (callback: (event: PointerEvent, currentElement: NElement<any>) => void) => NEvent<"pointerenter">;
+    pointerleave?: (callback: (event: PointerEvent, currentElement: NElement<any>) => void) => NEvent<"pointerleave">;
+    pointermove?: (callback: (event: PointerEvent, currentElement: NElement<any>) => void) => NEvent<"pointermove">;
+    pointerout?: (callback: (event: PointerEvent, currentElement: NElement<any>) => void) => NEvent<"pointerout">;
+    pointerover?: (callback: (event: PointerEvent, currentElement: NElement<any>) => void) => NEvent<"pointerover">;
+    pointerup?: (callback: (event: PointerEvent, currentElement: NElement<any>) => void) => NEvent<"pointerup">;
+    progress?: (callback: (event: ProgressEvent<EventTarget>, currentElement: NElement<any>) => void) => NEvent<"progress">;
+    ratechange?: (callback: (event: Event, currentElement: NElement<any>) => void) => NEvent<"ratechange">;
+    reset?: (callback: (event: Event, currentElement: NElement<any>) => void) => NEvent<"reset">;
+    resize?: (callback: (event: UIEvent, currentElement: NElement<any>) => void) => NEvent<"resize">;
+    scroll?: (callback: (event: Event, currentElement: NElement<any>) => void) => NEvent<"scroll">;
+    securitypolicyviolation?: (callback: (event: SecurityPolicyViolationEvent, currentElement: NElement<any>) => void) => NEvent<"securitypolicyviolation">;
+    seeked?: (callback: (event: Event, currentElement: NElement<any>) => void) => NEvent<"seeked">;
+    seeking?: (callback: (event: Event, currentElement: NElement<any>) => void) => NEvent<"seeking">;
+    select?: (callback: (event: Event, currentElement: NElement<any>) => void) => NEvent<"select">;
+    selectionchange?: (callback: (event: Event, currentElement: NElement<any>) => void) => NEvent<"selectionchange">;
+    selectstart?: (callback: (event: Event, currentElement: NElement<any>) => void) => NEvent<"selectstart">;
+    slotchange?: (callback: (event: Event, currentElement: NElement<any>) => void) => NEvent<"slotchange">;
+    stalled?: (callback: (event: Event, currentElement: NElement<any>) => void) => NEvent<"stalled">;
+    submit?: (callback: (event: SubmitEvent, currentElement: NElement<any>) => void) => NEvent<"submit">;
+    suspend?: (callback: (event: Event, currentElement: NElement<any>) => void) => NEvent<"suspend">;
+    timeupdate?: (callback: (event: Event, currentElement: NElement<any>) => void) => NEvent<"timeupdate">;
+    toggle?: (callback: (event: Event, currentElement: NElement<any>) => void) => NEvent<"toggle">;
+    touchcancel?: (callback: (event: TouchEvent, currentElement: NElement<any>) => void) => NEvent<"touchcancel">;
+    touchend?: (callback: (event: TouchEvent, currentElement: NElement<any>) => void) => NEvent<"touchend">;
+    touchmove?: (callback: (event: TouchEvent, currentElement: NElement<any>) => void) => NEvent<"touchmove">;
+    touchstart?: (callback: (event: TouchEvent, currentElement: NElement<any>) => void) => NEvent<"touchstart">;
+    transitioncancel?: (callback: (event: TransitionEvent, currentElement: NElement<any>) => void) => NEvent<"transitioncancel">;
+    transitionend?: (callback: (event: TransitionEvent, currentElement: NElement<any>) => void) => NEvent<"transitionend">;
+    transitionrun?: (callback: (event: TransitionEvent, currentElement: NElement<any>) => void) => NEvent<"transitionrun">;
+    transitionstart?: (callback: (event: TransitionEvent, currentElement: NElement<any>) => void) => NEvent<"transitionstart">;
+    volumechange?: (callback: (event: Event, currentElement: NElement<any>) => void) => NEvent<"volumechange">;
+    waiting?: (callback: (event: Event, currentElement: NElement<any>) => void) => NEvent<"waiting">;
+    webkitanimationend?: (callback: (event: Event, currentElement: NElement<any>) => void) => NEvent<"webkitanimationend">;
+    webkitanimationiteration?: (callback: (event: Event, currentElement: NElement<any>) => void) => NEvent<"webkitanimationiteration">;
+    webkitanimationstart?: (callback: (event: Event, currentElement: NElement<any>) => void) => NEvent<"webkitanimationstart">;
+    webkittransitionend?: (callback: (event: Event, currentElement: NElement<any>) => void) => NEvent<"webkittransitionend">;
+    wheel?: (callback: (event: WheelEvent, currentElement: NElement<any>) => void) => NEvent<"wheel">;
+};
 
 /**
  * 流水线
@@ -2224,26 +2452,26 @@ type EDObj = {
 /**
  * 鼠标(拖拽)事件处理
  * @param {NElement} element 绑定到元素
- * @param {function(PointerData):void} callBack 回调
+ * @param {function(PointerData):void} callback 回调
  * @param {number} [button] 绑定的按键
  * @param {HTMLElement | Window} [extensionRegion] 延伸区域 (实际捕获鼠标移动和按钮抬起的区域)
  */
-declare function mouseBind(element: NElement<any>, callBack: (arg0: PointerData$1) => void, button?: number | undefined, extensionRegion?: HTMLElement | Window | undefined): void;
+declare function mouseBind(element: NElement<any>, callback: (arg0: PointerData$1) => void, button?: number | undefined, extensionRegion?: HTMLElement | Window | undefined): void;
 
 /**
  * 触摸(拖拽) 事件处理
  * @param {NElement} element
- * @param {function(PointerData):void} callBack
+ * @param {function(PointerData):void} callback
  * @param {boolean} [preventDefault]
  */
-declare function touchBind(element: NElement<any>, callBack: (arg0: PointerData$1) => void, preventDefault?: boolean | undefined): void;
+declare function touchBind(element: NElement<any>, callback: (arg0: PointerData$1) => void, preventDefault?: boolean | undefined): void;
 
 /**
  * 键盘 事件处理
  * @param {HTMLElement} element
- * @param {function(KeyboardData) : void} callBack
+ * @param {function(KeyboardData) : void} callback
  */
-declare function keyboardBind(element: HTMLElement, callBack: (arg0: KeyboardData$1) => void): void;
+declare function keyboardBind(element: HTMLElement, callback: (arg0: KeyboardData$1) => void): void;
 
 /**
  * 包装为仅能执行一次的函数
@@ -2662,4 +2890,4 @@ type NList_item = NList_list$1;
 type PointerData = PointerData$1;
 type KeyboardData = KeyboardData$1;
 
-export { EventHandler, KeyboardData, NAsse, NAttr, NElement, NEvent, NList, NList_item, NList_list, NLocate, NStyle, NTagName, NText$1 as NText, PointerData, bindArrayHook, bindAttribute, bindMapHook, bindSetHook, bindValue, createHookArray, createHookMap, createHookObj, createHookSet, createNStyle, createNStyleList, cssG, delayPromise, delayPromiseWithReject, delayPromiseWithResolve, divideLayout_DU, divideLayout_LR, divideLayout_RL, divideLayout_UD, expandElement, getNElement, isAmong, keyboardBind, mouseBind, runOnce, tag, tagName, touchBind };
+export { EventHandler, KeyboardData, NAsse, NAttr, NElement, NEvent, NList, NList_item, NList_list, NLocate, NStyle, NTagName, NText$1 as NText, PointerData, bindArrayHook, bindAttribute, bindMapHook, bindSetHook, bindValue, createHookArray, createHookMap, createHookObj, createHookSet, createNStyle, createNStyleList, cssG, delayPromise, delayPromiseWithReject, delayPromiseWithResolve, divideLayout_DU, divideLayout_LR, divideLayout_RL, divideLayout_UD, eventName, expandElement, getNElement, isAmong, keyboardBind, mouseBind, nTagName, runOnce, tag, tagName, touchBind };

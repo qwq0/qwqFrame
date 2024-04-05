@@ -4,9 +4,9 @@ export { NText } from "./dom/node/NText.js";
 
 export { NAsse } from "./dom/feature/NAsse.js";
 export { NAttr } from "./dom/feature/NAttr.js";
-export { NEvent } from "./dom/feature/NEvent.js";
+export { NEvent, eventName } from "./dom/feature/NEvent.js";
 export { NStyle, createNStyle, createNStyleList } from "./dom/feature/NStyle.js";
-export { NTagName } from "./dom/feature/NTagName.js";
+export { NTagName, nTagName } from "./dom/feature/NTagName.js";
 export { NList } from "./dom/feature/NList.js";
 
 export { cssG } from "./dom/style/cssGen.js";
