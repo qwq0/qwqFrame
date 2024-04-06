@@ -36,6 +36,7 @@ export { createHookSet, bindSetHook } from "./data/hook/set/proxySet.js";
 export { delayPromise, delayPromiseWithReject, delayPromiseWithResolve } from "./util/delayPromise.js";
 export { EventHandler } from "./util/EventHandler.js";
 export { isAmong } from "./util/forEach.js";
+export { uniqueIdentifierString } from "./util/uniqueIdentifier.js";
 
 /**
  * @typedef {import("./dom/feature/NList.js").NList_list} NList_list

@@ -2,7 +2,7 @@
     "name": "qwq-frame",
     "author": "qwq0",
     "repository": "https://github.com/qwq0/qwqFrame",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "type": "module",
     "main": "./dist/qwqframe.js",
     "types": "./dist/qwqframe.d.ts",

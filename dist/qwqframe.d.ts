@@ -2639,6 +2639,26 @@ declare class EventHandler<T extends unknown> {
 declare function isAmong(k: any, ...s: Array<any>): boolean;
 
 /**
+ * 生成唯一字符串(qwq-uid)
+ * 基于毫秒级时间和随机数
+ *
+ * qwq-uid格式
+ * 仅由 小写字母 数字 连字符 组成
+ * 不以连字符开头或结尾
+ * 不存在两个相邻的连字符
+ * 即由零或几个连字符分隔的多个字母和数字子串
+ * 第一个子串为36进制的毫秒级时间戳
+ * 其后的子串为36进制的随机数
+ *
+ * 优先安全随机
+ * 当安全随机不可用时回退到普通随机(不保证安全性)
+ *
+ * @param {number} [randomSection] 随机节数量
+ * @returns {string}
+ */
+declare function uniqueIdentifierString(randomSection?: number | undefined): string;
+
+/**
  * 左右方向分割
  * @param {string} leftSize
  * @param {NElement | import("./expandElement").EDObj} a
@@ -2980,4 +3000,4 @@ type NList_item = NList_list$1;
 type PointerData = PointerData$1;
 type KeyboardData = KeyboardData$1;
 
-export { EventHandler, type KeyboardData, NAsse, NAttr, NElement, NEvent, NList, type NList_item, type NList_list, NLocate, NStyle, NTagName, NText$1 as NText, type PointerData, bindArrayHook, bindAttribute, bindMapHook, bindSetHook, bindValue, createHookArray, createHookMap, createHookObj, createHookSet, createNStyle, createNStyleList, cssG, delayPromise, delayPromiseWithReject, delayPromiseWithResolve, divideLayout_DU, divideLayout_LR, divideLayout_RL, divideLayout_UD, eventName, expandElement, getNElement, isAmong, keyboardBind, mouseBind, nTagName, runOnce, tag, tagName, touchBind };
+export { EventHandler, type KeyboardData, NAsse, NAttr, NElement, NEvent, NList, type NList_item, type NList_list, NLocate, NStyle, NTagName, NText$1 as NText, type PointerData, bindArrayHook, bindAttribute, bindMapHook, bindSetHook, bindValue, createHookArray, createHookMap, createHookObj, createHookSet, createNStyle, createNStyleList, cssG, delayPromise, delayPromiseWithReject, delayPromiseWithResolve, divideLayout_DU, divideLayout_LR, divideLayout_RL, divideLayout_UD, eventName, expandElement, getNElement, isAmong, keyboardBind, mouseBind, nTagName, runOnce, tag, tagName, touchBind, uniqueIdentifierString };
