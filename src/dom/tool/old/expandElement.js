@@ -1,4 +1,4 @@
-import { NElement, getNElement } from "../node/NElement.js";
+import { NElement, getNElement } from "../../node/NElement.js";
 
 /**
  * 遍历展开元素

@@ -11,11 +11,12 @@ export { NList } from "./dom/feature/NList.js";
 
 export { cssG } from "./dom/style/cssGen.js";
 
-export { bindAttribute } from "./dom/tool/bindAttribute.js";
+export { bindAttribute } from "./dom/tool/asse/bindAttribute.js";
+export { classNames } from "./dom/tool/asse/classNames.js";
 
-export { expandElement } from "./dom/tool/expandElement.js";
-export { divideLayout_LR, divideLayout_UD, divideLayout_RL, divideLayout_DU } from "./dom/tool/divideLayout.js";
-export { tag, tagName } from "./dom/tool/parsingElement.js";
+export { expandElement } from "./dom/tool/old/expandElement.js";
+export { divideLayout_LR, divideLayout_UD, divideLayout_RL, divideLayout_DU } from "./dom/tool/layout/divideLayout.js";
+export { tag, tagName } from "./dom/tool/old/parsingElement.js";
 
 export { mouseBind } from "./dom/tool/event/mouse.js";
 export { touchBind } from "./dom/tool/event/touch.js";

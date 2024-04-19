@@ -1398,6 +1398,26 @@ function bindAttribute(attrName, obj, key, noInitialize = false)
 }
 
 /**
+ * 生成添加类名的流水线
+ * @param {string | Array<string>} classNames 多个用空格分隔的类名
+ */
+function classNames(classNames)
+{
+    let classNameList = (
+        typeof (classNames) == "string" ?
+            classNames.split(" ") :
+            classNames.map(o => o.split(" ")).flat()
+    );
+    return new NAsse(e =>
+    {
+        classNameList.forEach(o =>
+        {
+            (/** @type {HTMLElement} */(e.element)).classList.add(o);
+        });
+    });
+}
+
+/**
  * 遍历展开元素
  * @typedef {{
  *     id?:  string, // id
@@ -1567,8 +1587,8 @@ function expandElement(obj)
 /**
  * 左右方向分割
  * @param {string} leftSize
- * @param {NElement | import("./expandElement").EDObj} a
- * @param {NElement | import("./expandElement").EDObj} b
+ * @param {NElement | import("../old/expandElement.js").EDObj} a
+ * @param {NElement | import("../old/expandElement.js").EDObj} b
  * @returns {NElement}
  */
 function divideLayout_LR(leftSize, a, b)
@@ -1594,8 +1614,8 @@ function divideLayout_LR(leftSize, a, b)
 /**
  * 上下方向分割
  * @param {string} upSize
- * @param {NElement | import("./expandElement").EDObj} a
- * @param {NElement | import("./expandElement").EDObj} b
+ * @param {NElement | import("../old/expandElement.js").EDObj} a
+ * @param {NElement | import("../old/expandElement.js").EDObj} b
  * @returns {NElement}
  */
 function divideLayout_UD(upSize, a, b)
@@ -1621,8 +1641,8 @@ function divideLayout_UD(upSize, a, b)
 /**
  * 右左方向分割
  * @param {string} rightSize
- * @param {NElement | import("./expandElement").EDObj} a
- * @param {NElement | import("./expandElement").EDObj} b
+ * @param {NElement | import("../old/expandElement.js").EDObj} a
+ * @param {NElement | import("../old/expandElement.js").EDObj} b
  * @returns {NElement}
  */
 function divideLayout_RL(rightSize, a, b)
@@ -1648,8 +1668,8 @@ function divideLayout_RL(rightSize, a, b)
 /**
  * 下上方向分割
  * @param {string} downSize
- * @param {NElement | import("./expandElement").EDObj} a
- * @param {NElement | import("./expandElement").EDObj} b
+ * @param {NElement | import("../old/expandElement.js").EDObj} a
+ * @param {NElement | import("../old/expandElement.js").EDObj} b
  * @returns {NElement}
  */
 function divideLayout_DU(downSize, a, b)
@@ -1722,6 +1742,7 @@ function parsingElement(tagName, strings, ...keys)
 /**
  * 解析标签
  * 默认为div标签
+ * @deprecated
  * @param {TemplateStringsArray} strings
  * @param {Array<parsingElementKeysType>} keys
  * @returns {NElement}
@@ -1733,6 +1754,7 @@ function tag(strings, ...keys)
 
 /**
  * 解析指定标签名的标签
+ * @deprecated
  * @param {string} name
  * @returns {function(TemplateStringsArray, ...parsingElementKeysType): NElement}
  */
@@ -3032,7 +3054,7 @@ function bindMapHook(proxyMap, callbacks, option = {})
         callbackObj.set = (ind, value) =>
         {
             callbackObj.del(ind);
-            callbackObj.add(ind, value);
+            return callbackObj.add(ind, value);
         };
     }
 
@@ -3576,4 +3598,4 @@ function uniqueIdentifierString(randomSection = 2)
     return ret;
 }
 
-export { EventHandler, NAsse, NAttr, NElement, NEvent, NList, NLocate, NStyle, NTagName, NText, bindArrayHook, bindAttribute, bindMapHook, bindSetHook, bindValue, createHookArray, createHookMap, createHookObj, createHookSet, createNStyle, createNStyleList, cssG, delayPromise, delayPromiseWithReject, delayPromiseWithResolve, divideLayout_DU, divideLayout_LR, divideLayout_RL, divideLayout_UD, eventName, expandElement, getNElement, isAmong, keyboardBind, mouseBind, nTagName, runOnce, tag, tagName, touchBind, uniqueIdentifierString };
+export { EventHandler, NAsse, NAttr, NElement, NEvent, NList, NLocate, NStyle, NTagName, NText, bindArrayHook, bindAttribute, bindMapHook, bindSetHook, bindValue, classNames, createHookArray, createHookMap, createHookObj, createHookSet, createNStyle, createNStyleList, cssG, delayPromise, delayPromiseWithReject, delayPromiseWithResolve, divideLayout_DU, divideLayout_LR, divideLayout_RL, divideLayout_UD, eventName, expandElement, getNElement, isAmong, keyboardBind, mouseBind, nTagName, runOnce, tag, tagName, touchBind, uniqueIdentifierString };

@@ -139,7 +139,7 @@ export function bindMapHook(proxyMap, callbacks, option = {})
         callbackObj.set = (ind, value) =>
         {
             callbackObj.del(ind);
-            callbackObj.add(ind, value);
+            return callbackObj.add(ind, value);
         };
     }
 

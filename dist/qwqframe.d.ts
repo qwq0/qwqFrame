@@ -1896,6 +1896,12 @@ declare namespace cssG {
 declare function bindAttribute<T extends unknown>(attrName: string, obj: T, key: (string & {}) | keyof T, noInitialize?: boolean | undefined): (element: NElement<any>) => void;
 
 /**
+ * 生成添加类名的流水线
+ * @param {string | Array<string>} classNames 多个用空格分隔的类名
+ */
+declare function classNames(classNames: string | Array<string>): NAsse;
+
+/**
  * 展开元素
  * 将内容js对象转换为封装的HTML树
  * 请不要转换不受信任的json
@@ -2661,32 +2667,32 @@ declare function uniqueIdentifierString(randomSection?: number | undefined): str
 /**
  * 左右方向分割
  * @param {string} leftSize
- * @param {NElement | import("./expandElement").EDObj} a
- * @param {NElement | import("./expandElement").EDObj} b
+ * @param {NElement | import("../old/expandElement.js").EDObj} a
+ * @param {NElement | import("../old/expandElement.js").EDObj} b
  * @returns {NElement}
  */
 declare function divideLayout_LR(leftSize: string, a: NElement<any> | EDObj, b: NElement<any> | EDObj): NElement<any>;
 /**
  * 上下方向分割
  * @param {string} upSize
- * @param {NElement | import("./expandElement").EDObj} a
- * @param {NElement | import("./expandElement").EDObj} b
+ * @param {NElement | import("../old/expandElement.js").EDObj} a
+ * @param {NElement | import("../old/expandElement.js").EDObj} b
  * @returns {NElement}
  */
 declare function divideLayout_UD(upSize: string, a: NElement<any> | EDObj, b: NElement<any> | EDObj): NElement<any>;
 /**
  * 右左方向分割
  * @param {string} rightSize
- * @param {NElement | import("./expandElement").EDObj} a
- * @param {NElement | import("./expandElement").EDObj} b
+ * @param {NElement | import("../old/expandElement.js").EDObj} a
+ * @param {NElement | import("../old/expandElement.js").EDObj} b
  * @returns {NElement}
  */
 declare function divideLayout_RL(rightSize: string, a: NElement<any> | EDObj, b: NElement<any> | EDObj): NElement<any>;
 /**
  * 下上方向分割
  * @param {string} downSize
- * @param {NElement | import("./expandElement").EDObj} a
- * @param {NElement | import("./expandElement").EDObj} b
+ * @param {NElement | import("../old/expandElement.js").EDObj} a
+ * @param {NElement | import("../old/expandElement.js").EDObj} b
  * @returns {NElement}
  */
 declare function divideLayout_DU(downSize: string, a: NElement<any> | EDObj, b: NElement<any> | EDObj): NElement<any>;
@@ -2694,6 +2700,7 @@ declare function divideLayout_DU(downSize: string, a: NElement<any> | EDObj, b: 
 /**
  * 解析标签
  * 默认为div标签
+ * @deprecated
  * @param {TemplateStringsArray} strings
  * @param {Array<parsingElementKeysType>} keys
  * @returns {NElement}
@@ -2701,6 +2708,7 @@ declare function divideLayout_DU(downSize: string, a: NElement<any> | EDObj, b: 
 declare function tag(strings: TemplateStringsArray, ...keys: Array<parsingElementKeysType>): NElement<any>;
 /**
  * 解析指定标签名的标签
+ * @deprecated
  * @param {string} name
  * @returns {function(TemplateStringsArray, ...parsingElementKeysType): NElement}
  */
@@ -3000,4 +3008,4 @@ type NList_item = NList_list$1;
 type PointerData = PointerData$1;
 type KeyboardData = KeyboardData$1;
 
-export { EventHandler, type KeyboardData, NAsse, NAttr, NElement, NEvent, NList, type NList_item, type NList_list, NLocate, NStyle, NTagName, NText$1 as NText, type PointerData, bindArrayHook, bindAttribute, bindMapHook, bindSetHook, bindValue, createHookArray, createHookMap, createHookObj, createHookSet, createNStyle, createNStyleList, cssG, delayPromise, delayPromiseWithReject, delayPromiseWithResolve, divideLayout_DU, divideLayout_LR, divideLayout_RL, divideLayout_UD, eventName, expandElement, getNElement, isAmong, keyboardBind, mouseBind, nTagName, runOnce, tag, tagName, touchBind, uniqueIdentifierString };
+export { EventHandler, type KeyboardData, NAsse, NAttr, NElement, NEvent, NList, type NList_item, type NList_list, NLocate, NStyle, NTagName, NText$1 as NText, type PointerData, bindArrayHook, bindAttribute, bindMapHook, bindSetHook, bindValue, classNames, createHookArray, createHookMap, createHookObj, createHookSet, createNStyle, createNStyleList, cssG, delayPromise, delayPromiseWithReject, delayPromiseWithResolve, divideLayout_DU, divideLayout_LR, divideLayout_RL, divideLayout_UD, eventName, expandElement, getNElement, isAmong, keyboardBind, mouseBind, nTagName, runOnce, tag, tagName, touchBind, uniqueIdentifierString };

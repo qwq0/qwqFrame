@@ -1,4 +1,4 @@
-import { NElement } from "../node/NElement.js";
+import { NElement } from "../../node/NElement.js";
 
 /**
  * 绑定元素属性到对象作为getter/setter

@@ -1,6 +1,6 @@
-import { NElement, getNElement } from "../node/NElement.js";
-import { NEvent } from "../feature/NEvent.js";
-import { NStyle } from "../feature/NStyle.js";
+import { NElement, getNElement } from "../../node/NElement.js";
+import { NEvent } from "../../feature/NEvent.js";
+import { NStyle } from "../../feature/NStyle.js";
 
 /**
  * 解析标签
@@ -35,6 +35,7 @@ function parsingElement(tagName, strings, ...keys)
 /**
  * 解析标签
  * 默认为div标签
+ * @deprecated
  * @param {TemplateStringsArray} strings
  * @param {Array<parsingElementKeysType>} keys
  * @returns {NElement}
@@ -46,6 +47,7 @@ export function tag(strings, ...keys)
 
 /**
  * 解析指定标签名的标签
+ * @deprecated
  * @param {string} name
  * @returns {function(TemplateStringsArray, ...parsingElementKeysType): NElement}
  */

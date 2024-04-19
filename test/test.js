@@ -1,6 +1,5 @@
 import { createNStyle as style, NStyle } from "../src/dom/feature/NStyle.js";
 import { NEvent } from "../src/dom/feature/NEvent.js";
-import { tag, tagName } from "../src/dom/tool/parsingElement.js";
 import { cssG, expandElement, getNElement, NList, bindValue, createHookObj, createHookArray } from "../src/index.js";
 import { bindArrayHook } from "../src/data/hook/array/proxyArray.js";
 import { unboundHook } from "../src/debug/unboundHookSet.js";
@@ -123,29 +122,5 @@ let testElement_2 = expandElement({
     }
 });
 
-let testElement_3 = tag`
-    --测试3--
-    ${new NStyle("color", "red")}
-
-    ${tag`
-        子节点1
-        ${new NStyle("color", "black")}
-    `}
-
-    ${tag`
-        子节点2
-        ${new NEvent("click", () => console.log("onclick"))}
-    `}
-
-    在两个子节点间添加文字
-
-    ${tag`
-        子节点3
-        ${tagName("video")`
-        `}
-    `}
-`;
-
 body.addChild(testElement_1);
 body.addChild(testElement_2);
-body.addChild(testElement_3);

@@ -1,11 +1,11 @@
-import { NElement } from "../node/NElement.js";
-import { expandElement } from "./expandElement.js";
+import { NElement } from "../../node/NElement.js";
+import { expandElement } from "../old/expandElement.js";
 
 /**
  * 左右方向分割
  * @param {string} leftSize
- * @param {NElement | import("./expandElement").EDObj} a
- * @param {NElement | import("./expandElement").EDObj} b
+ * @param {NElement | import("../old/expandElement.js").EDObj} a
+ * @param {NElement | import("../old/expandElement.js").EDObj} b
  * @returns {NElement}
  */
 export function divideLayout_LR(leftSize, a, b)
@@ -31,8 +31,8 @@ export function divideLayout_LR(leftSize, a, b)
 /**
  * 上下方向分割
  * @param {string} upSize
- * @param {NElement | import("./expandElement").EDObj} a
- * @param {NElement | import("./expandElement").EDObj} b
+ * @param {NElement | import("../old/expandElement.js").EDObj} a
+ * @param {NElement | import("../old/expandElement.js").EDObj} b
  * @returns {NElement}
  */
 export function divideLayout_UD(upSize, a, b)
@@ -58,8 +58,8 @@ export function divideLayout_UD(upSize, a, b)
 /**
  * 右左方向分割
  * @param {string} rightSize
- * @param {NElement | import("./expandElement").EDObj} a
- * @param {NElement | import("./expandElement").EDObj} b
+ * @param {NElement | import("../old/expandElement.js").EDObj} a
+ * @param {NElement | import("../old/expandElement.js").EDObj} b
  * @returns {NElement}
  */
 export function divideLayout_RL(rightSize, a, b)
@@ -85,8 +85,8 @@ export function divideLayout_RL(rightSize, a, b)
 /**
  * 下上方向分割
  * @param {string} downSize
- * @param {NElement | import("./expandElement").EDObj} a
- * @param {NElement | import("./expandElement").EDObj} b
+ * @param {NElement | import("../old/expandElement.js").EDObj} a
+ * @param {NElement | import("../old/expandElement.js").EDObj} b
  * @returns {NElement}
  */
 export function divideLayout_DU(downSize, a, b)
