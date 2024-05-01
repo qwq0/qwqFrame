@@ -49,40 +49,51 @@ export function createHookArray(srcArray)
                 case "push":
                     return (/** @type {any[]} */ ...items) =>
                     {
+                        let ret = srcArray.push(...items);
                         items.forEach(o =>
                         {
                             oldLength++;
                             emitAdd(oldLength - 1, o);
                         });
-                        return srcArray.push(...items);
+                        return ret;
                     };
                 case "pop":
                     return () =>
                     {
-                        oldLength--;
-                        emitDel(oldLength);
-                        return srcArray.pop();
+                        let ret = srcArray.pop();
+                        if (oldLength > 0)
+                        {
+                            oldLength--;
+                            emitDel(oldLength);
+                        }
+                        return ret;
                     };
                 case "unshift":
                     return (/** @type {any[]} */ ...items) =>
                     {
+                        let ret = srcArray.unshift(...items);
                         items.forEach((o, ind) =>
                         {
                             oldLength++;
                             emitAdd(ind, o);
                         });
-                        return srcArray.unshift(...items);
+                        return ret;
                     };
                 case "shift":
                     return () =>
                     {
-                        oldLength--;
-                        emitDel(0);
-                        return srcArray.shift();
+                        let ret = srcArray.shift();
+                        if (oldLength > 0)
+                        {
+                            oldLength--;
+                            emitDel(0);
+                        }
+                        return ret;
                     };
                 case "splice":
                     return (/** @type {number} */ start, deleteCount = Infinity, /** @type {Array} */ ...items) =>
                     {
+                        let ret = srcArray.splice(start, deleteCount, ...items);
                         let actualStartIndex = (
                             start >= 0 ?
                                 (
@@ -97,22 +108,26 @@ export function createHookArray(srcArray)
                                 Math.min(deleteCount, oldLength - actualStartIndex) :
                                 0
                         );
-                        for (let i = 0; i < actualDeleteCount; i++)
+                        for (let i = actualDeleteCount - 1; i >= 0; i--)
                         {
                             oldLength--;
-                            emitDel(actualStartIndex);
+                            emitDel(actualStartIndex + i);
                         }
                         items.forEach((o, ind) =>
                         {
                             oldLength++;
                             emitAdd(actualStartIndex + ind, o);
                         });
-                        return srcArray.splice(start, deleteCount, ...items);
+                        return ret;
                     };
+                case "at":
+                case "concat":
                 case "forEach":
                 case "map":
                 case "every":
                 case "some":
+                case "reduce":
+                case "reduceRight":
                 case "join":
                 case "find":
                 case "findIndex":
@@ -122,11 +137,38 @@ export function createHookArray(srcArray)
                 case "flatMap":
                 case "includes":
                 case "indexOf":
+                case "lastIndexOf":
                 case "slice":
+                case "with":
+                case "toString":
+                case "toLocaleString":
+                case "toReversed":
+                case "toSorted":
+                case "toSpliced":
+                case "keys":
+                case "values":
+                case "entries":
                     return (/** @type {any} */ ...arg) =>
                     {
                         // @ts-ignore
                         return srcArray[key](...arg);
+                    };
+                case "reverse":
+                case "sort":
+                    return (/** @type {any} */ ...arg) =>
+                    {
+                        // @ts-ignore
+                        let ret = srcArray[key](...arg);
+                        for (let i = oldLength - 1; i >= 0; i--)
+                            emitDel(i);
+                        for (let i = 0; i < oldLength; i++)
+                            emitAdd(i, srcArray[i]);
+                        return ret;
+                    };
+                case "copyWithin":
+                    return (/** @type {number} */ targetIndex, /** @type {number} */ start, /** @type {number} */ end) =>
+                    {
+                        return Array.prototype.copyWithin.call(proxyArray, targetIndex, start, end);
                     };
                 default:
                     return Reflect.get(target, key);
@@ -175,6 +217,20 @@ export function createHookArray(srcArray)
             }
             return ret;
         },
+
+        deleteProperty: (target, key) => // 删除值
+        {
+            let ret = delete srcArray[key];
+            if ((typeof (key) == "string" && (/^[1-9][0-9]*$/.test(key) || key == "0")) || typeof (key) == "number")
+            {
+                let ind = Number(key);
+                if (ind < oldLength)
+                {
+                    emitSet(ind, undefined);
+                }
+            }
+            return ret;
+        }
     }));
 
     arrayProxyMap.set(proxyArray, { hookSet: hookSet, srcArr: srcArray });

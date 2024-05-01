@@ -159,10 +159,13 @@ export class NList
 
     /**
      * 获取(生成)元素
-     * @param {NList_list} list
+     * @param {NList_list | NList} list
      */
     static getElement(list)
     {
-        return (new NList(list)).getElement();
+        if (list instanceof NList)
+            return list.getElement();
+        else
+            return (new NList(list)).getElement();
     }
 }

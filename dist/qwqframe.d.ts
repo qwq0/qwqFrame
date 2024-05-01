@@ -1840,9 +1840,9 @@ declare class NList {
     static flat(list: NList_list$1): NList;
     /**
      * 获取(生成)元素
-     * @param {NList_list} list
+     * @param {NList_list | NList} list
      */
-    static getElement(list: NList_list$1): NElement<any>;
+    static getElement(list: NList_list$1 | NList): NElement<any>;
     /**
      * @param {NList_list} list
      */
@@ -1900,6 +1900,16 @@ declare function bindAttribute<T extends unknown>(attrName: string, obj: T, key:
  * @param {string | Array<string>} classNames 多个用空格分隔的类名
  */
 declare function classNames(classNames: string | Array<string>): NAsse;
+
+/**
+ * 创建列表
+ * @template {any} T
+ * @param {Array<T>} dataArray
+ * @param {(data: T) => NElement} builder
+ * @param {NList | import("../../feature/NList").NList_list} [listNList]
+ * @returns {NElement}
+ */
+declare function buildList<T extends unknown>(dataArray: T[], builder: (data: T) => NElement<any>, listNList?: NList | NList_list$1 | undefined): NElement<any>;
 
 /**
  * 展开元素
@@ -3008,4 +3018,4 @@ type NList_item = NList_list$1;
 type PointerData = PointerData$1;
 type KeyboardData = KeyboardData$1;
 
-export { EventHandler, type KeyboardData, NAsse, NAttr, NElement, NEvent, NList, type NList_item, type NList_list, NLocate, NStyle, NTagName, NText$1 as NText, type PointerData, bindArrayHook, bindAttribute, bindMapHook, bindSetHook, bindValue, classNames, createHookArray, createHookMap, createHookObj, createHookSet, createNStyle, createNStyleList, cssG, delayPromise, delayPromiseWithReject, delayPromiseWithResolve, divideLayout_DU, divideLayout_LR, divideLayout_RL, divideLayout_UD, eventName, expandElement, getNElement, isAmong, keyboardBind, mouseBind, nTagName, runOnce, tag, tagName, touchBind, uniqueIdentifierString };
+export { EventHandler, type KeyboardData, NAsse, NAttr, NElement, NEvent, NList, type NList_item, type NList_list, NLocate, NStyle, NTagName, NText$1 as NText, type PointerData, bindArrayHook, bindAttribute, bindMapHook, bindSetHook, bindValue, buildList, classNames, createHookArray, createHookMap, createHookObj, createHookSet, createNStyle, createNStyleList, cssG, delayPromise, delayPromiseWithReject, delayPromiseWithResolve, divideLayout_DU, divideLayout_LR, divideLayout_RL, divideLayout_UD, eventName, expandElement, getNElement, isAmong, keyboardBind, mouseBind, nTagName, runOnce, createNStyleList as styles, tag, tagName, touchBind, uniqueIdentifierString };
