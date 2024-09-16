@@ -1878,6 +1878,10 @@ declare class NList {
  * 特征列表
  */
 type NList_list$1 = Array<string | HookBindInfo | NTagName<any> | NStyle<any> | NAttr<any> | NEvent<any> | NAsse | NList | (string | HookBindInfo | NElement<any> | NLocate | NText$1 | NAsse | NList | NList_list$1 | NTagName<any> | NStyle<any> | NAttr<any> | NEvent<any> | ((e: NElement<any>) => void))[] | NElement<any> | NText$1 | NLocate | ((e: NElement<any>) => void)>;
+/**
+ * 特征列表
+ */
+type NList_item$1 = (string | HookBindInfo | NElement<any> | NLocate | NText$1 | NAsse | NList | NList_list$1 | NTagName<any> | NStyle<any> | NAttr<any> | NEvent<any> | ((e: NElement<any>) => void))[][number];
 
 declare namespace cssG {
     function diFull(value: string): string;
@@ -3014,7 +3018,7 @@ declare function delayPromiseWithResolve<T extends unknown>(time: number, resolv
 declare function delayPromiseWithReject(time: number, rejectReason: any): Promise<void>;
 
 type NList_list = NList_list$1;
-type NList_item = NList_list$1;
+type NList_item = NList_item$1;
 type PointerData = PointerData$1;
 type KeyboardData = KeyboardData$1;
 

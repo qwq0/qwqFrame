@@ -50,7 +50,7 @@ export { uniqueIdentifierString } from "./util/uniqueIdentifier.js";
 
 /**
  * @typedef {import("./dom/feature/NList.js").NList_list} NList_list
- * @typedef {import("./dom/feature/NList.js").NList_list} NList_item
+ * @typedef {import("./dom/feature/NList.js").NList_item} NList_item
  * @typedef {import("./dom/tool/event/PointerData.js").PointerData} PointerData
  * @typedef {import("./dom/tool/event/KeyboardData.js").KeyboardData} KeyboardData
  */
