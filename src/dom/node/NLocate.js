@@ -1,8 +1,8 @@
+import { NElement } from "./NElement.js";
 
 /**
  * Comment节点的封装
  * 用于进行节点定位
- * @typedef {import("./NElement").NElement} NElement
  * @typedef {import("./NText").NText} NText
  */
 export class NLocate
@@ -22,6 +22,15 @@ export class NLocate
             this.node = node;
         else
             this.node = new Comment();
+    }
+
+    /**
+     * 获取父元素
+     * @returns {NElement}
+     */
+    getParent()
+    {
+        return NElement.byElement(this.node.parentElement);
     }
 
     /**

@@ -49,6 +49,15 @@ export class NElement
     }
 
     /**
+     * 获取父元素
+     * @returns {NElement}
+     */
+    getParent()
+    {
+        return NElement.byElement(this.node.parentElement);
+    }
+
+    /**
      * 添加单个子节点
      * @param {NElement | NLocate | NText | Node | string | HookBindInfo} chi
      */
@@ -203,7 +212,7 @@ export class NElement
      */
     getChilds()
     {
-        return Array.from(this.node.children).map(o => getNElement(/** @type {HTMLElement} */(o)));
+        return Array.from(this.node.children).map(o => NElement.byElement(/** @type {HTMLElement} */(o)));
     }
 
     /**
@@ -213,7 +222,7 @@ export class NElement
      */
     getChild(ind)
     {
-        return getNElement(/** @type {HTMLElement} */(this.node.children[ind]));
+        return NElement.byElement(/** @type {HTMLElement} */(this.node.children[ind]));
     }
 
     /**

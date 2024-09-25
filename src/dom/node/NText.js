@@ -1,7 +1,8 @@
+import { NElement } from "./NElement.js";
+
 /**
  * Text节点的封装
  * 用于进行节点定位
- * @typedef {import("./NElement").NElement} NElement
  * @typedef {import("./NLocate").NLocate} NLocate
  */
 export class NText
@@ -25,6 +26,15 @@ export class NText
             if (text)
                 this.setText(text);
         }
+    }
+
+    /**
+     * 获取父元素
+     * @returns {NElement}
+     */
+    getParent()
+    {
+        return NElement.byElement(this.node.parentElement);
     }
 
     /**

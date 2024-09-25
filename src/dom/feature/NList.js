@@ -1,5 +1,5 @@
 import { HookBindInfo } from "../../data/hook/object/HookBindInfo.js";
-import { getNElement, NElement } from "../node/NElement.js";
+import { NElement } from "../node/NElement.js";
 import { NLocate } from "../node/NLocate.js";
 import { NText } from "../node/NText.js";
 import { NAsse } from "./NAsse.js";
@@ -141,7 +141,7 @@ export class NList
         let tagName = this.getTagName();
         if (tagName == "")
             tagName = "div";
-        let ele = getNElement(document.createElement(tagName));
+        let ele = NElement.byElement(document.createElement(tagName));
         this.apply(ele);
         return ele;
     }

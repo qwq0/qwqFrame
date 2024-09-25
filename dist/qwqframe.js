@@ -388,7 +388,6 @@ class HookBindInfo
 /**
  * Comment节点的封装
  * 用于进行节点定位
- * @typedef {import("./NElement").NElement} NElement
  * @typedef {import("./NText").NText} NText
  */
 class NLocate
@@ -408,6 +407,15 @@ class NLocate
             this.node = node;
         else
             this.node = new Comment();
+    }
+
+    /**
+     * 获取父元素
+     * @returns {NElement}
+     */
+    getParent()
+    {
+        return NElement.byElement(this.node.parentElement);
     }
 
     /**
@@ -441,7 +449,6 @@ class NLocate
 /**
  * Text节点的封装
  * 用于进行节点定位
- * @typedef {import("./NElement").NElement} NElement
  * @typedef {import("./NLocate").NLocate} NLocate
  */
 class NText
@@ -465,6 +472,15 @@ class NText
             if (text)
                 this.setText(text);
         }
+    }
+
+    /**
+     * 获取父元素
+     * @returns {NElement}
+     */
+    getParent()
+    {
+        return NElement.byElement(this.node.parentElement);
     }
 
     /**
@@ -863,7 +879,7 @@ class NList
         let tagName = this.getTagName();
         if (tagName == "")
             tagName = "div";
-        let ele = getNElement(document.createElement(tagName));
+        let ele = NElement.byElement(document.createElement(tagName));
         this.apply(ele);
         return ele;
     }
@@ -932,6 +948,15 @@ class NElement
     get element()
     {
         return this.node;
+    }
+
+    /**
+     * 获取父元素
+     * @returns {NElement}
+     */
+    getParent()
+    {
+        return NElement.byElement(this.node.parentElement);
     }
 
     /**
@@ -1089,7 +1114,7 @@ class NElement
      */
     getChilds()
     {
-        return Array.from(this.node.children).map(o => getNElement(/** @type {HTMLElement} */(o)));
+        return Array.from(this.node.children).map(o => NElement.byElement(/** @type {HTMLElement} */(o)));
     }
 
     /**
@@ -1099,7 +1124,7 @@ class NElement
      */
     getChild(ind)
     {
-        return getNElement(/** @type {HTMLElement} */(this.node.children[ind]));
+        return NElement.byElement(/** @type {HTMLElement} */(this.node.children[ind]));
     }
 
     /**
