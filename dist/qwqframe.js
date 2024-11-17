@@ -994,7 +994,7 @@ class NElement
                 else
                 {
                     let newNode = (initVal == null ? new NLocate() : (typeof (initVal) == "string" ? new NText(initVal) : initVal));
-                    currentNode.replaceWith(currentNode);
+                    currentNode.replaceWith(newNode);
                     currentNode = newNode;
                 }
             }).bindDestroy(this);
