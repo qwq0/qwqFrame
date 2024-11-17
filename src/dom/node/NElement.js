@@ -91,7 +91,7 @@ export class NElement
                 }
                 else
                 {
-                    let newNode = (initVal == null ? new NLocate() : (typeof (initVal) == "string" ? new NText(initVal) : initVal));
+                    let newNode = (val == null ? new NLocate() : (typeof (val) == "string" ? new NText(val) : val));
                     currentNode.replaceWith(newNode);
                     currentNode = newNode;
                 }
