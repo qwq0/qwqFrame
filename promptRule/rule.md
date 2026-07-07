@@ -19,7 +19,7 @@
 - 若数组中的成员是一个字符串 表示在此位置插入一个文本节点
 - 若数组中存在NTagName类实例 表示此元素是div以外的元素，若是div则可缺省此成员，使用 nTagName.标签名 可以快速获取此类实例 例如 nTagName.img
 - 若数组中的成员是一个NAttr类实例 表示为此元素增加一个html标签属性，使用 new NAttr("name", "value") 来创建一个NAttr实例
-- 若数组中的成员是一个style列表 表示为此元素添加样式，使用styles函数创建一个style列表，接受一个参数 类型为一个对象，其中键为驼峰格式的css样式名 值为字符串格式的css样式值
+- 若数组中的成员是一个styles实例 表示为此元素添加样式，使用styles函数创建一个style列表，接受一个参数 类型为一个对象，其中键为驼峰格式的css样式名 值为字符串格式的css样式值
 - 同一个元素的描述中有多个style的情况 数组中更靠后的样式有更高的优先级
 - 若数组中的成员是一个NEvent类实例 表示为此元素增加一个事件监听器，使用 eventName.事件名(回调) 调用此类 例如 eventName.click(e=>console.log("clicked"))
 - 若数组中的成员是一个函数 表示此元素创建时hook，框架渲染到此函数时(创建元素树时)自动执行此函数 并传入当前所在的元素对应的NElement实例，如果需要获取特定元素以供其他部分操作 应当创建一个匿名函数并将此元素的NElement储存到某个变量中备用 以避免再从dom树中获取对象
@@ -30,9 +30,9 @@
 - element.remove() 移除实例化的元素
 
 # 样式复用与元素操作
-- 将 styles 函数得到的返回值保存到变量可以复用给多个元素 若不必复用的 styles 也可以在元素描述中就地创建
+- 调用 styles({ styleName: value }) 函数得到的styles实例 可以保存到变量可以复用给多个元素，若不必复用的样式也可以在元素描述中就地调用函数创建
 - 将元素实例化后保存到变量以便添加到页面 移除等操作
-- 对于已经创建完成的元素 可以使用 nElement.applyNList(styles实例) 或 nElement.setStyles(参数同styles函数的参数)
+- 对创建完成的元素修改样式，已经存在styles实例 使用 nElement.applyNList(styles实例)，需要就地创建并使用一组样式 使用 nElement.setStyles(参数同调用styles函数时传入的参数)
 
 # 动画效果
 - nElement.animate(keyframes, options):Animation  使用此方法可以执行dom动画，其中keyframes可以是Array<Keyframe> | PropertyIndexedKeyframes，options可以是毫秒单位的时间或KeyframeAnimationOptions
@@ -45,6 +45,6 @@ qframe中存在两种数据联动方式 使用不同的方式实现 需要根据
 - bindValue(proxyedObject, key) 可以获取一个Proxy对象中的某个键的绑定实例，可以将此实例传递给 元素描述 中以进行联动，例如若某个值是string则可以取代 显示的文本 或 styles中的值
 - bindValue(proxyedObject, key, func) 类似上述绑定 但使用func提供的函数处理变化后的值，可用于原始数据不是期望的值的情况 例如原始数据不是字符串类型 或是需要添加前缀后缀 或是转成可读格式的场景
 ### 在已经存在的对象中打入getter/setter
-- bindAttribute(attrName, obj, key, noInitialize = false) 创建一个对象中的键与元素属性的绑定，使用此方法创建一个 getter/setter 对到 obj 对象的 key 上，对obj的写入和读取都被重定向到当前元素的 attrName 属性，特别的对于noInitialize=true时，不将obj.key的原始值初始化给nElement.attrName而是完全丢弃原始值
+- bindAttribute(attrName, obj, key, noInitialize = false) 创建一个对象中的键与元素属性的绑定实例，应当将此函数的返回值作为NList元素描述的列表项，使用此方法创建一个 getter/setter 对到 obj 对象的 key 上，对obj的写入和读取都被重定向到当前元素的 attrName 属性，特别的对于noInitialize=true时，不将obj.key的原始值初始化给nElement.attrName而是完全丢弃原始值
 
 -- 规则结束 --
