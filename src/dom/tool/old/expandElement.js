@@ -2,6 +2,7 @@ import { NElement, getNElement } from "../../node/NElement.js";
 
 /**
  * 遍历展开元素
+ * @deprecated qwqframe框架最早的原型数据格式 即将被弃用
  * @typedef {{
  *     id?:  string, // id
  *     left?: string, // 距左边(style)

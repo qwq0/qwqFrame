@@ -16,7 +16,10 @@ export function runOnce(func)
         else
         {
             runned = true;
-            return func(...para);
+            let funcTmp = func;
+            // @ts-ignore
+            func = null;
+            return funcTmp(...para);
         }
     });
 }

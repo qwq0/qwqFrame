@@ -67,6 +67,12 @@ export function createHookObj(srcObj)
 
 /**
  * 获取代理对象中指定值的绑定信息
+ * 第一个参数传入代理对象
+ * 第二个参数传入需要数据的键
+ * 若需要获取的数据需要经过函数处理
+ * 可以再传入或不传入更多所需数据的键
+ * 并在最后一个参数传入一个函数用于处理
+ * 该函数能获取到每个提到的键对应的数据
  * @template {Object} T
  * @param {T} proxyObj
  * @param {[(keyof T) | (string & {}) | symbol] | [((keyof T) | (string & {}) | symbol), ...Array<(keyof T) | (string & {}) | symbol>, function(...any): any]} keys

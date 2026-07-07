@@ -1,3 +1,10 @@
+// data
+
+export { createHookObj, bindValue } from "./data/hook/object/proxyObject.js";
+export { createHookArray, bindArrayHook } from "./data/hook/array/proxyArray.js";
+export { createHookMap, bindMapHook } from "./data/hook/map/proxyMap.js";
+export { createHookSet, bindSetHook } from "./data/hook/set/proxySet.js";
+
 // dom
 
 export { NElement, getNElement } from "./dom/node/NElement.js";
@@ -32,12 +39,11 @@ export { keyboardBind } from "./dom/tool/event/keyboard.js";
 
 export { runOnce } from "./flow/runOnce.js";
 
-// data
+// net
+// TODO
 
-export { createHookObj, bindValue } from "./data/hook/object/proxyObject.js";
-export { createHookArray, bindArrayHook } from "./data/hook/array/proxyArray.js";
-export { createHookMap, bindMapHook } from "./data/hook/map/proxyMap.js";
-export { createHookSet, bindSetHook } from "./data/hook/set/proxySet.js";
+// state
+// TODO
 
 // util
 

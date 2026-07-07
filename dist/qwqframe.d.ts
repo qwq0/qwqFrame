@@ -150,7 +150,7 @@ declare class HookBindInfo {
      * @param {function(...any): any} ctFunc
      */
     constructor(proxyObj: object, srcObj: object, keys: Array<string | symbol>, hookMap: Map<string | symbol, Set<HookBindValue | HookBindCallback>>, ctFunc: (...args: any[]) => any);
-    proxyObj: any;
+    proxyObj: object;
     /**
      * 获取此钩子绑定的值
      */
@@ -174,7 +174,7 @@ declare class HookBindInfo {
      * @param {(keyof T) | (string & {}) | symbol} targetKey
      * @returns {HookBindValue}
      */
-    bindToValue<T extends unknown>(targetObj: T, targetKey: (keyof T) | (string & {}) | symbol): HookBindValue;
+    bindToValue<T extends Object>(targetObj: T, targetKey: (keyof T) | (string & {}) | symbol): HookBindValue;
     /**
      * 绑定到回调函数
      * @param {function(any): void} callback
@@ -280,7 +280,7 @@ declare class NLocate {
     /**
      * @param {Comment} [node]
      */
-    constructor(node?: Comment | undefined);
+    constructor(node?: Comment);
     /**
      * Comment节点
      * @type {Comment}
@@ -402,7 +402,7 @@ declare class NElement<ElementObjectType extends HTMLElement> {
      * @param {number} [begin] 开始删除的子节点下标 缺省则为从0开始
      * @param {number} [end] 结束删除的子节点下标 不包含end 缺省则为到结尾
      */
-    removeChilds(begin?: number | undefined, end?: number | undefined): void;
+    removeChilds(begin?: number, end?: number): void;
     /**
      * 获取子节点列表
      * 返回的列表不会随dom树变化
@@ -473,14 +473,14 @@ declare class NElement<ElementObjectType extends HTMLElement> {
      * @param {function(HTMLElementEventMap[K]): any} callback
      * @param {boolean | AddEventListenerOptions} [options]
      */
-    addEventListener<K extends keyof HTMLElementEventMap>(eventName: K, callback: (arg0: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions | undefined): void;
+    addEventListener<K extends keyof HTMLElementEventMap>(eventName: K, callback: (arg0: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
     /**
      * 移除事件监听器
      * @param {string} eventName
      * @param {function(Event) : void} callback
      * @param {boolean | EventListenerOptions} [options]
      */
-    removeEventListener(eventName: string, callback: (arg0: Event) => void, options?: boolean | EventListenerOptions | undefined): void;
+    removeEventListener(eventName: string, callback: (arg0: Event) => void, options?: boolean | EventListenerOptions): void;
     /**
      * 执行动画
      * @param {Array<Keyframe> | PropertyIndexedKeyframes} keyframes
@@ -681,7 +681,7 @@ type NList_item$1 = NList_list$1[number];
 
 declare namespace cssG {
     function diFull(value: string): string;
-    function rgb(r: number | string, g: number | string, b: number | string, a?: string | number | undefined): string;
+    function rgb(r: number | string, g: number | string, b: number | string, a?: number | string): string;
 }
 
 /**
@@ -693,7 +693,7 @@ declare namespace cssG {
  * @param {boolean} [noInitialize] 不将对象中原来的值赋给元素属性
  * @returns {(element: NElement) => void} 流水线函数
  */
-declare function bindAttribute<T extends unknown>(attrName: string, obj: T, key: (keyof T) | (string & {}), noInitialize?: boolean | undefined): (element: NElement<any>) => void;
+declare function bindAttribute<T extends Object>(attrName: string, obj: T, key: (keyof T) | (string & {}), noInitialize?: boolean): (element: NElement<any>) => void;
 
 /**
  * 生成添加类名的流水线
@@ -709,7 +709,7 @@ declare function classNames(classNames: string | Array<string>): NAsse;
  * @param {NList | import("../../feature/NList").NList_list} [listNList]
  * @returns {NElement}
  */
-declare function buildList<T extends unknown>(dataArray: Array<T>, builder: (data: T) => NElement<any>, listNList?: NList | NList_list$1 | undefined): NElement<any>;
+declare function buildList<T extends unknown>(dataArray: Array<T>, builder: (data: T) => NElement<any>, listNList?: NList | NList_list$1): NElement<any>;
 
 /**
  * 展开元素
@@ -757,7 +757,7 @@ type EDObj = {
  * @param {number} [button] 绑定的按键
  * @param {HTMLElement | Window} [extensionRegion] 延伸区域 (实际捕获鼠标移动和按钮抬起的区域)
  */
-declare function mouseBind(element: NElement<any>, callback: (arg0: PointerData$1) => void, button?: number | undefined, extensionRegion?: HTMLElement | Window | undefined): void;
+declare function mouseBind(element: NElement<any>, callback: (arg0: PointerData$1) => void, button?: number, extensionRegion?: HTMLElement | Window): void;
 
 /**
  * 触摸(拖拽) 事件处理
@@ -765,7 +765,7 @@ declare function mouseBind(element: NElement<any>, callback: (arg0: PointerData$
  * @param {function(PointerData):void} callback
  * @param {boolean} [preventDefault]
  */
-declare function touchBind(element: NElement<any>, callback: (arg0: PointerData$1) => void, preventDefault?: boolean | undefined): void;
+declare function touchBind(element: NElement<any>, callback: (arg0: PointerData$1) => void, preventDefault?: boolean): void;
 
 /**
  * 键盘 事件处理
@@ -867,61 +867,7 @@ declare function isAmong(k: any, ...s: Array<any>): boolean;
  * @param {number} [randomSection] 随机节数量
  * @returns {string}
  */
-declare function uniqueIdentifierString(randomSection?: number | undefined): string;
-
-/**
- * 左右方向分割
- * @param {string} leftSize
- * @param {NElement | import("../old/expandElement.js").EDObj} a
- * @param {NElement | import("../old/expandElement.js").EDObj} b
- * @returns {NElement}
- */
-declare function divideLayout_LR(leftSize: string, a: NElement<any> | EDObj, b: NElement<any> | EDObj): NElement<any>;
-/**
- * 上下方向分割
- * @param {string} upSize
- * @param {NElement | import("../old/expandElement.js").EDObj} a
- * @param {NElement | import("../old/expandElement.js").EDObj} b
- * @returns {NElement}
- */
-declare function divideLayout_UD(upSize: string, a: NElement<any> | EDObj, b: NElement<any> | EDObj): NElement<any>;
-/**
- * 右左方向分割
- * @param {string} rightSize
- * @param {NElement | import("../old/expandElement.js").EDObj} a
- * @param {NElement | import("../old/expandElement.js").EDObj} b
- * @returns {NElement}
- */
-declare function divideLayout_RL(rightSize: string, a: NElement<any> | EDObj, b: NElement<any> | EDObj): NElement<any>;
-/**
- * 下上方向分割
- * @param {string} downSize
- * @param {NElement | import("../old/expandElement.js").EDObj} a
- * @param {NElement | import("../old/expandElement.js").EDObj} b
- * @returns {NElement}
- */
-declare function divideLayout_DU(downSize: string, a: NElement<any> | EDObj, b: NElement<any> | EDObj): NElement<any>;
-
-/**
- * 解析标签
- * 默认为div标签
- * @deprecated
- * @param {TemplateStringsArray} strings
- * @param {Array<parsingElementKeysType>} keys
- * @returns {NElement}
- */
-declare function tag(strings: TemplateStringsArray, ...keys: Array<parsingElementKeysType>): NElement<any>;
-/**
- * 解析指定标签名的标签
- * @deprecated
- * @param {string} name
- * @returns {function(TemplateStringsArray, ...parsingElementKeysType): NElement}
- */
-declare function tagName(name: string): (arg0: TemplateStringsArray, ...args: parsingElementKeysType[]) => NElement<any>;
-/**
- * 解析标签
- */
-type parsingElementKeysType = NElement<any> | NStyle<any> | NEvent<any>;
+declare function uniqueIdentifierString(randomSection?: number): string;
 
 /**
  * 创建对象的代理
@@ -929,15 +875,21 @@ type parsingElementKeysType = NElement<any> | NStyle<any> | NEvent<any>;
  * @param {T} srcObj
  * @returns {T}
  */
-declare function createHookObj<T extends unknown>(srcObj: T): T;
+declare function createHookObj<T extends object>(srcObj: T): T;
 /**
  * 获取代理对象中指定值的绑定信息
+ * 第一个参数传入代理对象
+ * 第二个参数传入需要数据的键
+ * 若需要获取的数据需要经过函数处理
+ * 可以再传入或不传入更多所需数据的键
+ * 并在最后一个参数传入一个函数用于处理
+ * 该函数能获取到每个提到的键对应的数据
  * @template {Object} T
  * @param {T} proxyObj
  * @param {[(keyof T) | (string & {}) | symbol] | [((keyof T) | (string & {}) | symbol), ...Array<(keyof T) | (string & {}) | symbol>, function(...any): any]} keys
  * @returns {HookBindInfo}
  */
-declare function bindValue<T extends unknown>(proxyObj: T, ...keys: [(keyof T) | (string & {}) | symbol] | [((keyof T) | (string & {}) | symbol), ...Array<(keyof T) | (string & {}) | symbol>, (...args: any[]) => any]): HookBindInfo;
+declare function bindValue<T extends Object>(proxyObj: T, ...keys: [(keyof T) | (string & {}) | symbol] | [((keyof T) | (string & {}) | symbol), ...Array<(keyof T) | (string & {}) | symbol>, (...args: any[]) => any]): HookBindInfo;
 
 /**
  * 数组钩子绑定类
@@ -1022,7 +974,7 @@ declare function bindArrayHook<K extends unknown>(proxyArray: Array<K>, callback
 }, option?: {
     noSet?: boolean;
     addExisting?: boolean;
-} | undefined): ArrayHookBind;
+}): ArrayHookBind;
 
 /**
  * Map钩子绑定类
@@ -1108,7 +1060,7 @@ declare function bindMapHook<K extends unknown, V extends unknown>(proxyMap: Map
 }, option?: {
     noSet?: boolean;
     addExisting?: boolean;
-} | undefined): MapHookBind;
+}): MapHookBind;
 
 /**
  * Set钩子绑定类
@@ -1181,7 +1133,61 @@ declare function bindSetHook<K extends unknown>(proxySet: Set<K>, callbacks: {
     del?: (value: K) => void;
 }, option?: {
     addExisting?: boolean;
-} | undefined): SetHookBind;
+}): SetHookBind;
+
+/**
+ * 左右方向分割
+ * @param {string} leftSize
+ * @param {NElement | import("../old/expandElement.js").EDObj} a
+ * @param {NElement | import("../old/expandElement.js").EDObj} b
+ * @returns {NElement}
+ */
+declare function divideLayout_LR(leftSize: string, a: NElement<any> | EDObj, b: NElement<any> | EDObj): NElement<any>;
+/**
+ * 上下方向分割
+ * @param {string} upSize
+ * @param {NElement | import("../old/expandElement.js").EDObj} a
+ * @param {NElement | import("../old/expandElement.js").EDObj} b
+ * @returns {NElement}
+ */
+declare function divideLayout_UD(upSize: string, a: NElement<any> | EDObj, b: NElement<any> | EDObj): NElement<any>;
+/**
+ * 右左方向分割
+ * @param {string} rightSize
+ * @param {NElement | import("../old/expandElement.js").EDObj} a
+ * @param {NElement | import("../old/expandElement.js").EDObj} b
+ * @returns {NElement}
+ */
+declare function divideLayout_RL(rightSize: string, a: NElement<any> | EDObj, b: NElement<any> | EDObj): NElement<any>;
+/**
+ * 下上方向分割
+ * @param {string} downSize
+ * @param {NElement | import("../old/expandElement.js").EDObj} a
+ * @param {NElement | import("../old/expandElement.js").EDObj} b
+ * @returns {NElement}
+ */
+declare function divideLayout_DU(downSize: string, a: NElement<any> | EDObj, b: NElement<any> | EDObj): NElement<any>;
+
+/**
+ * 解析标签
+ * 默认为div标签
+ * @deprecated qwqframe框架早期的原型数据格式 即将被弃用
+ * @param {TemplateStringsArray} strings
+ * @param {Array<parsingElementKeysType>} keys
+ * @returns {NElement}
+ */
+declare function tag(strings: TemplateStringsArray, ...keys: Array<parsingElementKeysType>): NElement<any>;
+/**
+ * 解析指定标签名的标签
+ * @deprecated qwqframe框架早期的原型数据格式 即将被弃用
+ * @param {string} name
+ * @returns {function(TemplateStringsArray, ...parsingElementKeysType): NElement}
+ */
+declare function tagName(name: string): (arg0: TemplateStringsArray, ...args: parsingElementKeysType[]) => NElement<any>;
+/**
+ * 解析标签
+ */
+type parsingElementKeysType = NElement<any> | NStyle<any> | NEvent<any>;
 
 /**
  * 异步延迟

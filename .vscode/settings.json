@@ -2,8 +2,5 @@
     "liveServer.settings.port": 5501,
     "files.watcherExclude": {
         "./dist/**": true
-    },
-    "cmake.configureOnOpen": false,
-    "stm32-for-vscode.openOCDPath": false,
-    "stm32-for-vscode.armToolchainPath": false
+    }
 }

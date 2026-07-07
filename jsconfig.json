@@ -3,6 +3,8 @@
         "allowJs": true,
         "checkJs": true,
         "target": "ES2022",
+        "noImplicitAny": false,
+        "strictNullChecks": false,
         "lib": [
             "DOM",
             "ES2022"

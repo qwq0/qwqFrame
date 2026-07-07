@@ -1,37 +1,4 @@
 /**
- * 正向遍历数组
- * 在回调中返回不为false或void的值主动结束遍历
- * 主动结束遍历 返回true
- * 未主动结束遍历完全部内容 返回false
- * @template T
- * @param {ArrayLike<T>} o
- * @param {function(T, number):(boolean | void)} callback
- * @returns {boolean}
- */
-function forEach(o, callback)
-{
-    if (!o)
-        return false;
-    for (let i = 0, Li = o.length; i < Li; i++)
-        if (o[i] != undefined && callback(o[i], i))
-            return true;
-    return false;
-}
-
-/**
- * 判断第一个参数是否属于之后所有的参数
- * 第一个参数与任何一个之后的参数相等 返回true
- * 与任何一个都不相等 返回false
- * @param {any} k
- * @param  {Array<any>} s
- * @returns {boolean}
- */
-function isAmong(k, ...s)
-{
-    return s.some(o => o === k);
-}
-
-/**
  * 为绑定回收的钩子
  */
 let unboundHook = new Set();
@@ -383,6 +350,1285 @@ class HookBindInfo
     {
         return new HookBindCallback(this, callback);
     }
+}
+
+/**
+ * 代理对象 到 钩子映射和源对象 映射
+ * 
+ * @type {WeakMap<object, {
+ *  hookMap: Map<string | symbol, Set<import("./HookBindValue").HookBindValue | import("./HookBindCallback").HookBindCallback>>,
+ *  srcObj: object
+ * }>}
+ */
+const proxyMap = new WeakMap();
+
+/**
+ * 创建对象的代理
+ * @template {object} T
+ * @param {T} srcObj
+ * @returns {T}
+ */
+function createHookObj(srcObj)
+{
+    if (proxyMap.has(srcObj)) // 已经是代理对象
+        throw "Unable to create a proxy for a proxy object";
+    /**
+     * 修改指定值时需要触发的钩子
+     * @type {Map<string | symbol, Set<HookBindValue | HookBindCallback>>}
+     */
+    const hookMap = new Map();
+    const proxyObj = (new Proxy((/** @type {object} */(srcObj)), {
+        get: (target, key) => // 取值
+        {
+            return Reflect.get(target, key);
+        },
+
+        set: (target, key, newValue) => // 设置值
+        {
+            let ret = Reflect.set(target, key, newValue);
+            if (ret)
+            {
+                let hookSet = hookMap.get(key);
+                if (hookSet) // 若此key上存在钩子集合
+                {
+                    hookSet.forEach(o =>
+                    {
+                        o.emit(); // 触发每个钩子
+                    });
+                }
+            }
+            return ret;
+        },
+
+        // TODO 应当当作设置为undefined 并创建专用方法解除绑定钩子
+        deleteProperty: (target, key) => // 删除值
+        {
+            let ret = Reflect.deleteProperty(target, key);
+            if (ret)
+            {
+                let hookSet = hookMap.get(key);
+                if (hookSet) // 若此key上存在钩子集合
+                {
+                    hookSet.forEach(o =>
+                    {
+                        o.destroy(); // 销毁每个钩子
+                    });
+                    hookMap.delete(key); // 移除此key上的钩子集合
+                }
+            }
+            return ret;
+        }
+    }));
+    proxyMap.set(proxyObj, { hookMap, srcObj });
+    return proxyObj;
+}
+
+/**
+ * 获取代理对象中指定值的绑定信息
+ * 第一个参数传入代理对象
+ * 第二个参数传入需要数据的键
+ * 若需要获取的数据需要经过函数处理
+ * 可以再传入或不传入更多所需数据的键
+ * 并在最后一个参数传入一个函数用于处理
+ * 该函数能获取到每个提到的键对应的数据
+ * @template {Object} T
+ * @param {T} proxyObj
+ * @param {[(keyof T) | (string & {}) | symbol] | [((keyof T) | (string & {}) | symbol), ...Array<(keyof T) | (string & {}) | symbol>, function(...any): any]} keys
+ * @returns {HookBindInfo}
+ */
+function bindValue(proxyObj, ...keys)
+{
+    const ctFunc = (/** @type {function(...any): any} */(keys.length >= 2 ? keys.pop() : null));
+    const proxyMata = proxyMap.get(proxyObj);
+    if (proxyMata == undefined)
+        throw "bindValue: Values can only be bound from proxy objects";
+    return new HookBindInfo(proxyObj, proxyMata.srcObj, (/** @type {Array<string | symbol>}*/(keys)), proxyMata.hookMap, ctFunc);
+}
+
+/**
+ * 数组钩子绑定类
+ * 
+ * @typedef {{
+ *  set: (index: number, value: any) => void,
+ *  add: (index: number, value: any) => void,
+ *  del: (index: number) => void
+ * }} callbackType
+ */
+class ArrayHookBind
+{
+    /**
+     * 代理数组
+     * @type {Array}
+     */
+    #proxyArr = null;
+
+    /**
+     * 修改数组时需要触发的钩子
+     * 此值为 hookStatus 文件中 arrayProxyMap 的 hookSet 的引用
+     * @type {Set<ArrayHookBind>}
+     */
+    #hookSet = null;
+
+    /**
+     * 回调函数的弱引用
+     * @type {WeakRef<callbackType>}
+     */
+    #cbRef = null;
+
+    /**
+     * 回调函数
+     * 当此钩子绑定自动释放时为null
+     * @type {callbackType}
+     */
+    #callback = null;
+
+    /**
+     * 目标对象引用映射
+     * 用于建立目标对象到指定对象的强引用关系
+     * @type {WeakMap<object, Set<object>>}
+     */
+    #targetRefMap = new WeakMap();
+
+    /**
+     * @param {Array} proxyArr
+     * @param {Set<ArrayHookBind>} hookSet
+     * @param {callbackType} callback
+     */
+    constructor(proxyArr, hookSet, callback)
+    {
+        this.#proxyArr = proxyArr;
+        this.#hookSet = hookSet;
+        this.#cbRef = new WeakRef(callback);
+        this.#callback = callback;
+
+        // 添加调试未绑定探针
+        unboundHook.add(this);
+    }
+
+    /**
+     * 触发此钩子 (设置)
+     * @param {number} index
+     * @param {any} value
+     */
+    emitSet(index, value)
+    {
+        let callback = this.#cbRef.deref();
+        if (callback)
+        {
+            try
+            {
+                callback.set(index, value);
+            }
+            catch (err)
+            {
+                console.error(err);
+            }
+        }
+    }
+
+    /**
+     * 触发此钩子 (增加)
+     * @param {number} index
+     * @param {any} value
+     */
+    emitAdd(index, value)
+    {
+        let callback = this.#cbRef.deref();
+        if (callback)
+        {
+            try
+            {
+                callback.add(index, value);
+            }
+            catch (err)
+            {
+                console.error(err);
+            }
+        }
+    }
+
+    /**
+     * 触发此钩子 (删除)
+     * @param {number} index
+     */
+    emitDel(index)
+    {
+        let callback = this.#cbRef.deref();
+        if (callback)
+        {
+            try
+            {
+                callback.del(index);
+            }
+            catch (err)
+            {
+                console.error(err);
+            }
+        }
+    }
+
+    /**
+     * 销毁此钩子
+     * 销毁后钩子将不再自动触发
+     */
+    destroy()
+    {
+        this.#hookSet.delete(this);
+        freeHookBindDestroy(this);
+
+        // 移除调试未绑定探针
+        unboundHook.delete(this);
+    }
+
+    /**
+     * 绑定销毁
+     * 当目标对象释放时销毁
+     * @param {object} targetObj
+     * @returns {ArrayHookBind} 返回自身
+     */
+    bindDestroy(targetObj)
+    {
+        let targetRefSet = this.#targetRefMap.get(targetObj);
+        if (targetRefSet == undefined)
+        {
+            targetRefSet = new Set();
+            this.#targetRefMap.set(targetObj, targetRefSet);
+        }
+        targetRefSet.add(this.#callback);
+        this.#callback = null;
+        
+        hookBindDestroy(targetObj, this);
+
+        // 移除调试未绑定探针
+        unboundHook.delete(this);
+
+        return this;
+    }
+}
+
+/**
+ * 代理数组 到 钩子映射和目标对象 映射
+ * 
+ * @type {WeakMap<object, {
+*  hookSet: Set<import("./ArrayHookBind").ArrayHookBind>,
+*  srcArr: Array
+* }>}
+*/
+const arrayProxyMap = new WeakMap();
+
+/**
+ * 创建数组的代理
+ * @template {Array} T
+ * @param {T} srcArray
+ * @returns {T}
+ */
+function createHookArray(srcArray)
+{
+    let oldLength = srcArray.length;
+
+    /**
+     * @type {Set<ArrayHookBind>}
+     */
+    let hookSet = new Set();
+
+    /**
+     * @param {number} ind
+     * @param {any} value
+     */
+    function emitSet(ind, value)
+    {
+        hookSet.forEach(o => { o.emitSet(ind, value); });
+    }
+    /**
+     * @param {number} ind
+     * @param {any} value
+     */
+    function emitAdd(ind, value)
+    {
+        hookSet.forEach(o => { o.emitAdd(ind, value); });
+    }
+    /**
+     * @param {number} ind
+     */
+    function emitDel(ind)
+    {
+        hookSet.forEach(o => { o.emitDel(ind); });
+    }
+
+    const proxyArray = (new Proxy(srcArray, {
+        get: (target, key) => // 取值
+        {
+            // TODO 此处构建的函数可缓存
+            switch (key)
+            {
+                case "push":
+                    return (/** @type {any[]} */ ...items) =>
+                    {
+                        let ret = srcArray.push(...items);
+                        items.forEach(o =>
+                        {
+                            oldLength++;
+                            emitAdd(oldLength - 1, o);
+                        });
+                        return ret;
+                    };
+                case "pop":
+                    return () =>
+                    {
+                        let ret = srcArray.pop();
+                        if (oldLength > 0)
+                        {
+                            oldLength--;
+                            emitDel(oldLength);
+                        }
+                        return ret;
+                    };
+                case "unshift":
+                    return (/** @type {any[]} */ ...items) =>
+                    {
+                        let ret = srcArray.unshift(...items);
+                        items.forEach((o, ind) =>
+                        {
+                            oldLength++;
+                            emitAdd(ind, o);
+                        });
+                        return ret;
+                    };
+                case "shift":
+                    return () =>
+                    {
+                        let ret = srcArray.shift();
+                        if (oldLength > 0)
+                        {
+                            oldLength--;
+                            emitDel(0);
+                        }
+                        return ret;
+                    };
+                case "splice":
+                    return (/** @type {number} */ start, deleteCount = Infinity, /** @type {Array} */ ...items) =>
+                    {
+                        let ret = srcArray.splice(start, deleteCount, ...items);
+                        let actualStartIndex = (
+                            start >= 0 ?
+                                (
+                                    start >= oldLength ? oldLength : start
+                                ) :
+                                (
+                                    start < -oldLength ? 0 : start + oldLength
+                                )
+                        );
+                        let actualDeleteCount = (
+                            deleteCount > 0 ?
+                                Math.min(deleteCount, oldLength - actualStartIndex) :
+                                0
+                        );
+                        for (let i = actualDeleteCount - 1; i >= 0; i--)
+                        {
+                            oldLength--;
+                            emitDel(actualStartIndex + i);
+                        }
+                        items.forEach((o, ind) =>
+                        {
+                            oldLength++;
+                            emitAdd(actualStartIndex + ind, o);
+                        });
+                        return ret;
+                    };
+                case "at":
+                case "concat":
+                case "forEach":
+                case "map":
+                case "every":
+                case "some":
+                case "reduce":
+                case "reduceRight":
+                case "join":
+                case "find":
+                case "findIndex":
+                case "findLast":
+                case "findLastIndex":
+                case "flat":
+                case "flatMap":
+                case "includes":
+                case "indexOf":
+                case "lastIndexOf":
+                case "slice":
+                case "with":
+                case "toString":
+                case "toLocaleString":
+                case "toReversed":
+                case "toSorted":
+                case "toSpliced":
+                case "keys":
+                case "values":
+                case "entries":
+                    return (/** @type {any} */ ...arg) =>
+                    {
+                        // @ts-ignore
+                        return srcArray[key](...arg);
+                    };
+                case "reverse":
+                case "sort":
+                    return (/** @type {any} */ ...arg) =>
+                    {
+                        // @ts-ignore
+                        let ret = srcArray[key](...arg);
+                        for (let i = oldLength - 1; i >= 0; i--)
+                            emitDel(i);
+                        for (let i = 0; i < oldLength; i++)
+                            emitAdd(i, srcArray[i]);
+                        return ret;
+                    };
+                case "copyWithin":
+                    return (/** @type {number} */ targetIndex, /** @type {number} */ start, /** @type {number} */ end) =>
+                    {
+                        return Array.prototype.copyWithin.call(proxyArray, targetIndex, start, end);
+                    };
+                default:
+                    return Reflect.get(target, key);
+            }
+        },
+
+        set: (target, key, newValue) => // 设置值
+        {
+            let ret = Reflect.set(target, key, newValue);
+            if (ret)
+            {
+                if (key == "length")
+                {
+                    let oldLengthBefore = oldLength;
+                    oldLength = newValue;
+                    if (newValue < oldLengthBefore)
+                    {
+                        for (let i = oldLengthBefore - 1; i >= newValue; i--)
+                            emitDel(i);
+                    }
+                    else if (newValue > oldLengthBefore)
+                    {
+                        for (let i = oldLengthBefore; i < newValue; i++)
+                            emitAdd(i, undefined);
+                    }
+                }
+                else if ((typeof (key) == "string" && (/^[1-9][0-9]*$/.test(key) || key == "0")) || typeof (key) == "number")
+                {
+                    let ind = Number(key);
+                    if (ind >= oldLength)
+                    {
+                        let oldLengthBefore = oldLength;
+                        oldLength = ind + 1;
+                        if (ind >= oldLengthBefore + 1)
+                        {
+                            for (let i = oldLengthBefore; i < ind; i++)
+                                emitAdd(i, undefined);
+                        }
+                        emitAdd(ind, newValue);
+                    }
+                    else
+                    {
+                        emitSet(ind, newValue);
+                    }
+                }
+            }
+            return ret;
+        },
+
+        deleteProperty: (target, key) => // 删除值
+        {
+            let ret = delete srcArray[key];
+            if ((typeof (key) == "string" && (/^[1-9][0-9]*$/.test(key) || key == "0")) || typeof (key) == "number")
+            {
+                let ind = Number(key);
+                if (ind < oldLength)
+                {
+                    emitSet(ind, undefined);
+                }
+            }
+            return ret;
+        }
+    }));
+
+    arrayProxyMap.set(proxyArray, { hookSet: hookSet, srcArr: srcArray });
+
+    return proxyArray;
+}
+
+
+/**
+ * 绑定数组的代理
+ * 回调函数中不应当进行可能触发钩子的操作
+ * @template {any} K
+ * @param {Array<K>} proxyArray
+ * @param {{
+ *  set?: (index: number, value: K) => void;
+ *  add: (index: number, value: K) => void;
+ *  del: (index: number) => void;
+ * }} callbacks
+ * @param {{ noSet?: boolean, addExisting?: boolean }} [option]
+ * @returns {ArrayHookBind}
+ */
+function bindArrayHook(proxyArray, callbacks, option = {})
+{
+    const proxyMata = arrayProxyMap.get(proxyArray);
+    if (proxyMata == undefined)
+        throw "bindArrayHook: Hook callbacks can only be bound from proxy array";
+
+    option = Object.assign({
+        noSet: false,
+        addExisting: false
+    }, option);
+
+    let callbackObj = Object.assign({
+        set: () => { },
+        add: () => { },
+        del: () => { },
+    }, callbacks);
+
+    if (option.noSet)
+    {
+        if (callbacks.set != undefined)
+        {
+            throw "bindArrayHook: cannot pass the set function when setting the noSet option";
+        }
+        callbackObj.set = (ind, value) =>
+        {
+            callbackObj.del(ind);
+            callbackObj.add(ind, value);
+        };
+    }
+
+
+    if (option.addExisting)
+    {
+        try
+        {
+            proxyMata.srcArr.forEach((e, ind) =>
+            {
+                callbackObj.add(ind, e);
+            });
+        }
+        catch (err)
+        {
+            console.log(err);
+        }
+    }
+
+    let ret = new ArrayHookBind(proxyArray, proxyMata.hookSet, callbackObj);
+    proxyMata.hookSet.add(ret);
+    return ret;
+}
+
+/**
+ * Map钩子绑定类
+ * 
+ * @typedef {{
+ *  add: (key: any, value: any) => void | (() => void),
+ *  set: (key: any, value: any) => void | (() => void),
+ *  del: (key: any) => void
+ * }} callbackType
+ */
+class MapHookBind
+{
+    /**
+     * 代理Map
+     * @type {Map}
+     */
+    #proxyMap = null;
+
+    /**
+     * 修改数组时需要触发的钩子
+     * 此值为 hookStatus 文件中 mapProxyMap 的 hookSet 的引用
+     * @type {Set<MapHookBind>}
+     */
+    #hookSet = null;
+
+    /**
+     * 回调函数的弱引用
+     * @type {WeakRef<callbackType>}
+     */
+    #cbRef = null;
+
+    /**
+     * 回调函数
+     * 当此钩子绑定自动释放时为null
+     * @type {callbackType}
+     */
+    #callback = null;
+
+    /**
+     * 当触发删除钩子时调用的回调函数
+     * @type {Map<any, () => void>}
+     */
+    #delCallbackMap = new Map();
+
+    /**
+     * 目标对象引用映射
+     * 用于建立目标对象到指定对象的强引用关系
+     * @type {WeakMap<object, Set<object>>}
+     */
+    #targetRefMap = new WeakMap();
+
+    /**
+     * @param {Map} proxyMap
+     * @param {Set<MapHookBind>} hookSet
+     * @param {callbackType} callback
+     */
+    constructor(proxyMap, hookSet, callback)
+    {
+        this.#proxyMap = proxyMap;
+        this.#hookSet = hookSet;
+        this.#cbRef = new WeakRef(callback);
+        this.#callback = callback;
+
+        // 添加调试未绑定探针
+        unboundHook.add(this);
+    }
+
+    /**
+     * 触发此钩子 (增加)
+     * @param {any} key
+     * @param {any} value
+     */
+    emitAdd(key, value)
+    {
+        let callback = this.#cbRef.deref();
+        if (callback)
+        {
+            try
+            {
+                let specificCallback = callback.add(key, value);
+                if (typeof (specificCallback) == "function")
+                    this.#delCallbackMap.set(key, specificCallback);
+            }
+            catch (err)
+            {
+                console.error(err);
+            }
+        }
+
+    }
+
+    /**
+     * 触发此钩子 (设置)
+     * @param {any} key
+     * @param {any} value
+     */
+    emitSet(key, value)
+    {
+        let oldSpecificCallback = this.#delCallbackMap.get(key);
+        if (oldSpecificCallback)
+        {
+            this.#delCallbackMap.delete(key);
+            try
+            {
+                oldSpecificCallback();
+            }
+            catch (err)
+            {
+                console.error(err);
+            }
+        }
+
+        let callback = this.#cbRef.deref();
+        if (callback)
+        {
+            try
+            {
+                let newSpecificCallback = callback.set(key, value);
+                if (typeof (newSpecificCallback) == "function")
+                    this.#delCallbackMap.set(key, newSpecificCallback);
+            }
+            catch (err)
+            {
+                console.error(err);
+            }
+        }
+    }
+
+    /**
+     * 触发此钩子 (删除)
+     * @param {any} key
+     */
+    emitDel(key)
+    {
+        let specificCallback = this.#delCallbackMap.get(key);
+        if (specificCallback)
+        {
+            this.#delCallbackMap.delete(key);
+            try
+            {
+                specificCallback();
+            }
+            catch (err)
+            {
+                console.error(err);
+            }
+        }
+
+        let callback = this.#cbRef.deref();
+        if (callback)
+        {
+            try
+            {
+                callback.del(key);
+            }
+            catch (err)
+            {
+                console.error(err);
+            }
+        }
+    }
+
+    /**
+     * 销毁此钩子
+     * 销毁后钩子将不再自动触发
+     */
+    destroy()
+    {
+        this.#hookSet.delete(this);
+        freeHookBindDestroy(this);
+
+        // 移除调试未绑定探针
+        unboundHook.delete(this);
+    }
+
+    /**
+     * 绑定销毁
+     * 当目标对象释放时销毁
+     * @param {object} targetObj
+     * @returns {MapHookBind} 返回自身
+     */
+    bindDestroy(targetObj)
+    {
+        let targetRefSet = this.#targetRefMap.get(targetObj);
+        if (targetRefSet == undefined)
+        {
+            targetRefSet = new Set();
+            this.#targetRefMap.set(targetObj, targetRefSet);
+        }
+        targetRefSet.add(this.#callback);
+        this.#callback = null;
+
+        hookBindDestroy(targetObj, this);
+
+        // 移除调试未绑定探针
+        unboundHook.delete(this);
+
+        return this;
+    }
+}
+
+/**
+ * 代理数组 到 钩子映射和目标对象 映射
+ * 
+ * @type {WeakMap<object, {
+*  hookSet: Set<import("./MapHookBind").MapHookBind>,
+*  srcMap: Map
+* }>}
+*/
+const mapProxyMap = new WeakMap();
+
+/**
+ * 创建Map的代理
+ * @template {Map} T
+ * @param {T} srcMap
+ * @returns {T}
+ */
+function createHookMap(srcMap)
+{
+    /**
+     * @type {Set<MapHookBind>}
+     */
+    let hookSet = new Set();
+
+    /**
+     * @param {any} key
+     * @param {any} value
+     */
+    function emitAdd(key, value)
+    {
+        hookSet.forEach(o => { o.emitAdd(key, value); });
+    }
+
+    /**
+     * @param {any} key
+     * @param {any} value
+     */
+    function emitSet(key, value)
+    {
+        hookSet.forEach(o => { o.emitSet(key, value); });
+    }
+
+    /**
+     * @param {any} key
+     */
+    function emitDel(key)
+    {
+        hookSet.forEach(o => { o.emitDel(key); });
+    }
+
+    const proxyMap = (new Proxy(srcMap, {
+        get: (target, key) => // 取值
+        {
+            // TODO 此处构建的函数可缓存
+            switch (key)
+            {
+                case "set":
+                    return (/** @type {any} */ key, /** @type {any} */ value) =>
+                    {
+                        let has = srcMap.has(key);
+
+                        srcMap.set(key, value);
+
+                        if (has)
+                            emitSet(key, value);
+                        else
+                            emitAdd(key, value);
+
+                        return proxyMap;
+                    };
+                case "delete":
+                    return (/** @type {any} */ key) =>
+                    {
+                        let has = srcMap.delete(key);
+
+                        if (has)
+                            emitDel(key);
+
+                        return has;
+                    };
+                case "clear":
+                    return () =>
+                    {
+                        let keys = srcMap.keys();
+
+                        srcMap.clear();
+
+                        for (let key of keys)
+                        {
+                            emitDel(key);
+                        }
+                    };
+                default: {
+                    let value = Reflect.get(target, key);
+                    if (typeof (value) == "function")
+                        return value.bind(srcMap);
+                    else
+                        return value;
+                }
+            }
+        },
+
+    }));
+
+    mapProxyMap.set(proxyMap, { hookSet: hookSet, srcMap: srcMap });
+
+    return proxyMap;
+}
+
+/**
+ * 绑定Map的代理
+ * 回调函数中不应当进行可能触发钩子的操作
+ * @template {any} K
+ * @template {any} V
+ * @param {Map<K, V>} proxyMap
+ * @param {{
+ *  add?: (key: K, value: V) => void | (() => void),
+ *  set?: (key: K, value: V) => void | (() => void),
+ *  del?: (key: K) => void
+ * }} callbacks
+ * @param {{ noSet?: boolean, addExisting?: boolean }} [option]
+ * @returns {MapHookBind}
+ */
+function bindMapHook(proxyMap, callbacks, option = {})
+{
+    const proxyMata = mapProxyMap.get(proxyMap);
+    if (proxyMata == undefined)
+        throw "bindMapHook: Hook callbacks can only be bound from proxy array";
+
+    option = Object.assign({
+        noSet: false,
+        addExisting: false
+    }, option);
+
+    let callbackObj = Object.assign({
+        set: () => { },
+        add: () => { },
+        del: () => { },
+    }, callbacks);
+
+    if (option.noSet)
+    {
+        if (callbacks.set != undefined)
+        {
+            throw "bindMapHook: cannot pass the set function when setting the noSet option";
+        }
+        callbackObj.set = (ind, value) =>
+        {
+            callbackObj.del(ind);
+            return callbackObj.add(ind, value);
+        };
+    }
+
+
+    if (option.addExisting)
+    {
+        try
+        {
+            proxyMata.srcMap.forEach((value, key) =>
+            {
+                callbackObj.add(key, value);
+            });
+        }
+        catch (err)
+        {
+            console.log(err);
+        }
+    }
+
+    let ret = new MapHookBind(proxyMap, proxyMata.hookSet, callbackObj);
+    proxyMata.hookSet.add(ret);
+    return ret;
+}
+
+/**
+ * Set钩子绑定类
+ * 
+ * @typedef {{
+ *  add: (value: any) => void | (() => void),
+ *  del: (value: any) => void
+ * }} callbackType
+ */
+class SetHookBind
+{
+    /**
+     * 代理Set
+     * @type {Set}
+     */
+    #proxySet = null;
+
+    /**
+     * 修改数组时需要触发的钩子
+     * 此值为 hookStatus 文件中 mapProxyMap 的 hookSet 的引用
+     * @type {Set<SetHookBind>}
+     */
+    #hookSet = null;
+
+    /**
+     * 回调函数的弱引用
+     * @type {WeakRef<callbackType>}
+     */
+    #cbRef = null;
+
+    /**
+     * 回调函数
+     * 当此钩子绑定自动释放时为null
+     * @type {callbackType}
+     */
+    #callback = null;
+
+    /**
+     * 当触发删除钩子时调用的回调函数
+     * @type {Map<any, () => void>}
+     */
+    #delCallbackMap = new Map();
+    
+    /**
+     * 目标对象引用映射
+     * 用于建立目标对象到指定对象的强引用关系
+     * @type {WeakMap<object, Set<object>>}
+     */
+    #targetRefMap = new WeakMap();
+
+    /**
+     * @param {Set} proxyMap
+     * @param {Set<SetHookBind>} hookSet
+     * @param {callbackType} callback
+     */
+    constructor(proxyMap, hookSet, callback)
+    {
+        this.#proxySet = proxyMap;
+        this.#hookSet = hookSet;
+        this.#cbRef = new WeakRef(callback);
+        this.#callback = callback;
+
+        // 添加调试未绑定探针
+        unboundHook.add(this);
+    }
+
+    /**
+     * 触发此钩子 (增加)
+     * @param {any} value
+     */
+    emitAdd(value)
+    {
+        let callback = this.#cbRef.deref();
+        if (callback)
+        {
+            try
+            {
+                let specificCallback = callback.add(value);
+                if (typeof (specificCallback) == "function")
+                    this.#delCallbackMap.set(value, specificCallback);
+            }
+            catch (err)
+            {
+                console.error(err);
+            }
+        }
+
+    }
+
+    /**
+     * 触发此钩子 (删除)
+     * @param {any} value
+     */
+    emitDel(value)
+    {
+        let specificCallback = this.#delCallbackMap.get(value);
+        if (specificCallback)
+        {
+            this.#delCallbackMap.delete(value);
+            try
+            {
+                specificCallback();
+            }
+            catch (err)
+            {
+                console.error(err);
+            }
+        }
+
+        let callback = this.#cbRef.deref();
+        if (callback)
+        {
+            try
+            {
+                callback.del(value);
+            }
+            catch (err)
+            {
+                console.error(err);
+            }
+        }
+    }
+
+    /**
+     * 销毁此钩子
+     * 销毁后钩子将不再自动触发
+     */
+    destroy()
+    {
+        this.#hookSet.delete(this);
+        freeHookBindDestroy(this);
+
+        // 移除调试未绑定探针
+        unboundHook.delete(this);
+    }
+
+    /**
+     * 绑定销毁
+     * 当目标对象释放时销毁
+     * @param {object} targetObj
+     * @returns {SetHookBind} 返回自身
+     */
+    bindDestroy(targetObj)
+    {
+        let targetRefSet = this.#targetRefMap.get(targetObj);
+        if (targetRefSet == undefined)
+        {
+            targetRefSet = new Set();
+            this.#targetRefMap.set(targetObj, targetRefSet);
+        }
+        targetRefSet.add(this.#callback);
+        this.#callback = null;
+        
+        hookBindDestroy(targetObj, this);
+
+        // 移除调试未绑定探针
+        unboundHook.delete(this);
+
+        return this;
+    }
+}
+
+/**
+ * 代理数组 到 钩子映射和目标对象 映射
+ * 
+ * @type {WeakMap<object, {
+*  hookSet: Set<import("./SetHookBind").SetHookBind>,
+*  srcMap: Set
+* }>}
+*/
+const setProxyMap = new WeakMap();
+
+/**
+ * 创建Set的代理
+ * @template {Set} T
+ * @param {T} srcSet
+ * @returns {T}
+ */
+function createHookSet(srcSet)
+{
+    /**
+     * @type {Set<SetHookBind>}
+     */
+    let hookSet = new Set();
+
+    /**
+     * @param {any} value
+     */
+    function emitAdd(value)
+    {
+        hookSet.forEach(o => { o.emitAdd(value); });
+    }
+
+    /**
+     * @param {any} value
+     */
+    function emitDel(value)
+    {
+        hookSet.forEach(o => { o.emitDel(value); });
+    }
+
+    const proxyMap = (new Proxy(srcSet, {
+        get: (target, key) => // 取值
+        {
+            // TODO 此处构建的函数可缓存
+            switch (key)
+            {
+                case "add":
+                    return (/** @type {any} */ value) =>
+                    {
+                        let has = srcSet.has(value);
+
+                        srcSet.add(value);
+
+                        if (!has)
+                            emitAdd(value);
+
+                        return proxyMap;
+                    };
+                case "delete":
+                    return (/** @type {any} */ key) =>
+                    {
+                        let has = srcSet.delete(key);
+
+                        if (has)
+                            emitDel(key);
+
+                        return has;
+                    };
+                case "clear":
+                    return () =>
+                    {
+                        let values = srcSet.values();
+
+                        srcSet.clear();
+
+                        for (let value of values)
+                        {
+                            emitDel(value);
+                        }
+                    };
+                default: {
+                    let value = Reflect.get(target, key);
+                    if (typeof (value) == "function")
+                        return value.bind(srcSet);
+                    else
+                        return value;
+                }
+            }
+        },
+
+    }));
+
+    setProxyMap.set(proxyMap, { hookSet: hookSet, srcMap: srcSet });
+
+    return proxyMap;
+}
+
+/**
+ * 绑定Set的代理
+ * 回调函数中不应当进行可能触发钩子的操作
+ * @template {any} K
+ * @param {Set<K>} proxySet
+ * @param {{
+ *  add?: (value: K) => void | (() => void),
+ *  del?: (value: K) => void
+ * }} callbacks
+ * @param {{ addExisting?: boolean }} [option]
+ * @returns {SetHookBind}
+ */
+function bindSetHook(proxySet, callbacks, option = {})
+{
+    const proxyMata = setProxyMap.get(proxySet);
+    if (proxyMata == undefined)
+        throw "bindMapHook: Hook callbacks can only be bound from proxy array";
+
+    option = Object.assign({
+        noSet: false,
+        addExisting: false
+    }, option);
+
+    let callbackObj = Object.assign({
+        add: () => { },
+        del: () => { },
+    }, callbacks);
+
+
+
+    if (option.addExisting)
+    {
+        try
+        {
+            proxyMata.srcMap.forEach((value) =>
+            {
+                callbackObj.add(value);
+            });
+        }
+        catch (err)
+        {
+            console.log(err);
+        }
+    }
+
+    let ret = new SetHookBind(proxySet, proxyMata.hookSet, callbackObj);
+    proxyMata.hookSet.add(ret);
+    return ret;
+}
+
+/**
+ * 正向遍历数组
+ * 在回调中返回不为false或void的值主动结束遍历
+ * 主动结束遍历 返回true
+ * 未主动结束遍历完全部内容 返回false
+ * @template T
+ * @param {ArrayLike<T>} o
+ * @param {function(T, number):(boolean | void)} callback
+ * @returns {boolean}
+ */
+function forEach(o, callback)
+{
+    if (!o)
+        return false;
+    for (let i = 0, Li = o.length; i < Li; i++)
+        if (o[i] != undefined && callback(o[i], i))
+            return true;
+    return false;
+}
+
+/**
+ * 判断第一个参数是否属于之后所有的参数
+ * 第一个参数与任何一个之后的参数相等 返回true
+ * 与任何一个都不相等 返回false
+ * @param {any} k
+ * @param  {Array<any>} s
+ * @returns {boolean}
+ */
+function isAmong(k, ...s)
+{
+    return s.some(o => o === k);
 }
 
 /**
@@ -1446,479 +2692,6 @@ function classNames(classNames)
 }
 
 /**
- * 数组钩子绑定类
- * 
- * @typedef {{
- *  set: (index: number, value: any) => void,
- *  add: (index: number, value: any) => void,
- *  del: (index: number) => void
- * }} callbackType
- */
-class ArrayHookBind
-{
-    /**
-     * 代理数组
-     * @type {Array}
-     */
-    #proxyArr = null;
-
-    /**
-     * 修改数组时需要触发的钩子
-     * 此值为 hookStatus 文件中 arrayProxyMap 的 hookSet 的引用
-     * @type {Set<ArrayHookBind>}
-     */
-    #hookSet = null;
-
-    /**
-     * 回调函数的弱引用
-     * @type {WeakRef<callbackType>}
-     */
-    #cbRef = null;
-
-    /**
-     * 回调函数
-     * 当此钩子绑定自动释放时为null
-     * @type {callbackType}
-     */
-    #callback = null;
-
-    /**
-     * 目标对象引用映射
-     * 用于建立目标对象到指定对象的强引用关系
-     * @type {WeakMap<object, Set<object>>}
-     */
-    #targetRefMap = new WeakMap();
-
-    /**
-     * @param {Array} proxyArr
-     * @param {Set<ArrayHookBind>} hookSet
-     * @param {callbackType} callback
-     */
-    constructor(proxyArr, hookSet, callback)
-    {
-        this.#proxyArr = proxyArr;
-        this.#hookSet = hookSet;
-        this.#cbRef = new WeakRef(callback);
-        this.#callback = callback;
-
-        // 添加调试未绑定探针
-        unboundHook.add(this);
-    }
-
-    /**
-     * 触发此钩子 (设置)
-     * @param {number} index
-     * @param {any} value
-     */
-    emitSet(index, value)
-    {
-        let callback = this.#cbRef.deref();
-        if (callback)
-        {
-            try
-            {
-                callback.set(index, value);
-            }
-            catch (err)
-            {
-                console.error(err);
-            }
-        }
-    }
-
-    /**
-     * 触发此钩子 (增加)
-     * @param {number} index
-     * @param {any} value
-     */
-    emitAdd(index, value)
-    {
-        let callback = this.#cbRef.deref();
-        if (callback)
-        {
-            try
-            {
-                callback.add(index, value);
-            }
-            catch (err)
-            {
-                console.error(err);
-            }
-        }
-    }
-
-    /**
-     * 触发此钩子 (删除)
-     * @param {number} index
-     */
-    emitDel(index)
-    {
-        let callback = this.#cbRef.deref();
-        if (callback)
-        {
-            try
-            {
-                callback.del(index);
-            }
-            catch (err)
-            {
-                console.error(err);
-            }
-        }
-    }
-
-    /**
-     * 销毁此钩子
-     * 销毁后钩子将不再自动触发
-     */
-    destroy()
-    {
-        this.#hookSet.delete(this);
-        freeHookBindDestroy(this);
-
-        // 移除调试未绑定探针
-        unboundHook.delete(this);
-    }
-
-    /**
-     * 绑定销毁
-     * 当目标对象释放时销毁
-     * @param {object} targetObj
-     * @returns {ArrayHookBind} 返回自身
-     */
-    bindDestroy(targetObj)
-    {
-        let targetRefSet = this.#targetRefMap.get(targetObj);
-        if (targetRefSet == undefined)
-        {
-            targetRefSet = new Set();
-            this.#targetRefMap.set(targetObj, targetRefSet);
-        }
-        targetRefSet.add(this.#callback);
-        this.#callback = null;
-        
-        hookBindDestroy(targetObj, this);
-
-        // 移除调试未绑定探针
-        unboundHook.delete(this);
-
-        return this;
-    }
-}
-
-/**
- * 代理数组 到 钩子映射和目标对象 映射
- * 
- * @type {WeakMap<object, {
-*  hookSet: Set<import("./ArrayHookBind").ArrayHookBind>,
-*  srcArr: Array
-* }>}
-*/
-const arrayProxyMap = new WeakMap();
-
-/**
- * 创建数组的代理
- * @template {Array} T
- * @param {T} srcArray
- * @returns {T}
- */
-function createHookArray(srcArray)
-{
-    let oldLength = srcArray.length;
-
-    /**
-     * @type {Set<ArrayHookBind>}
-     */
-    let hookSet = new Set();
-
-    /**
-     * @param {number} ind
-     * @param {any} value
-     */
-    function emitSet(ind, value)
-    {
-        hookSet.forEach(o => { o.emitSet(ind, value); });
-    }
-    /**
-     * @param {number} ind
-     * @param {any} value
-     */
-    function emitAdd(ind, value)
-    {
-        hookSet.forEach(o => { o.emitAdd(ind, value); });
-    }
-    /**
-     * @param {number} ind
-     */
-    function emitDel(ind)
-    {
-        hookSet.forEach(o => { o.emitDel(ind); });
-    }
-
-    const proxyArray = (new Proxy(srcArray, {
-        get: (target, key) => // 取值
-        {
-            // TODO 此处构建的函数可缓存
-            switch (key)
-            {
-                case "push":
-                    return (/** @type {any[]} */ ...items) =>
-                    {
-                        let ret = srcArray.push(...items);
-                        items.forEach(o =>
-                        {
-                            oldLength++;
-                            emitAdd(oldLength - 1, o);
-                        });
-                        return ret;
-                    };
-                case "pop":
-                    return () =>
-                    {
-                        let ret = srcArray.pop();
-                        if (oldLength > 0)
-                        {
-                            oldLength--;
-                            emitDel(oldLength);
-                        }
-                        return ret;
-                    };
-                case "unshift":
-                    return (/** @type {any[]} */ ...items) =>
-                    {
-                        let ret = srcArray.unshift(...items);
-                        items.forEach((o, ind) =>
-                        {
-                            oldLength++;
-                            emitAdd(ind, o);
-                        });
-                        return ret;
-                    };
-                case "shift":
-                    return () =>
-                    {
-                        let ret = srcArray.shift();
-                        if (oldLength > 0)
-                        {
-                            oldLength--;
-                            emitDel(0);
-                        }
-                        return ret;
-                    };
-                case "splice":
-                    return (/** @type {number} */ start, deleteCount = Infinity, /** @type {Array} */ ...items) =>
-                    {
-                        let ret = srcArray.splice(start, deleteCount, ...items);
-                        let actualStartIndex = (
-                            start >= 0 ?
-                                (
-                                    start >= oldLength ? oldLength : start
-                                ) :
-                                (
-                                    start < -oldLength ? 0 : start + oldLength
-                                )
-                        );
-                        let actualDeleteCount = (
-                            deleteCount > 0 ?
-                                Math.min(deleteCount, oldLength - actualStartIndex) :
-                                0
-                        );
-                        for (let i = actualDeleteCount - 1; i >= 0; i--)
-                        {
-                            oldLength--;
-                            emitDel(actualStartIndex + i);
-                        }
-                        items.forEach((o, ind) =>
-                        {
-                            oldLength++;
-                            emitAdd(actualStartIndex + ind, o);
-                        });
-                        return ret;
-                    };
-                case "at":
-                case "concat":
-                case "forEach":
-                case "map":
-                case "every":
-                case "some":
-                case "reduce":
-                case "reduceRight":
-                case "join":
-                case "find":
-                case "findIndex":
-                case "findLast":
-                case "findLastIndex":
-                case "flat":
-                case "flatMap":
-                case "includes":
-                case "indexOf":
-                case "lastIndexOf":
-                case "slice":
-                case "with":
-                case "toString":
-                case "toLocaleString":
-                case "toReversed":
-                case "toSorted":
-                case "toSpliced":
-                case "keys":
-                case "values":
-                case "entries":
-                    return (/** @type {any} */ ...arg) =>
-                    {
-                        // @ts-ignore
-                        return srcArray[key](...arg);
-                    };
-                case "reverse":
-                case "sort":
-                    return (/** @type {any} */ ...arg) =>
-                    {
-                        // @ts-ignore
-                        let ret = srcArray[key](...arg);
-                        for (let i = oldLength - 1; i >= 0; i--)
-                            emitDel(i);
-                        for (let i = 0; i < oldLength; i++)
-                            emitAdd(i, srcArray[i]);
-                        return ret;
-                    };
-                case "copyWithin":
-                    return (/** @type {number} */ targetIndex, /** @type {number} */ start, /** @type {number} */ end) =>
-                    {
-                        return Array.prototype.copyWithin.call(proxyArray, targetIndex, start, end);
-                    };
-                default:
-                    return Reflect.get(target, key);
-            }
-        },
-
-        set: (target, key, newValue) => // 设置值
-        {
-            let ret = Reflect.set(target, key, newValue);
-            if (ret)
-            {
-                if (key == "length")
-                {
-                    let oldLengthBefore = oldLength;
-                    oldLength = newValue;
-                    if (newValue < oldLengthBefore)
-                    {
-                        for (let i = oldLengthBefore - 1; i >= newValue; i--)
-                            emitDel(i);
-                    }
-                    else if (newValue > oldLengthBefore)
-                    {
-                        for (let i = oldLengthBefore; i < newValue; i++)
-                            emitAdd(i, undefined);
-                    }
-                }
-                else if ((typeof (key) == "string" && (/^[1-9][0-9]*$/.test(key) || key == "0")) || typeof (key) == "number")
-                {
-                    let ind = Number(key);
-                    if (ind >= oldLength)
-                    {
-                        let oldLengthBefore = oldLength;
-                        oldLength = ind + 1;
-                        if (ind >= oldLengthBefore + 1)
-                        {
-                            for (let i = oldLengthBefore; i < ind; i++)
-                                emitAdd(i, undefined);
-                        }
-                        emitAdd(ind, newValue);
-                    }
-                    else
-                    {
-                        emitSet(ind, newValue);
-                    }
-                }
-            }
-            return ret;
-        },
-
-        deleteProperty: (target, key) => // 删除值
-        {
-            let ret = delete srcArray[key];
-            if ((typeof (key) == "string" && (/^[1-9][0-9]*$/.test(key) || key == "0")) || typeof (key) == "number")
-            {
-                let ind = Number(key);
-                if (ind < oldLength)
-                {
-                    emitSet(ind, undefined);
-                }
-            }
-            return ret;
-        }
-    }));
-
-    arrayProxyMap.set(proxyArray, { hookSet: hookSet, srcArr: srcArray });
-
-    return proxyArray;
-}
-
-
-/**
- * 绑定数组的代理
- * 回调函数中不应当进行可能触发钩子的操作
- * @template {any} K
- * @param {Array<K>} proxyArray
- * @param {{
- *  set?: (index: number, value: K) => void;
- *  add: (index: number, value: K) => void;
- *  del: (index: number) => void;
- * }} callbacks
- * @param {{ noSet?: boolean, addExisting?: boolean }} [option]
- * @returns {ArrayHookBind}
- */
-function bindArrayHook(proxyArray, callbacks, option = {})
-{
-    const proxyMata = arrayProxyMap.get(proxyArray);
-    if (proxyMata == undefined)
-        throw "bindArrayHook: Hook callbacks can only be bound from proxy array";
-
-    option = Object.assign({
-        noSet: false,
-        addExisting: false
-    }, option);
-
-    let callbackObj = Object.assign({
-        set: () => { },
-        add: () => { },
-        del: () => { },
-    }, callbacks);
-
-    if (option.noSet)
-    {
-        if (callbacks.set != undefined)
-        {
-            throw "bindArrayHook: cannot pass the set function when setting the noSet option";
-        }
-        callbackObj.set = (ind, value) =>
-        {
-            callbackObj.del(ind);
-            callbackObj.add(ind, value);
-        };
-    }
-
-
-    if (option.addExisting)
-    {
-        try
-        {
-            proxyMata.srcArr.forEach((e, ind) =>
-            {
-                callbackObj.add(ind, e);
-            });
-        }
-        catch (err)
-        {
-            console.log(err);
-        }
-    }
-
-    let ret = new ArrayHookBind(proxyArray, proxyMata.hookSet, callbackObj);
-    proxyMata.hookSet.add(ret);
-    return ret;
-}
-
-/**
  * 创建列表
  * @template {any} T
  * @param {Array<T>} dataArray
@@ -2049,6 +2822,7 @@ function buildList(dataArray, builder, listNList)
 
 /**
  * 遍历展开元素
+ * @deprecated qwqframe框架最早的原型数据格式 即将被弃用
  * @typedef {{
  *     id?:  string, // id
  *     left?: string, // 距左边(style)
@@ -2372,7 +3146,7 @@ function parsingElement(tagName, strings, ...keys)
 /**
  * 解析标签
  * 默认为div标签
- * @deprecated
+ * @deprecated qwqframe框架早期的原型数据格式 即将被弃用
  * @param {TemplateStringsArray} strings
  * @param {Array<parsingElementKeysType>} keys
  * @returns {NElement}
@@ -2384,7 +3158,7 @@ function tag(strings, ...keys)
 
 /**
  * 解析指定标签名的标签
- * @deprecated
+ * @deprecated qwqframe框架早期的原型数据格式 即将被弃用
  * @param {string} name
  * @returns {function(TemplateStringsArray, ...parsingElementKeysType): NElement}
  */
@@ -2827,776 +3601,12 @@ function runOnce(func)
         else
         {
             runned = true;
-            return func(...para);
+            let funcTmp = func;
+            // @ts-ignore
+            func = null;
+            return funcTmp(...para);
         }
     });
-}
-
-/**
- * 代理对象 到 钩子映射和源对象 映射
- * 
- * @type {WeakMap<object, {
- *  hookMap: Map<string | symbol, Set<import("./HookBindValue").HookBindValue | import("./HookBindCallback").HookBindCallback>>,
- *  srcObj: object
- * }>}
- */
-const proxyMap = new WeakMap();
-
-/**
- * 创建对象的代理
- * @template {object} T
- * @param {T} srcObj
- * @returns {T}
- */
-function createHookObj(srcObj)
-{
-    if (proxyMap.has(srcObj)) // 已经是代理对象
-        throw "Unable to create a proxy for a proxy object";
-    /**
-     * 修改指定值时需要触发的钩子
-     * @type {Map<string | symbol, Set<HookBindValue | HookBindCallback>>}
-     */
-    const hookMap = new Map();
-    const proxyObj = (new Proxy((/** @type {object} */(srcObj)), {
-        get: (target, key) => // 取值
-        {
-            return Reflect.get(target, key);
-        },
-
-        set: (target, key, newValue) => // 设置值
-        {
-            let ret = Reflect.set(target, key, newValue);
-            if (ret)
-            {
-                let hookSet = hookMap.get(key);
-                if (hookSet) // 若此key上存在钩子集合
-                {
-                    hookSet.forEach(o =>
-                    {
-                        o.emit(); // 触发每个钩子
-                    });
-                }
-            }
-            return ret;
-        },
-
-        // TODO 应当当作设置为undefined 并创建专用方法解除绑定钩子
-        deleteProperty: (target, key) => // 删除值
-        {
-            let ret = Reflect.deleteProperty(target, key);
-            if (ret)
-            {
-                let hookSet = hookMap.get(key);
-                if (hookSet) // 若此key上存在钩子集合
-                {
-                    hookSet.forEach(o =>
-                    {
-                        o.destroy(); // 销毁每个钩子
-                    });
-                    hookMap.delete(key); // 移除此key上的钩子集合
-                }
-            }
-            return ret;
-        }
-    }));
-    proxyMap.set(proxyObj, { hookMap, srcObj });
-    return proxyObj;
-}
-
-/**
- * 获取代理对象中指定值的绑定信息
- * @template {Object} T
- * @param {T} proxyObj
- * @param {[(keyof T) | (string & {}) | symbol] | [((keyof T) | (string & {}) | symbol), ...Array<(keyof T) | (string & {}) | symbol>, function(...any): any]} keys
- * @returns {HookBindInfo}
- */
-function bindValue(proxyObj, ...keys)
-{
-    const ctFunc = (/** @type {function(...any): any} */(keys.length >= 2 ? keys.pop() : null));
-    const proxyMata = proxyMap.get(proxyObj);
-    if (proxyMata == undefined)
-        throw "bindValue: Values can only be bound from proxy objects";
-    return new HookBindInfo(proxyObj, proxyMata.srcObj, (/** @type {Array<string | symbol>}*/(keys)), proxyMata.hookMap, ctFunc);
-}
-
-/**
- * Map钩子绑定类
- * 
- * @typedef {{
- *  add: (key: any, value: any) => void | (() => void),
- *  set: (key: any, value: any) => void | (() => void),
- *  del: (key: any) => void
- * }} callbackType
- */
-class MapHookBind
-{
-    /**
-     * 代理Map
-     * @type {Map}
-     */
-    #proxyMap = null;
-
-    /**
-     * 修改数组时需要触发的钩子
-     * 此值为 hookStatus 文件中 mapProxyMap 的 hookSet 的引用
-     * @type {Set<MapHookBind>}
-     */
-    #hookSet = null;
-
-    /**
-     * 回调函数的弱引用
-     * @type {WeakRef<callbackType>}
-     */
-    #cbRef = null;
-
-    /**
-     * 回调函数
-     * 当此钩子绑定自动释放时为null
-     * @type {callbackType}
-     */
-    #callback = null;
-
-    /**
-     * 当触发删除钩子时调用的回调函数
-     * @type {Map<any, () => void>}
-     */
-    #delCallbackMap = new Map();
-
-    /**
-     * 目标对象引用映射
-     * 用于建立目标对象到指定对象的强引用关系
-     * @type {WeakMap<object, Set<object>>}
-     */
-    #targetRefMap = new WeakMap();
-
-    /**
-     * @param {Map} proxyMap
-     * @param {Set<MapHookBind>} hookSet
-     * @param {callbackType} callback
-     */
-    constructor(proxyMap, hookSet, callback)
-    {
-        this.#proxyMap = proxyMap;
-        this.#hookSet = hookSet;
-        this.#cbRef = new WeakRef(callback);
-        this.#callback = callback;
-
-        // 添加调试未绑定探针
-        unboundHook.add(this);
-    }
-
-    /**
-     * 触发此钩子 (增加)
-     * @param {any} key
-     * @param {any} value
-     */
-    emitAdd(key, value)
-    {
-        let callback = this.#cbRef.deref();
-        if (callback)
-        {
-            try
-            {
-                let specificCallback = callback.add(key, value);
-                if (typeof (specificCallback) == "function")
-                    this.#delCallbackMap.set(key, specificCallback);
-            }
-            catch (err)
-            {
-                console.error(err);
-            }
-        }
-
-    }
-
-    /**
-     * 触发此钩子 (设置)
-     * @param {any} key
-     * @param {any} value
-     */
-    emitSet(key, value)
-    {
-        let oldSpecificCallback = this.#delCallbackMap.get(key);
-        if (oldSpecificCallback)
-        {
-            this.#delCallbackMap.delete(key);
-            try
-            {
-                oldSpecificCallback();
-            }
-            catch (err)
-            {
-                console.error(err);
-            }
-        }
-
-        let callback = this.#cbRef.deref();
-        if (callback)
-        {
-            try
-            {
-                let newSpecificCallback = callback.set(key, value);
-                if (typeof (newSpecificCallback) == "function")
-                    this.#delCallbackMap.set(key, newSpecificCallback);
-            }
-            catch (err)
-            {
-                console.error(err);
-            }
-        }
-    }
-
-    /**
-     * 触发此钩子 (删除)
-     * @param {any} key
-     */
-    emitDel(key)
-    {
-        let specificCallback = this.#delCallbackMap.get(key);
-        if (specificCallback)
-        {
-            this.#delCallbackMap.delete(key);
-            try
-            {
-                specificCallback();
-            }
-            catch (err)
-            {
-                console.error(err);
-            }
-        }
-
-        let callback = this.#cbRef.deref();
-        if (callback)
-        {
-            try
-            {
-                callback.del(key);
-            }
-            catch (err)
-            {
-                console.error(err);
-            }
-        }
-    }
-
-    /**
-     * 销毁此钩子
-     * 销毁后钩子将不再自动触发
-     */
-    destroy()
-    {
-        this.#hookSet.delete(this);
-        freeHookBindDestroy(this);
-
-        // 移除调试未绑定探针
-        unboundHook.delete(this);
-    }
-
-    /**
-     * 绑定销毁
-     * 当目标对象释放时销毁
-     * @param {object} targetObj
-     * @returns {MapHookBind} 返回自身
-     */
-    bindDestroy(targetObj)
-    {
-        let targetRefSet = this.#targetRefMap.get(targetObj);
-        if (targetRefSet == undefined)
-        {
-            targetRefSet = new Set();
-            this.#targetRefMap.set(targetObj, targetRefSet);
-        }
-        targetRefSet.add(this.#callback);
-        this.#callback = null;
-
-        hookBindDestroy(targetObj, this);
-
-        // 移除调试未绑定探针
-        unboundHook.delete(this);
-
-        return this;
-    }
-}
-
-/**
- * 代理数组 到 钩子映射和目标对象 映射
- * 
- * @type {WeakMap<object, {
-*  hookSet: Set<import("./MapHookBind").MapHookBind>,
-*  srcMap: Map
-* }>}
-*/
-const mapProxyMap = new WeakMap();
-
-/**
- * 创建Map的代理
- * @template {Map} T
- * @param {T} srcMap
- * @returns {T}
- */
-function createHookMap(srcMap)
-{
-    /**
-     * @type {Set<MapHookBind>}
-     */
-    let hookSet = new Set();
-
-    /**
-     * @param {any} key
-     * @param {any} value
-     */
-    function emitAdd(key, value)
-    {
-        hookSet.forEach(o => { o.emitAdd(key, value); });
-    }
-
-    /**
-     * @param {any} key
-     * @param {any} value
-     */
-    function emitSet(key, value)
-    {
-        hookSet.forEach(o => { o.emitSet(key, value); });
-    }
-
-    /**
-     * @param {any} key
-     */
-    function emitDel(key)
-    {
-        hookSet.forEach(o => { o.emitDel(key); });
-    }
-
-    const proxyMap = (new Proxy(srcMap, {
-        get: (target, key) => // 取值
-        {
-            // TODO 此处构建的函数可缓存
-            switch (key)
-            {
-                case "set":
-                    return (/** @type {any} */ key, /** @type {any} */ value) =>
-                    {
-                        let has = srcMap.has(key);
-
-                        srcMap.set(key, value);
-
-                        if (has)
-                            emitSet(key, value);
-                        else
-                            emitAdd(key, value);
-
-                        return proxyMap;
-                    };
-                case "delete":
-                    return (/** @type {any} */ key) =>
-                    {
-                        let has = srcMap.delete(key);
-
-                        if (has)
-                            emitDel(key);
-
-                        return has;
-                    };
-                case "clear":
-                    return () =>
-                    {
-                        let keys = srcMap.keys();
-
-                        srcMap.clear();
-
-                        for (let key of keys)
-                        {
-                            emitDel(key);
-                        }
-                    };
-                default: {
-                    let value = Reflect.get(target, key);
-                    if (typeof (value) == "function")
-                        return value.bind(srcMap);
-                    else
-                        return value;
-                }
-            }
-        },
-
-    }));
-
-    mapProxyMap.set(proxyMap, { hookSet: hookSet, srcMap: srcMap });
-
-    return proxyMap;
-}
-
-/**
- * 绑定Map的代理
- * 回调函数中不应当进行可能触发钩子的操作
- * @template {any} K
- * @template {any} V
- * @param {Map<K, V>} proxyMap
- * @param {{
- *  add?: (key: K, value: V) => void | (() => void),
- *  set?: (key: K, value: V) => void | (() => void),
- *  del?: (key: K) => void
- * }} callbacks
- * @param {{ noSet?: boolean, addExisting?: boolean }} [option]
- * @returns {MapHookBind}
- */
-function bindMapHook(proxyMap, callbacks, option = {})
-{
-    const proxyMata = mapProxyMap.get(proxyMap);
-    if (proxyMata == undefined)
-        throw "bindMapHook: Hook callbacks can only be bound from proxy array";
-
-    option = Object.assign({
-        noSet: false,
-        addExisting: false
-    }, option);
-
-    let callbackObj = Object.assign({
-        set: () => { },
-        add: () => { },
-        del: () => { },
-    }, callbacks);
-
-    if (option.noSet)
-    {
-        if (callbacks.set != undefined)
-        {
-            throw "bindMapHook: cannot pass the set function when setting the noSet option";
-        }
-        callbackObj.set = (ind, value) =>
-        {
-            callbackObj.del(ind);
-            return callbackObj.add(ind, value);
-        };
-    }
-
-
-    if (option.addExisting)
-    {
-        try
-        {
-            proxyMata.srcMap.forEach((value, key) =>
-            {
-                callbackObj.add(key, value);
-            });
-        }
-        catch (err)
-        {
-            console.log(err);
-        }
-    }
-
-    let ret = new MapHookBind(proxyMap, proxyMata.hookSet, callbackObj);
-    proxyMata.hookSet.add(ret);
-    return ret;
-}
-
-/**
- * Set钩子绑定类
- * 
- * @typedef {{
- *  add: (value: any) => void | (() => void),
- *  del: (value: any) => void
- * }} callbackType
- */
-class SetHookBind
-{
-    /**
-     * 代理Set
-     * @type {Set}
-     */
-    #proxySet = null;
-
-    /**
-     * 修改数组时需要触发的钩子
-     * 此值为 hookStatus 文件中 mapProxyMap 的 hookSet 的引用
-     * @type {Set<SetHookBind>}
-     */
-    #hookSet = null;
-
-    /**
-     * 回调函数的弱引用
-     * @type {WeakRef<callbackType>}
-     */
-    #cbRef = null;
-
-    /**
-     * 回调函数
-     * 当此钩子绑定自动释放时为null
-     * @type {callbackType}
-     */
-    #callback = null;
-
-    /**
-     * 当触发删除钩子时调用的回调函数
-     * @type {Map<any, () => void>}
-     */
-    #delCallbackMap = new Map();
-    
-    /**
-     * 目标对象引用映射
-     * 用于建立目标对象到指定对象的强引用关系
-     * @type {WeakMap<object, Set<object>>}
-     */
-    #targetRefMap = new WeakMap();
-
-    /**
-     * @param {Set} proxyMap
-     * @param {Set<SetHookBind>} hookSet
-     * @param {callbackType} callback
-     */
-    constructor(proxyMap, hookSet, callback)
-    {
-        this.#proxySet = proxyMap;
-        this.#hookSet = hookSet;
-        this.#cbRef = new WeakRef(callback);
-        this.#callback = callback;
-
-        // 添加调试未绑定探针
-        unboundHook.add(this);
-    }
-
-    /**
-     * 触发此钩子 (增加)
-     * @param {any} value
-     */
-    emitAdd(value)
-    {
-        let callback = this.#cbRef.deref();
-        if (callback)
-        {
-            try
-            {
-                let specificCallback = callback.add(value);
-                if (typeof (specificCallback) == "function")
-                    this.#delCallbackMap.set(value, specificCallback);
-            }
-            catch (err)
-            {
-                console.error(err);
-            }
-        }
-
-    }
-
-    /**
-     * 触发此钩子 (删除)
-     * @param {any} value
-     */
-    emitDel(value)
-    {
-        let specificCallback = this.#delCallbackMap.get(value);
-        if (specificCallback)
-        {
-            this.#delCallbackMap.delete(value);
-            try
-            {
-                specificCallback();
-            }
-            catch (err)
-            {
-                console.error(err);
-            }
-        }
-
-        let callback = this.#cbRef.deref();
-        if (callback)
-        {
-            try
-            {
-                callback.del(value);
-            }
-            catch (err)
-            {
-                console.error(err);
-            }
-        }
-    }
-
-    /**
-     * 销毁此钩子
-     * 销毁后钩子将不再自动触发
-     */
-    destroy()
-    {
-        this.#hookSet.delete(this);
-        freeHookBindDestroy(this);
-
-        // 移除调试未绑定探针
-        unboundHook.delete(this);
-    }
-
-    /**
-     * 绑定销毁
-     * 当目标对象释放时销毁
-     * @param {object} targetObj
-     * @returns {SetHookBind} 返回自身
-     */
-    bindDestroy(targetObj)
-    {
-        let targetRefSet = this.#targetRefMap.get(targetObj);
-        if (targetRefSet == undefined)
-        {
-            targetRefSet = new Set();
-            this.#targetRefMap.set(targetObj, targetRefSet);
-        }
-        targetRefSet.add(this.#callback);
-        this.#callback = null;
-        
-        hookBindDestroy(targetObj, this);
-
-        // 移除调试未绑定探针
-        unboundHook.delete(this);
-
-        return this;
-    }
-}
-
-/**
- * 代理数组 到 钩子映射和目标对象 映射
- * 
- * @type {WeakMap<object, {
-*  hookSet: Set<import("./SetHookBind").SetHookBind>,
-*  srcMap: Set
-* }>}
-*/
-const setProxyMap = new WeakMap();
-
-/**
- * 创建Set的代理
- * @template {Set} T
- * @param {T} srcSet
- * @returns {T}
- */
-function createHookSet(srcSet)
-{
-    /**
-     * @type {Set<SetHookBind>}
-     */
-    let hookSet = new Set();
-
-    /**
-     * @param {any} value
-     */
-    function emitAdd(value)
-    {
-        hookSet.forEach(o => { o.emitAdd(value); });
-    }
-
-    /**
-     * @param {any} value
-     */
-    function emitDel(value)
-    {
-        hookSet.forEach(o => { o.emitDel(value); });
-    }
-
-    const proxyMap = (new Proxy(srcSet, {
-        get: (target, key) => // 取值
-        {
-            // TODO 此处构建的函数可缓存
-            switch (key)
-            {
-                case "add":
-                    return (/** @type {any} */ value) =>
-                    {
-                        let has = srcSet.has(value);
-
-                        srcSet.add(value);
-
-                        if (!has)
-                            emitAdd(value);
-
-                        return proxyMap;
-                    };
-                case "delete":
-                    return (/** @type {any} */ key) =>
-                    {
-                        let has = srcSet.delete(key);
-
-                        if (has)
-                            emitDel(key);
-
-                        return has;
-                    };
-                case "clear":
-                    return () =>
-                    {
-                        let values = srcSet.values();
-
-                        srcSet.clear();
-
-                        for (let value of values)
-                        {
-                            emitDel(value);
-                        }
-                    };
-                default: {
-                    let value = Reflect.get(target, key);
-                    if (typeof (value) == "function")
-                        return value.bind(srcSet);
-                    else
-                        return value;
-                }
-            }
-        },
-
-    }));
-
-    setProxyMap.set(proxyMap, { hookSet: hookSet, srcMap: srcSet });
-
-    return proxyMap;
-}
-
-/**
- * 绑定Set的代理
- * 回调函数中不应当进行可能触发钩子的操作
- * @template {any} K
- * @param {Set<K>} proxySet
- * @param {{
- *  add?: (value: K) => void | (() => void),
- *  del?: (value: K) => void
- * }} callbacks
- * @param {{ addExisting?: boolean }} [option]
- * @returns {SetHookBind}
- */
-function bindSetHook(proxySet, callbacks, option = {})
-{
-    const proxyMata = setProxyMap.get(proxySet);
-    if (proxyMata == undefined)
-        throw "bindMapHook: Hook callbacks can only be bound from proxy array";
-
-    option = Object.assign({
-        noSet: false,
-        addExisting: false
-    }, option);
-
-    let callbackObj = Object.assign({
-        add: () => { },
-        del: () => { },
-    }, callbacks);
-
-
-
-    if (option.addExisting)
-    {
-        try
-        {
-            proxyMata.srcMap.forEach((value) =>
-            {
-                callbackObj.add(value);
-            });
-        }
-        catch (err)
-        {
-            console.log(err);
-        }
-    }
-
-    let ret = new SetHookBind(proxySet, proxyMata.hookSet, callbackObj);
-    proxyMata.hookSet.add(ret);
-    return ret;
 }
 
 /**

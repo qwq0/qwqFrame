@@ -9,6 +9,6 @@
     "devDependencies": {
         "rollup": "^4.14.0",
         "rollup-plugin-dts": "^6.1.0",
-        "typescript": "^5.4.4"
+        "typescript": "^6.0.3"
     }
 }

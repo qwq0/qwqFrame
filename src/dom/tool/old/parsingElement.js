@@ -35,7 +35,7 @@ function parsingElement(tagName, strings, ...keys)
 /**
  * 解析标签
  * 默认为div标签
- * @deprecated
+ * @deprecated qwqframe框架早期的原型数据格式 即将被弃用
  * @param {TemplateStringsArray} strings
  * @param {Array<parsingElementKeysType>} keys
  * @returns {NElement}
@@ -47,7 +47,7 @@ export function tag(strings, ...keys)
 
 /**
  * 解析指定标签名的标签
- * @deprecated
+ * @deprecated qwqframe框架早期的原型数据格式 即将被弃用
  * @param {string} name
  * @returns {function(TemplateStringsArray, ...parsingElementKeysType): NElement}
  */
